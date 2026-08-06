@@ -55,7 +55,7 @@ export const ROUND_1_QUESTION: RoundQuestion = {
 
 // --- Reflexión final (3 preguntas, Agenda V2) ---
 export const REFLECTION_QUESTIONS: RoundQuestion[] = [
-  { id: "ref-1", prompt: "¿Qué prototipo te llevás? (el arco de transformación que querés impulsar)" },
+  { id: "ref-1", prompt: "¿Qué prototipo te llevas? (el arco de transformación que quieres impulsar)" },
   { id: "ref-2", prompt: "¿Quiénes son las 3 personas más importantes que necesitás involucrar para que esto pase en tu ámbito?" },
   { id: "ref-3", prompt: "En las próximas 2 semanas, ¿cómo vas a inspirar a estas personas a involucrarse?" },
 ];

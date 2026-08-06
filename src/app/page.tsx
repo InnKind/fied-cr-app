@@ -59,7 +59,7 @@ export default function Home() {
       <Waiting
         accent={roleColor}
         title="¡Ya estás dentro!"
-        message="Esperá un momento: la Ronda 1 arranca en breve."
+        message="Espera un momento: la Ronda 1 arranca en breve."
       />
     );
   }
@@ -75,7 +75,7 @@ export default function Home() {
           <Waiting
             accent={roleColor}
             title="¡Respuesta enviada!"
-            message="Ahora conversala con tu mesa. Esperá el siguiente paso."
+            message="Ahora convérsala con tu mesa. Espera el siguiente paso."
           />
         );
       }
@@ -99,7 +99,7 @@ export default function Home() {
     <Waiting
       accent={roleColor}
       title="Seguimos pronto"
-      message="Esperá la próxima ronda."
+      message="Espera la próxima ronda."
     />
   );
 }

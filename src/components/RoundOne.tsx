@@ -18,7 +18,7 @@ export default function RoundOne({
 
   async function submit() {
     if (answer.trim().length < 3) {
-      setError("Escribí tu respuesta antes de enviar.");
+      setError("Escribe tu respuesta antes de enviar.");
       return;
     }
     setSaving(true);
@@ -31,7 +31,7 @@ export default function RoundOne({
     });
     setSaving(false);
     if (dbError) {
-      setError("No se pudo enviar. Intentá de nuevo.");
+      setError("No se pudo enviar. Intenta de nuevo.");
       return;
     }
     onSubmitted();
@@ -47,7 +47,7 @@ export default function RoundOne({
           {ROUND_1_QUESTION.prompt}
         </h1>
         <p className="mt-3 text-sm text-slate-500">
-          Pensalo un momento a solas y escribí tu respuesta. Después la conversás
+          Piénsalo un momento a solas y escribe tu respuesta. Después la conversas
           con tu mesa.
         </p>
 
@@ -58,7 +58,7 @@ export default function RoundOne({
             setError(null);
           }}
           rows={6}
-          placeholder="Escribí tu respuesta…"
+          placeholder="Escribe tu respuesta…"
           className="mt-5 w-full resize-none rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
 

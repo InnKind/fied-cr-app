@@ -14,12 +14,12 @@ export default function Register({ onRegistered }: { onRegistered: () => void })
 
   async function handleEnter() {
     if (!role) {
-      setError("Elegí tu rol para continuar.");
+      setError("Elige tu rol para continuar.");
       return;
     }
     const tableNum = parseInt(table, 10);
     if (!table || Number.isNaN(tableNum) || tableNum < 1 || tableNum > EVENT.numberOfTables) {
-      setError(`Ingresá tu número de mesa (1 a ${EVENT.numberOfTables}).`);
+      setError(`Ingresa tu número de mesa (1 a ${EVENT.numberOfTables}).`);
       return;
     }
 
@@ -33,7 +33,7 @@ export default function Register({ onRegistered }: { onRegistered: () => void })
     setSaving(false);
 
     if (dbError || !data) {
-      setError("No se pudo guardar. Revisá tu conexión e intentá de nuevo.");
+      setError("No se pudo guardar. Revisa tu conexión e intenta de nuevo.");
       return;
     }
 
@@ -69,7 +69,7 @@ export default function Register({ onRegistered }: { onRegistered: () => void })
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           >
             <option value="" disabled>
-              Seleccioná tu rol…
+              Selecciona tu rol…
             </option>
             {ROLES.map((r) => (
               <option key={r.id} value={r.id}>

@@ -67,7 +67,7 @@ export default function Results({
   if (!data || !data.themes?.length) {
     return (
       <p className="text-slate-500">
-        Todavía no hay resultados. Esperá un momento…
+        Todavía no hay resultados. Espera un momento…
       </p>
     );
   }

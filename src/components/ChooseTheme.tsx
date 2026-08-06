@@ -46,7 +46,7 @@ export default function ChooseTheme({
       .eq("id", participantId);
     setSaving(false);
     if (dbErr) {
-      setError("No se pudo asignar la mesa. Intentá de nuevo.");
+      setError("No se pudo asignar la mesa. Intenta de nuevo.");
       return;
     }
     setAssigned({ table, theme: themeId });
@@ -59,7 +59,7 @@ export default function ChooseTheme({
       <div className="w-full max-w-md text-center">
         <p className="text-sm text-slate-500">Tu tema</p>
         <h2 className="mt-1 text-xl font-bold text-slate-900">{t?.title}</h2>
-        <p className="mt-6 text-slate-600">Andá a la</p>
+        <p className="mt-6 text-slate-600">Ve a la</p>
         <p className="text-5xl font-bold text-blue-700">Mesa {assigned.table}</p>
         <p className="mt-6 text-sm text-slate-400">
           Ahí vas a trabajar el prototipo con tu grupo.
@@ -71,13 +71,13 @@ export default function ChooseTheme({
   return (
     <div className="w-full max-w-md">
       <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-        Elegí tu tema
+        Elige tu tema
       </p>
       <h2 className="mt-1 text-2xl font-bold text-slate-900">
-        ¿Sobre qué querés trabajar?
+        ¿Sobre qué quieres trabajar?
       </h2>
       <p className="mt-2 text-sm text-slate-500">
-        Elegí el tema que mejor calza con tu rol.
+        Elige el tema que mejor calza con tu rol.
       </p>
       <div className="mt-5 space-y-3">
         {themes.map((t) => {

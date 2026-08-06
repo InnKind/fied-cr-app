@@ -76,7 +76,7 @@ export default function AdminPage() {
       body: JSON.stringify({ code: adminCode, current_round, phase }),
     });
     if (res.status === 401) {
-      setMsg("Sesión no autorizada. Volvé a entrar con la clave.");
+      setMsg("Sesión no autorizada. Vuelve a entrar con la clave.");
       setAuthed(false);
       localStorage.removeItem("fied_admin");
       return false;

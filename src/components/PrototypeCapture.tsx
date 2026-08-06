@@ -46,7 +46,7 @@ export default function PrototypeCapture({
     });
     setSaving(false);
     if (e) {
-      setError("No se pudo guardar. Intentá de nuevo.");
+      setError("No se pudo guardar. Intenta de nuevo.");
       return;
     }
     setSaved(true);
@@ -66,7 +66,7 @@ export default function PrototypeCapture({
       <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
         Facilitador · Resumen del prototipo{table ? ` · Mesa ${table}` : ""}
       </p>
-      <h2 className="mt-1 text-2xl font-bold text-slate-900">Resumí el prototipo de tu mesa</h2>
+      <h2 className="mt-1 text-2xl font-bold text-slate-900">Resume el prototipo de tu mesa</h2>
       <p className="mt-1 text-xs text-slate-400">
         (Plantilla provisional — los campos finales están por definir.)
       </p>
