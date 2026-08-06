@@ -1,27 +1,16 @@
-// Configuración del evento (config-driven).
-// Editá aquí las preguntas, temas y roles: la app los lee desde este archivo.
-// Fuente: docs/preguntas-y-temas.md. En rojo del documento = confirmado.
-// NOTA: la lista de ROLES es PROVISIONAL — falta la lista final del equipo.
+// Configuración del evento (config-driven). Editá acá las preguntas, temas y roles.
+// Alineado con "Agenda V2". Los textos marcados POR DEFINIR se cambian en un solo lugar.
 
-export type Role = {
-  id: string;
-  label: string;
-  color: string; // color del gafete/badge
-};
-
-export type Topic = {
+export type Role = { id: string; label: string; color: string };
+export type Theme = {
   id: string;
   title: string;
-  question: string;
-  context?: string;
+  provocation: string; // la "provocación" del tema (POR DEFINIR)
+  roles: string[]; // roles a los que este tema "les calza" (guía la elección)
 };
+export type RoundQuestion = { id: string; prompt: string };
 
-export type RoundQuestion = {
-  id: string;
-  prompt: string;
-};
-
-// --- Roles / sectores (PROVISIONAL — confirmar lista final con el equipo) ---
+// --- Roles / sectores (para el registro y para las preguntas por rol) ---
 export const ROLES: Role[] = [
   { id: "docente", label: "Docente / Profesor", color: "#2563eb" },
   { id: "estudiante", label: "Estudiante", color: "#16a34a" },
@@ -31,66 +20,59 @@ export const ROLES: Role[] = [
   { id: "gobierno", label: "Gobierno", color: "#0d9488" },
 ];
 
-// --- Temas de la Ronda 2 (4 confirmados; se puede agregar un 5º sin romper nada) ---
-export const TOPICS: Topic[] = [
+// --- Mesas ---
+export const SEATS_PER_TABLE = 8;
+export const TABLES_PER_THEME = 12; // PLACEHOLDER: ajustar según el # real de mesas del salón
+
+// --- 3 TEMAS (Agenda V2) — las provocaciones están POR DEFINIR ---
+export const THEMES: Theme[] = [
   {
     id: "aula",
     title: "La experiencia en el aula",
-    question:
-      "¿Cómo podríamos rediseñar una experiencia universitaria concreta para que el estudiante tome más decisiones sobre su aprendizaje, utilice la IA con criterio y demuestre capacidades que hoy no se observan adecuadamente?",
-    context:
-      "Modelo basado en la agencia del estudiante y la colaboración docente + IA. Ej.: una clase de 90 minutos con 25 estudiantes.",
+    provocation: "POR DEFINIR (provocación del tema 1 — perspectiva del estudiante).",
+    roles: ["estudiante", "docente"],
   },
   {
     id: "organizacional",
     title: "El modelo organizacional de la universidad",
-    question:
-      "¿Cómo podría una universidad reorganizar procesos, roles e incentivos para actualizar continuamente su oferta y responder con mayor velocidad a los cambios tecnológicos y sociales?",
-    context:
-      "La universidad como espacio de aprendizaje continuo. Innovación, plan de acción, cambio organizacional.",
+    provocation: "POR DEFINIR (provocación del tema 2 — perspectiva docente/facultad).",
+    roles: ["docente", "admin-universitario"],
   },
   {
-    id: "calidad",
-    title: "Impulso de calidad del sistema",
-    question:
-      "¿Qué evidencia mínima común permitiría reconocer, comparar y mejorar la calidad de los aprendizajes sin aumentar innecesariamente la burocracia institucional?",
-    context:
-      "Qué y cómo medir, y cómo compartirlo. Resultado, no proceso. Mejora continua entre todas las universidades.",
-  },
-  {
-    id: "oferta",
-    title: "Alinear la oferta con la demanda",
-    question:
-      "¿Cómo podría Costa Rica detectar cambios en la demanda de capacidades y traducirlos oportunamente en decisiones de oferta, currículo, microcredenciales y orientación estudiantil?",
-    context: "Nuevos formatos, los contenidos correctos, nueva oferta en 90 días.",
+    id: "regulatorio",
+    title: "Calidad y regulación del sistema",
+    provocation: "POR DEFINIR (provocación del tema 3 — perspectiva del regulador).",
+    roles: ["regulador", "gobierno", "sector-productivo"],
   },
 ];
 
-// --- Preguntas por ronda ---
+// --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
 export const ROUND_1_QUESTION: RoundQuestion = {
   id: "r1",
   prompt:
     "¿Qué tendría que ser observable en estudiantes, docentes, instituciones y empleadores para afirmar que Costa Rica ofrece educación superior de calidad en la era de la IA?",
 };
 
-// Ronda 2: la pregunta depende del tema escogido (ver TOPICS).
-
-export const ROUND_3_QUESTIONS: RoundQuestion[] = [
-  {
-    id: "r3-1",
-    prompt:
-      "¿Qué aspectos de la experiencia de aprendizaje que tuvimos juntos esta tarde podrían ser adoptados en las aulas universitarias?",
-  },
-  {
-    id: "r3-2",
-    prompt:
-      "Con base en las conversaciones, ¿cuáles son los cambios concretos que quisieras hacer a la forma en la que abordás tu rol en el sistema de educación superior? ¿Qué acciones querés tomar en las siguientes 2 semanas?",
-  },
+// --- Reflexión final (3 preguntas, Agenda V2) ---
+export const REFLECTION_QUESTIONS: RoundQuestion[] = [
+  { id: "ref-1", prompt: "¿Qué prototipo te llevás? (el arco de transformación que querés impulsar)" },
+  { id: "ref-2", prompt: "¿Quiénes son las 3 personas más importantes que necesitás involucrar para que esto pase en tu ámbito?" },
+  { id: "ref-3", prompt: "En las próximas 2 semanas, ¿cómo vas a inspirar a estas personas a involucrarse?" },
 ];
+
+// --- Preguntas al colectivo, una por rol (Agenda V2) — POR DEFINIR ---
+export const COLLECTIVE_QUESTIONS: Record<string, string> = {
+  estudiante: "POR DEFINIR (pregunta a estudiantes).",
+  docente: "POR DEFINIR (pregunta a docentes).",
+  "admin-universitario": "POR DEFINIR (pregunta a administradores de universidad).",
+  "sector-productivo": "POR DEFINIR (pregunta al sector productivo).",
+  regulador: "POR DEFINIR (pregunta a reguladores).",
+};
 
 export const EVENT = {
   name: "Inn.Kind · FIEd Costa Rica",
   exerciseTitle: "Ejercicio de Prototipado",
-  tableSize: 8,
-  numberOfTables: 32, // configurable: ~20 mesas reales; 32 cubre hasta ~250 personas
+  tableSize: SEATS_PER_TABLE,
+  // Solo lo usa el registro viejo (flujo en vivo). En Agenda V2 la mesa la asigna la app.
+  numberOfTables: THEMES.length * TABLES_PER_THEME,
 };
