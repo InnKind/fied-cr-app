@@ -7,7 +7,7 @@ type Theme = { title: string; description: string; count: number };
 type Synthesis = { themes: Theme[]; total: number };
 
 // Muestra la síntesis de una ronda (temas + conteo, con barras).
-// Se refresca sola, así aparece en cuanto el admin la genera.
+// Aparece AL INSTANTE cuando el admin la genera (Realtime), con poll de respaldo.
 // `big` = versión grande para proyectar.
 export default function Results({
   round = 1,
@@ -21,6 +21,7 @@ export default function Results({
 
   useEffect(() => {
     let active = true;
+
     async function load() {
       const { data: row } = await supabase
         .from("synthesis")
@@ -32,11 +33,31 @@ export default function Results({
         setLoading(false);
       }
     }
+
     load();
-    const t = setInterval(load, 4000);
+
+    const channel = supabase
+      .channel(`rt-synthesis-${round}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "synthesis",
+          filter: `round=eq.${round}`,
+        },
+        () => {
+          if (active) load();
+        }
+      )
+      .subscribe();
+
+    const poll = setInterval(load, 8000); // respaldo
+
     return () => {
       active = false;
-      clearInterval(t);
+      clearInterval(poll);
+      supabase.removeChannel(channel);
     };
   }, [round]);
 

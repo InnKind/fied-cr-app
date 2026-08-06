@@ -3,27 +3,27 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-// Código simple para separar el panel del admin de los participantes.
-// TODO (antes del evento): esto NO es seguridad real. Endurecer moviendo los
-// cambios de estado a una ruta de servidor con la clave secreta (service_role).
-const ADMIN_CODE = "fied2026";
-
 type EventState = { current_round: number; phase: string };
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [codeInput, setCodeInput] = useState("");
+  const [adminCode, setAdminCode] = useState("");
   const [state, setState] = useState<EventState | null>(null);
   const [counts, setCounts] = useState({ participants: 0, r1: 0 });
   const [msg, setMsg] = useState("");
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("fied_admin") === ADMIN_CODE) {
+    const saved =
+      typeof window !== "undefined" ? localStorage.getItem("fied_admin") : null;
+    if (saved) {
+      setAdminCode(saved);
       setAuthed(true);
     }
   }, []);
 
+  // Estado del evento + contadores en vivo (lectura, no requiere clave).
   useEffect(() => {
     if (!authed) return;
     let active = true;
@@ -53,13 +53,42 @@ export default function AdminPage() {
     };
   }, [authed]);
 
+  async function login() {
+    const res = await fetch("/api/admin/set-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: codeInput, validate: true }),
+    });
+    if (res.ok) {
+      localStorage.setItem("fied_admin", codeInput);
+      setAdminCode(codeInput);
+      setAuthed(true);
+      setMsg("");
+    } else {
+      setMsg("Código incorrecto.");
+    }
+  }
+
   async function setRound(current_round: number, phase: string) {
-    const { error } = await supabase
-      .from("event_state")
-      .update({ current_round, phase, updated_at: new Date().toISOString() })
-      .eq("id", 1);
-    setMsg(error ? "Error: " + error.message : "Actualizado ✓");
+    const res = await fetch("/api/admin/set-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: adminCode, current_round, phase }),
+    });
+    if (res.status === 401) {
+      setMsg("Sesión no autorizada. Volvé a entrar con la clave.");
+      setAuthed(false);
+      localStorage.removeItem("fied_admin");
+      return false;
+    }
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({}));
+      setMsg("Error: " + (b.error || res.status));
+      return false;
+    }
+    setMsg("Actualizado ✓");
     setTimeout(() => setMsg(""), 2500);
+    return true;
   }
 
   async function generateAndShow(round: number) {
@@ -72,8 +101,8 @@ export default function AdminPage() {
         setMsg("Error: " + (body.error || res.status));
         return;
       }
-      await setRound(round, "results");
-      setMsg(`Síntesis lista: ${body.themes?.length ?? 0} temas ✓`);
+      const ok = await setRound(round, "results");
+      if (ok) setMsg(`Síntesis lista: ${body.themes?.length ?? 0} temas ✓`);
     } catch {
       setMsg("Error de red al generar la síntesis.");
     } finally {
@@ -90,18 +119,11 @@ export default function AdminPage() {
             type="password"
             value={codeInput}
             onChange={(e) => setCodeInput(e.target.value)}
-            placeholder="Código de acceso"
+            placeholder="Clave de acceso"
             className="mt-4 w-full rounded-lg border border-slate-300 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
           <button
-            onClick={() => {
-              if (codeInput === ADMIN_CODE) {
-                localStorage.setItem("fied_admin", ADMIN_CODE);
-                setAuthed(true);
-              } else {
-                setMsg("Código incorrecto.");
-              }
-            }}
+            onClick={login}
             className="mt-3 w-full rounded-lg bg-slate-800 px-4 py-3 font-semibold text-white hover:bg-slate-900"
           >
             Entrar

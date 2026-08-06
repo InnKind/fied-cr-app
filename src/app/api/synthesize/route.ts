@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { synthesizeResponses } from "@/lib/gemini";
 import { ROUND_1_QUESTION } from "@/config/event";
-
-// Cliente de Supabase del lado servidor.
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function POST(req: NextRequest) {
   const round = Number(new URL(req.url).searchParams.get("round") || "1");
 
   // 1) Traer todas las respuestas de esa ronda.
-  const { data: rows, error } = await supabase
+  const { data: rows, error } = await supabaseAdmin
     .from("responses")
     .select("answer")
     .eq("round", round);
@@ -31,8 +25,8 @@ export async function POST(req: NextRequest) {
   try {
     const synthesis = await synthesizeResponses(question, answers);
 
-    // 4) Guardar (best-effort: si aún no existe la tabla, igual devolvemos).
-    const { error: upErr } = await supabase
+    // 4) Guardar (con privilegios de servidor).
+    const { error: upErr } = await supabaseAdmin
       .from("synthesis")
       .upsert({ round, payload: synthesis }, { onConflict: "round" });
     if (upErr) console.error("No se pudo guardar la síntesis:", upErr.message);
