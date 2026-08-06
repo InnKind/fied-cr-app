@@ -10,42 +10,27 @@ const PRIMARY = (process.env.GEMINI_MODEL || "gemini-flash-latest")
 const FALLBACKS = ["gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
 const MODELS = [...new Set([...PRIMARY, ...FALLBACKS])];
 
-export type Theme = { title: string; description: string; count: number };
-export type Synthesis = { themes: Theme[]; total: number };
-
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// Toma las respuestas abiertas de una ronda y las agrupa en 3-5 temas comunes.
-export async function synthesizeResponses(
-  question: string,
-  answers: string[]
-): Promise<Synthesis> {
+// Llamada genérica a Gemini con reintentos + modelos de respaldo. Devuelve el texto.
+export async function geminiGenerate(
+  prompt: string,
+  opts: { json?: boolean; temperature?: number } = {}
+): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("Falta GEMINI_API_KEY en el servidor.");
 
-  const listado = answers.map((a, i) => `${i + 1}. ${a}`).join("\n");
-  const prompt =
-    `Sos un analista experto de un foro de educación superior. ` +
-    `Te doy varias respuestas de participantes a esta pregunta:\n\n` +
-    `Pregunta: ${question}\n\n` +
-    `Respuestas de los participantes (${answers.length} en total):\n${listado}\n\n` +
-    `Agrupá las respuestas en 3 a 5 temas comunes (no más). Para cada tema: un título ` +
-    `corto (máx 6 palabras), una descripción de una línea, y cuántas respuestas encajan ` +
-    `(aprox; deben sumar alrededor del total). Ordená por frecuencia (mayor primero). ` +
-    `Devolvé SOLO JSON válido con esta forma exacta: ` +
-    `{"themes":[{"title":"...","description":"...","count":0}],"total":${answers.length}}. ` +
-    `Sin texto fuera del JSON.`;
-
   const body = JSON.stringify({
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { responseMimeType: "application/json", temperature: 0.3 },
+    generationConfig: {
+      ...(opts.json ? { responseMimeType: "application/json" } : {}),
+      temperature: opts.temperature ?? 0.3,
+    },
   });
 
   let lastErr = "sin intentos";
-
-  // Prueba cada modelo; reintenta 2 veces ante errores temporales (503/429/500).
   for (const model of MODELS) {
     for (let attempt = 0; attempt < 3; attempt++) {
       let res: Response;
@@ -69,27 +54,44 @@ export async function synthesizeResponses(
       if (res.ok) {
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          try {
-            return JSON.parse(text) as Synthesis;
-          } catch {
-            lastErr = `${model}: JSON inválido`;
-            break; // probar siguiente modelo
-          }
-        }
+        if (text) return text as string;
         lastErr = `${model}: sin texto`;
         break; // probar siguiente modelo
       }
 
       lastErr = `${model}: HTTP ${res.status}`;
-      // Errores temporales -> reintentar el mismo modelo con backoff.
       if (res.status === 503 || res.status === 429 || res.status === 500) {
         await sleep(800 * (attempt + 1));
         continue;
       }
-      break; // otro error (p. ej. 404) -> probar siguiente modelo
+      break; // otro error -> probar siguiente modelo
     }
   }
 
   throw new Error(`Gemini no disponible. Último error: ${lastErr}`);
+}
+
+export type Theme = { title: string; description: string; count: number };
+export type Synthesis = { themes: Theme[]; total: number };
+
+// Toma las respuestas abiertas de una ronda y las agrupa en 3-5 temas comunes.
+export async function synthesizeResponses(
+  question: string,
+  answers: string[]
+): Promise<Synthesis> {
+  const listado = answers.map((a, i) => `${i + 1}. ${a}`).join("\n");
+  const prompt =
+    `Sos un analista experto de un foro de educación superior. ` +
+    `Te doy varias respuestas de participantes a esta pregunta:\n\n` +
+    `Pregunta: ${question}\n\n` +
+    `Respuestas de los participantes (${answers.length} en total):\n${listado}\n\n` +
+    `Agrupá las respuestas en 3 a 5 temas comunes (no más). Para cada tema: un título ` +
+    `corto (máx 6 palabras), una descripción de una línea, y cuántas respuestas encajan ` +
+    `(aprox; deben sumar alrededor del total). Ordená por frecuencia (mayor primero). ` +
+    `Devolvé SOLO JSON válido con esta forma exacta: ` +
+    `{"themes":[{"title":"...","description":"...","count":0}],"total":${answers.length}}. ` +
+    `Sin texto fuera del JSON.`;
+
+  const text = await geminiGenerate(prompt, { json: true });
+  return JSON.parse(text) as Synthesis;
 }
