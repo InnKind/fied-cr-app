@@ -10,6 +10,7 @@ import Results from "@/components/Results";
 import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
 import MomentSelection from "@/components/MomentSelection";
+import IdeaEntry from "@/components/IdeaEntry";
 
 export default function Home() {
   const [participant, setParticipant] = useState<LocalParticipant | null>(null);
@@ -55,6 +56,11 @@ export default function Home() {
   // MOMENT_SELECTION: elegir 1 de los 3 momentos que registró el facilitador.
   if (phaseId === "MOMENT_SELECTION") {
     return <MomentSelection participantId={participant.id} accent={roleColor} />;
+  }
+
+  // IDEA_ENTRY: escribir ideas (IA + Agency) para el momento elegido.
+  if (phaseId === "IDEA_ENTRY") {
+    return <IdeaEntry participantId={participant.id} accent={roleColor} />;
   }
 
   // RESULTS: presentación de la síntesis.

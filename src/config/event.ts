@@ -69,6 +69,19 @@ export const COLLECTIVE_QUESTIONS: Record<string, string> = {
   regulador: "POR DEFINIR (pregunta a reguladores).",
 };
 
+// --- Captura de ideas (fase IDEA_ENTRY) ---
+// Preguntas genéricas (sirven para cualquier tema/momento). Redacción final del
+// equipo: ajustar aquí en un solo lugar.
+export const IDEA_PROMPTS = {
+  ai: "¿Cómo podría integrarse mejor la IA en el momento que elegiste?",
+  agency:
+    "¿Cómo podría la persona involucrada tener más autonomía, voz o poder de decisión en ese momento?",
+};
+
+// Enlace a Athenea (GPT externo) para seguir explorando tras enviar ideas.
+export const ATHENEA_URL =
+  "https://chatgpt.com/g/g-jGO4zaEiC-fied-foro-internacional-de-educacion";
+
 export const EVENT = {
   name: "Inn.Kind · FIEd Costa Rica",
   exerciseTitle: "Ejercicio de Prototipado",
