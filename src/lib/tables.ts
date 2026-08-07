@@ -14,3 +14,9 @@ export function assignTableForTheme(
   const localTable = Math.floor(alreadyInTheme / SEATS_PER_TABLE); // 0-based dentro del tema
   return idx * TABLES_PER_THEME + localTable + 1; // número global de mesa
 }
+
+// Deduce el id del tema a partir del número de mesa (según el bloque del salón).
+export function themeForTable(tableNumber: number): string | null {
+  const idx = Math.floor((tableNumber - 1) / TABLES_PER_THEME);
+  return THEMES[idx]?.id ?? null;
+}

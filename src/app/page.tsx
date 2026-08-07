@@ -9,6 +9,7 @@ import Waiting from "@/components/Waiting";
 import Results from "@/components/Results";
 import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
+import MomentSelection from "@/components/MomentSelection";
 
 export default function Home() {
   const [participant, setParticipant] = useState<LocalParticipant | null>(null);
@@ -49,6 +50,11 @@ export default function Home() {
   // TABLE_ASSIGNED: la persona ve su mesa asignada (con opción de corregirla).
   if (phaseId === "TABLE_ASSIGNED") {
     return <TableAssigned participantId={participant.id} accent={roleColor} />;
+  }
+
+  // MOMENT_SELECTION: elegir 1 de los 3 momentos que registró el facilitador.
+  if (phaseId === "MOMENT_SELECTION") {
+    return <MomentSelection participantId={participant.id} accent={roleColor} />;
   }
 
   // RESULTS: presentación de la síntesis.
