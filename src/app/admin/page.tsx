@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { PHASES, getPhase, normalizePhaseId } from "@/config/event";
 
 type EventState = { current_round: number; phase: string };
 
@@ -69,7 +70,7 @@ export default function AdminPage() {
     }
   }
 
-  async function setRound(current_round: number, phase: string) {
+  async function setPhase(current_round: number, phase: string) {
     const res = await fetch("/api/admin/set-state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -87,7 +88,7 @@ export default function AdminPage() {
       return false;
     }
     setMsg("Actualizado ✓");
-    setTimeout(() => setMsg(""), 2500);
+    setTimeout(() => setMsg(""), 2000);
     return true;
   }
 
@@ -101,7 +102,7 @@ export default function AdminPage() {
         setMsg("Error: " + (body.error || res.status));
         return;
       }
-      const ok = await setRound(round, "results");
+      const ok = await setPhase(round, "RESULTS");
       if (ok) setMsg(`Síntesis lista: ${body.themes?.length ?? 0} temas ✓`);
     } catch {
       setMsg("Error de red al generar la síntesis.");
@@ -134,8 +135,11 @@ export default function AdminPage() {
     );
   }
 
+  const currentPhaseId = normalizePhaseId(state?.phase);
+  const currentLabel = getPhase(currentPhaseId)?.label ?? state?.phase ?? "—";
+
   const btn =
-    "rounded-lg border border-slate-300 bg-white px-4 py-3 text-left font-medium text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50";
+    "rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-left font-medium text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50";
 
   return (
     <main className="flex-1 p-6 bg-slate-50">
@@ -143,24 +147,37 @@ export default function AdminPage() {
         <h1 className="text-2xl font-bold text-slate-900">Panel de administrador</h1>
 
         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm text-slate-500">Estado actual</p>
-          <p className="mt-1 text-lg font-semibold text-slate-900">
-            Ronda {state?.current_round ?? "—"} · fase: {state?.phase ?? "—"}
-          </p>
+          <p className="text-sm text-slate-500">Fase actual</p>
+          <p className="mt-1 text-lg font-semibold text-slate-900">{currentLabel}</p>
           <p className="mt-2 text-sm text-slate-600">
             Participantes: <b>{counts.participants}</b> · Respuestas Ronda 1:{" "}
             <b>{counts.r1}</b>
           </p>
         </div>
 
-        <p className="mt-6 text-sm font-medium text-slate-500">Controlar el ejercicio</p>
+        <p className="mt-6 text-sm font-medium text-slate-500">
+          Fases del ejercicio (toca una para cambiar a esa fase)
+        </p>
         <div className="mt-2 grid gap-2">
-          <button className={btn} onClick={() => setRound(0, "welcome")}>
-            ⟳ Bienvenida (Ronda 0)
-          </button>
-          <button className={btn} onClick={() => setRound(1, "answering")}>
-            ▶ Iniciar Ronda 1 (responder)
-          </button>
+          {PHASES.map((p) => {
+            const isCurrent = currentPhaseId === p.id;
+            return (
+              <button
+                key={p.id}
+                className={`${btn} ${
+                  isCurrent ? "border-blue-500 bg-blue-50 ring-1 ring-blue-300" : ""
+                }`}
+                onClick={() => setPhase(p.round, p.id)}
+              >
+                {isCurrent ? "● " : ""}
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="mt-6 text-sm font-medium text-slate-500">Acciones con IA</p>
+        <div className="mt-2 grid gap-2">
           <button
             className={`${btn} disabled:opacity-50`}
             disabled={generating}
@@ -168,7 +185,7 @@ export default function AdminPage() {
           >
             {generating
               ? "✨ Generando síntesis…"
-              : "✨ Generar síntesis + mostrar resultados (R1)"}
+              : "✨ Generar síntesis de la Ronda 1 → Resultados"}
           </button>
         </div>
 

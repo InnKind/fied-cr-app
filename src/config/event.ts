@@ -76,3 +76,48 @@ export const EVENT = {
   // Solo lo usa el registro viejo (flujo en vivo). En Agenda V2 la mesa la asigna la app.
   numberOfTables: THEMES.length * TABLES_PER_THEME,
 };
+
+// --- Máquina de estados del workshop (diseño de 2 rondas, reunión 7-ago) ---
+// El administrador controla en qué FASE está el evento; cada dispositivo muestra
+// la pantalla que corresponde a la fase actual (`event_state.phase` guarda el id).
+// Muchas pantallas todavía son placeholders (waitTitle/waitMessage) y se irán
+// construyendo una por una en los próximos pasos.
+export type Phase = {
+  id: string; // id canónico que se guarda en event_state.phase
+  round: 0 | 1 | 2; // agrupación por ronda (también se guarda en current_round)
+  label: string; // etiqueta para el panel de administrador
+  // Si la pantalla real todavía no existe, el participante ve este texto de espera:
+  waitTitle?: string;
+  waitMessage?: string;
+};
+
+export const PHASES: Phase[] = [
+  { id: "WELCOME", round: 0, label: "Bienvenida", waitTitle: "¡Ya estás dentro!", waitMessage: "El ejercicio arranca en breve. Deja tu celular a mano." },
+  { id: "THEME_SELECTION", round: 1, label: "1 · Elección de tema", waitTitle: "Elección de tema", waitMessage: "Pantalla en construcción." },
+  { id: "WAITING_ASSIGNMENT", round: 1, label: "2 · Esperando asignación de mesa", waitTitle: "Asignando mesas…", waitMessage: "Espera un momento mientras te ubicamos en una mesa." },
+  { id: "TABLE_ASSIGNED", round: 1, label: "3 · Mesa asignada", waitTitle: "Ve a tu mesa", waitMessage: "Pantalla en construcción." },
+  { id: "ROUND1_PHYSICAL_ACTIVITY", round: 1, label: "4 · Actividad en mesa (post-its)", waitTitle: "Actividad en tu mesa", waitMessage: "Sigue al facilitador. Por ahora no necesitas el celular." },
+  { id: "MOMENT_SELECTION", round: 1, label: "5 · Selección de momento", waitTitle: "Elige tu momento", waitMessage: "Pantalla en construcción." },
+  { id: "IDEA_ENTRY", round: 1, label: "6 · Captura de ideas (IA + Agency)", waitTitle: "Escribe tus ideas", waitMessage: "Pantalla en construcción." },
+  { id: "ROUND1_COMPLETE", round: 1, label: "7 · Ronda 1 completa (coffee break)", waitTitle: "¡Terminaste la Ronda 1!", waitMessage: "Toma tu café. Ya volvemos con los resultados." },
+  { id: "PROCESSING", round: 1, label: "8 · Procesando con IA", waitTitle: "Procesando…", waitMessage: "La IA está resumiendo las ideas de todas las mesas." },
+  { id: "RESULTS", round: 1, label: "9 · Resultados (presentación)" }, // pantalla real: Results
+  { id: "ROUND2", round: 2, label: "10 · Ronda 2 (reflexión)", waitTitle: "Ronda 2", waitMessage: "Pantalla en construcción." },
+  { id: "FINISHED", round: 2, label: "11 · Cierre", waitTitle: "¡Gracias por participar!", waitMessage: "El ejercicio terminó. Pronto podrás consultar los resultados." },
+];
+
+// Alias de las fases viejas por si event_state todavía trae un valor legacy.
+const LEGACY_PHASE_ALIAS: Record<string, string> = {
+  welcome: "WELCOME",
+  answering: "ROUND1_PHYSICAL_ACTIVITY",
+  results: "RESULTS",
+};
+
+export function normalizePhaseId(phase: string | null | undefined): string {
+  if (!phase) return "WELCOME";
+  return LEGACY_PHASE_ALIAS[phase] ?? phase;
+}
+
+export function getPhase(id: string): Phase | undefined {
+  return PHASES.find((p) => p.id === id);
+}
