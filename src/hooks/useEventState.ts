@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 
 export type EventState = { current_round: number; phase: string };
 
@@ -37,13 +38,19 @@ export function useEventState(): EventState | null {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Al (re)conectar el canal, recargamos para ponernos al día por si
+        // se perdió algún cambio mientras no había suscripción.
+        if (status === "SUBSCRIBED") load();
+      });
 
     const poll = setInterval(load, 8000); // respaldo
+    const stopForeground = onForeground(load); // refresca al volver a la pantalla
 
     return () => {
       active = false;
       clearInterval(poll);
+      stopForeground();
       supabase.removeChannel(channel);
     };
   }, []);

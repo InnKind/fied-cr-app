@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 
 type Theme = { title: string; description: string; count: number };
 type Synthesis = { themes: Theme[]; total: number };
@@ -50,13 +51,17 @@ export default function Results({
           if (active) load();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED" && active) load();
+      });
 
     const poll = setInterval(load, 8000); // respaldo
+    const stopForeground = onForeground(load); // refresca al volver a la pantalla
 
     return () => {
       active = false;
       clearInterval(poll);
+      stopForeground();
       supabase.removeChannel(channel);
     };
   }, [round]);
