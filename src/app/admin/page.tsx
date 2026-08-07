@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [counts, setCounts] = useState({ participants: 0, r1: 0 });
   const [msg, setMsg] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [distributing, setDistributing] = useState(false);
 
   useEffect(() => {
     const saved =
@@ -90,6 +91,29 @@ export default function AdminPage() {
     setMsg("Actualizado ✓");
     setTimeout(() => setMsg(""), 2000);
     return true;
+  }
+
+  async function distributeTables() {
+    setDistributing(true);
+    setMsg("Distribuyendo mesas…");
+    try {
+      const res = await fetch("/api/admin/assign-tables", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: adminCode }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setMsg("Error: " + (body.error || res.status));
+        return;
+      }
+      const ok = await setPhase(1, "TABLE_ASSIGNED");
+      if (ok) setMsg(`Mesas asignadas: ${body.assigned}/${body.total} ✓`);
+    } catch {
+      setMsg("Error de red al distribuir mesas.");
+    } finally {
+      setDistributing(false);
+    }
   }
 
   async function generateAndShow(round: number) {
@@ -176,8 +200,17 @@ export default function AdminPage() {
           })}
         </div>
 
-        <p className="mt-6 text-sm font-medium text-slate-500">Acciones con IA</p>
+        <p className="mt-6 text-sm font-medium text-slate-500">Acciones</p>
         <div className="mt-2 grid gap-2">
+          <button
+            className={`${btn} disabled:opacity-50`}
+            disabled={distributing}
+            onClick={distributeTables}
+          >
+            {distributing
+              ? "🎲 Distribuyendo mesas…"
+              : "🎲 Distribuir mesas → Mesa asignada"}
+          </button>
           <button
             className={`${btn} disabled:opacity-50`}
             disabled={generating}
