@@ -7,6 +7,7 @@ import { useEventState } from "@/hooks/useEventState";
 import Register from "@/components/Register";
 import Waiting from "@/components/Waiting";
 import Results from "@/components/Results";
+import ThemeSelection from "@/components/ThemeSelection";
 
 export default function Home() {
   const [participant, setParticipant] = useState<LocalParticipant | null>(null);
@@ -33,6 +34,17 @@ export default function Home() {
   const phaseId = normalizePhaseId(eventState.phase);
 
   // --- Pantallas reales por fase ---
+  // THEME_SELECTION: elegir 1 de los 3 temas.
+  if (phaseId === "THEME_SELECTION") {
+    return (
+      <ThemeSelection
+        participantId={participant.id}
+        role={participant.role}
+        accent={roleColor}
+      />
+    );
+  }
+
   // RESULTS: presentación de la síntesis.
   if (phaseId === "RESULTS") {
     return (
