@@ -134,6 +134,29 @@ export default function AdminPage() {
     }
   }
 
+  async function processR2() {
+    setGenerating(true);
+    setMsg("Procesando la Ronda 2 con IA…");
+    try {
+      const res = await fetch("/api/process-round2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: adminCode }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setMsg("Error: " + (body.error || res.status));
+        return;
+      }
+      const n = (body.themes ?? []).length;
+      setMsg(`Ronda 2 procesada ✓ · ${n} tema(s) agregado(s).`);
+    } catch {
+      setMsg("Error de red al procesar la Ronda 2.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function processR1() {
     setGenerating(true);
     setMsg("Procesando la Ronda 1 con IA… (puede tardar un poco)");
@@ -244,6 +267,18 @@ export default function AdminPage() {
             </button>
             <p className="mt-1 text-xs text-slate-400">
               Agrupa los momentos y arma las diapositivas (para la presentación).
+            </p>
+          </div>
+          <div className="mt-1">
+            <button
+              className="w-full rounded-lg bg-violet-700 px-4 py-3 text-center font-semibold text-white shadow-sm hover:bg-violet-800 disabled:opacity-50"
+              disabled={generating}
+              onClick={processR2}
+            >
+              {generating ? "🧠 Procesando…" : "🧠 Procesar Ronda 2 con IA"}
+            </button>
+            <p className="mt-1 text-xs text-slate-400">
+              Agrega las reflexiones (roles recurrentes + experiencias). No se proyecta.
             </p>
           </div>
         </div>

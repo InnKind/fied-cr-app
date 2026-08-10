@@ -163,3 +163,45 @@ export async function processRound1(
   const text = await geminiGenerate(prompt, { json: true });
   return JSON.parse(text) as { slides: Slide[] };
 }
+
+// ---- Agregación de la Ronda 2 (reflexión) ----
+
+export type Round2Aggregation = {
+  topRoles: { role: string; count: number }[];
+  experiences: IdeaTriple;
+};
+
+// Para un TEMA: agrupa los roles-a-involucrar equivalentes (con conteo) y
+// resume las experiencias por los 3 criterios (más repetida/fácil/disruptiva).
+export async function processRound2(
+  themeTitle: string,
+  roles: string[],
+  experiences: string[]
+): Promise<Round2Aggregation> {
+  const rolesBlock = roles.length
+    ? roles.map((r) => `  - ${r}`).join("\n")
+    : "  (ninguno)";
+  const expBlock = experiences.length
+    ? experiences.map((e, i) => `  ${i + 1}. ${e}`).join("\n")
+    : "  (ninguna)";
+
+  const prompt =
+    `Eres un analista de un foro de educación superior (FIED). Tema: "${themeTitle}".\n\n` +
+    `Los participantes que quieren accionar este tema indicaron los ROLES que necesitan ` +
+    `involucrar y una EXPERIENCIA que diseñarían para inspirarlos.\n\n` +
+    `ROLES a involucrar (escritos por la gente; pueden repetirse con otras palabras):\n` +
+    `${rolesBlock}\n\n` +
+    `EXPERIENCIAS propuestas:\n${expBlock}\n\n` +
+    `Tu tarea:\n` +
+    `1. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
+    `y cuenta cuántas veces aparece cada uno. Devuelve los más frecuentes primero (máx 6).\n` +
+    `2. De las EXPERIENCIAS elige 3 según: "mostRepeated" (la más común), "easiest" (la más ` +
+    `fácil de implementar) y "mostDisruptive" (la más radical). Parafrasea breve; no inventes. ` +
+    `Si faltan, deja "".\n\n` +
+    `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
+    `{"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
+    `Sin texto fuera del JSON.`;
+
+  const text = await geminiGenerate(prompt, { json: true });
+  return JSON.parse(text) as Round2Aggregation;
+}
