@@ -82,6 +82,15 @@ export const IDEA_PROMPTS = {
 export const ATHENEA_URL =
   "https://chatgpt.com/g/g-jGO4zaEiC-fied-foro-internacional-de-educacion";
 
+// --- Ronda 2 (reflexión) — 3 preguntas. La mesa ya no importa. ---
+export const ROUND2_QUESTIONS = {
+  theme: "¿En cuál de los 3 temas quieres tomar acción en tu contexto real?",
+  roles:
+    "¿Cuáles son los 3 roles que necesitas involucrar para llevar esta iniciativa adelante? (roles, no nombres)",
+  experience:
+    "¿Qué experiencia podrías diseñar para inspirar a esos roles a apoyarte?",
+};
+
 export const EVENT = {
   name: "Inn.Kind · FIEd Costa Rica",
   exerciseTitle: "Ejercicio de Prototipado",

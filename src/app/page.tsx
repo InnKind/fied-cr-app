@@ -10,6 +10,7 @@ import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
 import MomentSelection from "@/components/MomentSelection";
 import IdeaEntry from "@/components/IdeaEntry";
+import Round2 from "@/components/Round2";
 
 export default function Home() {
   const [participant, setParticipant] = useState<LocalParticipant | null>(null);
@@ -60,6 +61,11 @@ export default function Home() {
   // IDEA_ENTRY: escribir ideas (IA + Agency) para el momento elegido.
   if (phaseId === "IDEA_ENTRY") {
     return <IdeaEntry participantId={participant.id} accent={roleColor} />;
+  }
+
+  // ROUND2: reflexión final (tema + 3 roles + experiencia). La mesa no importa.
+  if (phaseId === "ROUND2") {
+    return <Round2 participantId={participant.id} accent={roleColor} />;
   }
 
   // RESULTS: los resultados se proyectan en la pantalla principal (/presentation).
