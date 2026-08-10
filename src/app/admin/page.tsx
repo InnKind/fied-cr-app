@@ -134,20 +134,28 @@ export default function AdminPage() {
     }
   }
 
-  async function generateAndShow(round: number) {
+  async function processR1() {
     setGenerating(true);
-    setMsg("Generando síntesis con IA… (puede tardar unos segundos)");
+    setMsg("Procesando la Ronda 1 con IA… (puede tardar un poco)");
     try {
-      const res = await fetch(`/api/synthesize?round=${round}`, { method: "POST" });
+      const res = await fetch("/api/process-round1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: adminCode }),
+      });
       const body = await res.json();
       if (!res.ok) {
         setMsg("Error: " + (body.error || res.status));
         return;
       }
-      const ok = await setPhase(round, "RESULTS");
-      if (ok) setMsg(`Síntesis lista: ${body.themes?.length ?? 0} temas ✓`);
+      const themes = (body.themes ?? []) as { slides?: unknown[] }[];
+      const slides = themes.reduce((n, t) => n + (t.slides?.length ?? 0), 0);
+      setMsg(
+        `Procesado ✓ · ${slides} diapositivas en ${themes.length} tema(s). ` +
+          "(Mostrarlas en pantalla es el siguiente paso.)"
+      );
     } catch {
-      setMsg("Error de red al generar la síntesis.");
+      setMsg("Error de red al procesar la Ronda 1.");
     } finally {
       setGenerating(false);
     }
@@ -230,12 +238,12 @@ export default function AdminPage() {
             <button
               className="w-full rounded-lg bg-violet-700 px-4 py-3 text-center font-semibold text-white shadow-sm hover:bg-violet-800 disabled:opacity-50"
               disabled={generating}
-              onClick={() => generateAndShow(1)}
+              onClick={processR1}
             >
-              {generating ? "✨ Generando síntesis…" : "✨ Generar síntesis (R1)"}
+              {generating ? "🧠 Procesando Ronda 1…" : "🧠 Procesar Ronda 1 con IA"}
             </button>
             <p className="mt-1 text-xs text-slate-400">
-              Corre la IA sobre la Ronda 1 y pasa a “Resultados”.
+              Agrupa los momentos y arma las diapositivas (para la presentación).
             </p>
           </div>
         </div>
@@ -254,7 +262,7 @@ export default function AdminPage() {
               p.id === "TABLE_ASSIGNED"
                 ? "🎲 Distribuir mesas"
                 : p.id === "RESULTS"
-                ? "✨ Generar síntesis"
+                ? "🧠 Procesar Ronda 1 con IA"
                 : null;
             return (
               <button

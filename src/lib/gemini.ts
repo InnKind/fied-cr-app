@@ -95,3 +95,71 @@ export async function synthesizeResponses(
   const text = await geminiGenerate(prompt, { json: true });
   return JSON.parse(text) as Synthesis;
 }
+
+// ---- Procesamiento de la Ronda 1 (diseño 2 rondas, coffee break) ----
+
+export type MomentInput = {
+  table: number | null;
+  text: string;
+  aiIdeas: string[];
+  agencyIdeas: string[];
+};
+
+export type IdeaTriple = {
+  mostRepeated: string;
+  easiest: string;
+  mostDisruptive: string;
+};
+
+export type Slide = {
+  moment: string;
+  tables: number;
+  ai: IdeaTriple;
+  agency: IdeaTriple;
+};
+
+// Toma los momentos de un TEMA (de varias mesas) con sus ideas de IA y Agency,
+// agrupa los equivalentes y arma una diapositiva por momento con 3 ideas de IA
+// y 3 de Agency según los criterios: más repetida / más fácil / más disruptiva.
+export async function processRound1(
+  themeTitle: string,
+  moments: MomentInput[]
+): Promise<{ slides: Slide[] }> {
+  const block = moments
+    .map((m, i) => {
+      const ai = m.aiIdeas.length
+        ? m.aiIdeas.map((x) => `      - ${x}`).join("\n")
+        : "      (sin ideas de IA)";
+      const ag = m.agencyIdeas.length
+        ? m.agencyIdeas.map((x) => `      - ${x}`).join("\n")
+        : "      (sin ideas de Agency)";
+      return `Momento ${i + 1} (Mesa ${m.table ?? "?"}): ${m.text}\n    Ideas de IA:\n${ai}\n    Ideas de Agency:\n${ag}`;
+    })
+    .join("\n\n");
+
+  const prompt =
+    `Eres un analista experto de un foro de educación superior (FIED). ` +
+    `Tema: "${themeTitle}".\n\n` +
+    `Estos son los "momentos" que varias mesas identificaron para rediseñar, con las ideas ` +
+    `que la gente escribió en dos dimensiones: IA (cómo integrar mejor la inteligencia ` +
+    `artificial) y Agency (cómo dar más autonomía, voz o decisión al actor).\n\n` +
+    `${block}\n\n` +
+    `Tu tarea:\n` +
+    `1. AGRUPA los momentos que son esencialmente el mismo aunque estén dichos con palabras ` +
+    `distintas (p. ej. "elegir mis cursos" y "decidir qué materias estudiar" son el mismo). ` +
+    `Dale a cada grupo un título corto y claro.\n` +
+    `2. Para cada grupo, indica en cuántas MESAS distintas apareció ("tables").\n` +
+    `3. Para cada grupo, elige 3 ideas de IA y 3 de Agency, TOMADAS de las ideas escritas para ` +
+    `ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de implementar) ` +
+    `y "mostDisruptive" (la más radical/transformadora). Si faltan ideas para un criterio, deja ` +
+    `ese campo como "". NO inventes ideas que nadie escribió; puedes parafrasear para que sean ` +
+    `breves y claras.\n` +
+    `4. Ordena los grupos por número de mesas (más repetidos primero) y luego por riqueza (los ` +
+    `que tienen ideas en ambas dimensiones primero).\n\n` +
+    `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
+    `{"slides":[{"moment":"...","tables":0,"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
+    `Sin texto fuera del JSON.`;
+
+  const text = await geminiGenerate(prompt, { json: true });
+  return JSON.parse(text) as { slides: Slide[] };
+}
