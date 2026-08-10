@@ -11,6 +11,7 @@ import TableAssigned from "@/components/TableAssigned";
 import MomentSelection from "@/components/MomentSelection";
 import IdeaEntry from "@/components/IdeaEntry";
 import Round2 from "@/components/Round2";
+import Closing from "@/components/Closing";
 
 export default function Home() {
   const [participant, setParticipant] = useState<LocalParticipant | null>(null);
@@ -66,6 +67,31 @@ export default function Home() {
   // ROUND2: reflexión final (tema + 3 roles + experiencia). La mesa no importa.
   if (phaseId === "ROUND2") {
     return <Round2 participantId={participant.id} accent={roleColor} />;
+  }
+
+  // ROUND1_COMPLETE: coffee break — invita a explorar con Athenea mientras procesa la IA.
+  if (phaseId === "ROUND1_COMPLETE") {
+    return (
+      <Closing
+        accent={roleColor}
+        title="¡Terminaste la Ronda 1!"
+        message="Toma tu café. Ya volvemos con los resultados. Mientras tanto, puedes seguir explorando."
+        showAthenea
+      />
+    );
+  }
+
+  // FINISHED: cierre + acceso al archivo post-evento.
+  if (phaseId === "FINISHED") {
+    return (
+      <Closing
+        accent={roleColor}
+        title="¡Gracias por participar!"
+        message="El ejercicio terminó. Puedes consultar lo que trabajó tu mesa cuando quieras."
+        showArchive
+        showAthenea
+      />
+    );
   }
 
   // RESULTS: los resultados se proyectan en la pantalla principal (/presentation).
