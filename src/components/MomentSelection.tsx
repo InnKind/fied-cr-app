@@ -11,9 +11,11 @@ type Moment = { id: string; ord: number; text: string };
 export default function MomentSelection({
   participantId,
   accent,
+  onSelected,
 }: {
   participantId: string;
   accent?: string;
+  onSelected?: () => void;
 }) {
   const [tableNumber, setTableNumber] = useState<number | null>(null);
   const [moments, setMoments] = useState<Moment[] | null>(null);
@@ -92,6 +94,7 @@ export default function MomentSelection({
       return;
     }
     setSelected(momentId);
+    onSelected?.();
   }
 
   if (!loaded || moments === null) {

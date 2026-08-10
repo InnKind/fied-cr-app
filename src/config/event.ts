@@ -46,6 +46,14 @@ export const THEMES: Theme[] = [
   },
 ];
 
+// Título numerado del tema para mostrarlo a las personas, p.ej.
+// "Tema 1: La experiencia en el aula". El número sale del orden en THEMES.
+export function numberedThemeTitle(id: string | null | undefined): string {
+  const i = THEMES.findIndex((t) => t.id === id);
+  if (i < 0) return "";
+  return `Tema ${i + 1}: ${THEMES[i].title}`;
+}
+
 // --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
 export const ROUND_1_QUESTION: RoundQuestion = {
   id: "r1",

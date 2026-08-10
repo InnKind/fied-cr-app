@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
-import { THEMES } from "@/config/event";
+import { numberedThemeTitle } from "@/config/event";
 import { themeForTable } from "@/lib/tables";
 
 type Moment = { id: string; ord: number; text: string };
@@ -22,7 +22,7 @@ export default function FacilitatorMoments({
   const [counts, setCounts] = useState<Record<string, number>>({});
 
   const theme = themeForTable(tableNumber);
-  const themeTitle = THEMES.find((t) => t.id === theme)?.title;
+  const themeTitle = numberedThemeTitle(theme);
 
   const loadMoments = useCallback(async () => {
     const { data } = await supabase
@@ -138,7 +138,7 @@ export default function FacilitatorMoments({
         Registra los 3 momentos ganadores
       </h2>
       {themeTitle && (
-        <p className="mt-1 text-sm text-slate-500">Tema: {themeTitle}</p>
+        <p className="mt-1 text-sm text-slate-500">{themeTitle}</p>
       )}
       <div className="mt-4 space-y-2">
         {[0, 1, 2].map((i) => (

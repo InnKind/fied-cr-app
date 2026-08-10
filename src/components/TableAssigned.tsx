@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { THEMES, EVENT } from "@/config/event";
+import { THEMES, EVENT, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
@@ -152,7 +152,7 @@ export default function TableAssigned({
             style={{ backgroundColor: accent }}
           />
         )}
-        {t && <p className="text-sm text-slate-500">Tu tema: {t.title}</p>}
+        {t && <p className="text-sm text-slate-500">{numberedThemeTitle(t.id)}</p>}
         <p className="mt-6 text-slate-600">Ve a la</p>
         <p className="text-6xl font-bold text-blue-700">Mesa {table}</p>
         <p className="mt-6 text-sm text-slate-400">

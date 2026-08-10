@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   EVENT,
-  THEMES,
   getPhase,
   normalizePhaseId,
+  numberedThemeTitle,
 } from "@/config/event";
 import { themeForTable } from "@/lib/tables";
 import { useEventState } from "@/hooks/useEventState";
@@ -85,7 +85,7 @@ export default function FacilitatorPage() {
   }
 
   const theme = themeForTable(table);
-  const themeTitle = THEMES.find((t) => t.id === theme)?.title ?? "—";
+  const themeTitle = numberedThemeTitle(theme) || "—";
   const phaseLabel =
     getPhase(normalizePhaseId(eventState?.phase))?.label ?? "…";
 

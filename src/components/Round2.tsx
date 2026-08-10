@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { THEMES, ROUND2_QUESTIONS } from "@/config/event";
+import { THEMES, ROUND2_QUESTIONS, numberedThemeTitle } from "@/config/event";
 
 // Fase ROUND2: reflexión final (3 preguntas). La mesa NO importa.
 // Guarda en round2_responses (una por persona; upsert). Resiliente a recargar.
@@ -134,7 +134,7 @@ export default function Round2({
             </option>
             {THEMES.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.title}
+                {numberedThemeTitle(t.id)}
               </option>
             ))}
           </select>

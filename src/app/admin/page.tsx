@@ -44,9 +44,8 @@ export default function AdminPage() {
         .from("participants")
         .select("*", { count: "exact", head: true });
       const { count: r1c } = await supabase
-        .from("responses")
-        .select("*", { count: "exact", head: true })
-        .eq("round", 1);
+        .from("idea_submissions")
+        .select("*", { count: "exact", head: true });
       const { count: themedC } = await supabase
         .from("participants")
         .select("*", { count: "exact", head: true })
@@ -226,7 +225,7 @@ export default function AdminPage() {
             <span>Participantes: <b>{counts.participants}</b></span>
             <span>Eligieron tema: <b>{counts.themed}</b></span>
             <span>Con mesa: <b>{counts.assigned}</b></span>
-            <span>Respuestas R1: <b>{counts.r1}</b></span>
+            <span>Ideas R1: <b>{counts.r1}</b></span>
           </div>
         </div>
 

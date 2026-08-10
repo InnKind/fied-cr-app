@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { THEMES } from "@/config/event";
+import { THEMES, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 
 // Fase THEME_SELECTION: la persona elige 1 de los 3 temas según su rol.
@@ -82,7 +82,7 @@ export default function ThemeSelection({
             />
           )}
           <p className="text-sm text-slate-500">Tu tema</p>
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">{t?.title}</h2>
+          <h2 className="mt-1 text-2xl font-bold text-slate-900">{numberedThemeTitle(selected)}</h2>
           <p className="mt-6 text-slate-600">
             ¡Listo! Espera un momento: te vamos a asignar una mesa.
           </p>
@@ -126,7 +126,7 @@ export default function ThemeSelection({
                 className="w-full rounded-lg border border-slate-300 bg-white p-4 text-left shadow-sm transition hover:border-blue-400 hover:bg-blue-50 disabled:opacity-60"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-slate-900">{t.title}</h3>
+                  <h3 className="font-semibold text-slate-900">{numberedThemeTitle(t.id)}</h3>
                   {fits && (
                     <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                       sugerido para tu rol

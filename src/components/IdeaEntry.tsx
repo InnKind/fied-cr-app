@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
+import MomentSelection from "@/components/MomentSelection";
 
 type Ctx = {
   table: number | null;
@@ -29,47 +30,44 @@ export default function IdeaEntry({
   const [sentCount, setSentCount] = useState(0);
   const [justSent, setJustSent] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: p } = await supabase
-        .from("participants")
-        .select("current_table, selected_theme")
-        .eq("id", participantId)
+  const loadCtx = useCallback(async () => {
+    const { data: p } = await supabase
+      .from("participants")
+      .select("current_table, selected_theme")
+      .eq("id", participantId)
+      .single();
+    const { data: sel } = await supabase
+      .from("moment_selections")
+      .select("moment_id")
+      .eq("participant_id", participantId)
+      .maybeSingle();
+    const momentId = (sel?.moment_id as string | null) ?? null;
+    let momentText: string | null = null;
+    if (momentId) {
+      const { data: m } = await supabase
+        .from("selected_moments")
+        .select("text")
+        .eq("id", momentId)
         .single();
-      const { data: sel } = await supabase
-        .from("moment_selections")
-        .select("moment_id")
-        .eq("participant_id", participantId)
-        .maybeSingle();
-      const momentId = (sel?.moment_id as string | null) ?? null;
-      let momentText: string | null = null;
-      if (momentId) {
-        const { data: m } = await supabase
-          .from("selected_moments")
-          .select("text")
-          .eq("id", momentId)
-          .single();
-        momentText = (m?.text as string | null) ?? null;
-      }
-      const { count } = await supabase
-        .from("idea_submissions")
-        .select("*", { count: "exact", head: true })
-        .eq("participant_id", participantId);
-      if (!active) return;
-      setCtx({
-        table: (p?.current_table as number | null) ?? null,
-        theme: (p?.selected_theme as string | null) ?? null,
-        momentId,
-        momentText,
-      });
-      setSentCount(count ?? 0);
-      setLoaded(true);
-    })();
-    return () => {
-      active = false;
-    };
+      momentText = (m?.text as string | null) ?? null;
+    }
+    const { count } = await supabase
+      .from("idea_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("participant_id", participantId);
+    setCtx({
+      table: (p?.current_table as number | null) ?? null,
+      theme: (p?.selected_theme as string | null) ?? null,
+      momentId,
+      momentText,
+    });
+    setSentCount(count ?? 0);
+    setLoaded(true);
   }, [participantId]);
+
+  useEffect(() => {
+    loadCtx();
+  }, [loadCtx]);
 
   async function submit() {
     if (!ai.trim() && !agency.trim()) {
@@ -105,17 +103,15 @@ export default function IdeaEntry({
     );
   }
 
-  // Todavía no eligió un momento.
+  // Todavía no eligió un momento (p.ej. no alcanzó a elegirlo antes de que el
+  // evento avanzara de fase): que lo elija aquí mismo y seguimos con las ideas.
   if (!ctx?.momentId) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <div className="w-full max-w-sm text-center">
-          <h1 className="text-xl font-semibold text-slate-800">Un momento…</h1>
-          <p className="mt-3 text-slate-600">
-            Primero elige el momento que vas a trabajar con tu grupo.
-          </p>
-        </div>
-      </main>
+      <MomentSelection
+        participantId={participantId}
+        accent={accent}
+        onSelected={loadCtx}
+      />
     );
   }
 

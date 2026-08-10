@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { THEMES, EVENT } from "@/config/event";
+import { EVENT, numberedThemeTitle } from "@/config/event";
 import { themeForTable } from "@/lib/tables";
 
 type Moment = { id: string; ord: number; text: string };
@@ -45,9 +45,7 @@ export default function ArchivoPage() {
     setSearched(true);
   }
 
-  const themeTitle = table
-    ? THEMES.find((t) => t.id === themeForTable(table))?.title
-    : null;
+  const themeTitle = table ? numberedThemeTitle(themeForTable(table)) : null;
 
   return (
     <main className="flex-1 p-6 bg-slate-50">
