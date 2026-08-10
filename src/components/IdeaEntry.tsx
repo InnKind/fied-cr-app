@@ -29,6 +29,7 @@ export default function IdeaEntry({
   const [error, setError] = useState<string | null>(null);
   const [sentCount, setSentCount] = useState(0);
   const [justSent, setJustSent] = useState(false);
+  const [changing, setChanging] = useState(false);
 
   const loadCtx = useCallback(async () => {
     const { data: p } = await supabase
@@ -103,14 +104,19 @@ export default function IdeaEntry({
     );
   }
 
-  // Todavía no eligió un momento (p.ej. no alcanzó a elegirlo antes de que el
-  // evento avanzara de fase): que lo elija aquí mismo y seguimos con las ideas.
-  if (!ctx?.momentId) {
+  // Elegir o CAMBIAR de momento: cuando no eligió ninguno (no alcanzó antes de
+  // que avanzara la fase) o cuando lo pide desde el formulario. Al elegir,
+  // volvemos a las ideas del nuevo momento.
+  if (changing || !ctx?.momentId) {
     return (
       <MomentSelection
         participantId={participantId}
         accent={accent}
-        onSelected={loadCtx}
+        onSelected={() => {
+          setChanging(false);
+          setJustSent(false);
+          loadCtx();
+        }}
       />
     );
   }
@@ -146,7 +152,13 @@ export default function IdeaEntry({
               Explorar más con Athenea ↗
             </a>
           </div>
-          <p className="mt-6 text-xs text-slate-400">
+          <button
+            onClick={() => setChanging(true)}
+            className="mt-6 text-sm font-medium text-slate-500 underline underline-offset-2 hover:text-slate-700"
+          >
+            Cambiar de momento
+          </button>
+          <p className="mt-4 text-xs text-slate-400">
             Mientras tanto, comparte tus ideas con tu subgrupo.
           </p>
         </div>
@@ -160,9 +172,17 @@ export default function IdeaEntry({
       <div className="w-full max-w-md">
         {ctx.momentText && (
           <div className="rounded-lg bg-blue-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-              Tu momento
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+                Tu momento
+              </p>
+              <button
+                onClick={() => setChanging(true)}
+                className="shrink-0 text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900"
+              >
+                Cambiar momento
+              </button>
+            </div>
             <p className="mt-0.5 font-medium text-slate-800">{ctx.momentText}</p>
           </div>
         )}

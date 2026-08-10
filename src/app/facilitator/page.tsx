@@ -16,6 +16,7 @@ import {
 } from "@/lib/facilitator";
 import FacilitatorMoments from "@/components/FacilitatorMoments";
 import FacilitatorPhotos from "@/components/FacilitatorPhotos";
+import FacilitatorReady from "@/components/FacilitatorReady";
 
 export default function FacilitatorPage() {
   const [table, setTable] = useState<number | null>(null);
@@ -119,6 +120,10 @@ export default function FacilitatorPage() {
 
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <FacilitatorPhotos tableNumber={table} />
+        </div>
+
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <FacilitatorReady tableNumber={table} />
         </div>
       </div>
     </main>

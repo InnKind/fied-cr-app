@@ -33,5 +33,14 @@ export async function POST(req: NextRequest) {
     .eq("id", 1);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Al cambiar de fase, reinicia el estado "lista" de todas las mesas para que
+  // "lista" signifique lista para el paso ACTUAL. Best-effort: si la tabla aún
+  // no existe, no bloquea el cambio de fase.
+  await supabaseAdmin
+    .from("table_status")
+    .update({ ready: false })
+    .gt("table_number", 0);
+
   return NextResponse.json({ ok: true });
 }

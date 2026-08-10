@@ -17,6 +17,9 @@ export default function AdminPage() {
     themed: 0,
     assigned: 0,
   });
+  const [tables, setTables] = useState<
+    { table: number; people: number; ready: boolean }[]
+  >([]);
   const [msg, setMsg] = useState("");
   const [generating, setGenerating] = useState(false);
   const [distributing, setDistributing] = useState(false);
@@ -54,6 +57,27 @@ export default function AdminPage() {
         .from("participants")
         .select("*", { count: "exact", head: true })
         .not("current_table", "is", null);
+      const { data: parts } = await supabase
+        .from("participants")
+        .select("current_table")
+        .not("current_table", "is", null);
+      const { data: statuses } = await supabase
+        .from("table_status")
+        .select("table_number, ready");
+      const perTable: Record<number, number> = {};
+      (parts ?? []).forEach((p) => {
+        const t = p.current_table as number;
+        perTable[t] = (perTable[t] ?? 0) + 1;
+      });
+      const readySet = new Set(
+        (statuses ?? [])
+          .filter((s) => s.ready)
+          .map((s) => s.table_number as number)
+      );
+      const tbls = Object.keys(perTable)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((t) => ({ table: t, people: perTable[t], ready: readySet.has(t) }));
       if (active) {
         if (es) setState(es as EventState);
         setCounts({
@@ -62,6 +86,7 @@ export default function AdminPage() {
           themed: themedC ?? 0,
           assigned: assignedC ?? 0,
         });
+        setTables(tbls);
       }
     }
     load();
@@ -228,6 +253,55 @@ export default function AdminPage() {
             <span>Ideas R1: <b>{counts.r1}</b></span>
           </div>
         </div>
+
+        {/* Estado de las mesas: cuáles marcó "listas" su facilitador */}
+        {tables.length > 0 && (
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-700">
+                Estado de las mesas
+              </p>
+              <span className="text-sm text-slate-500">
+                Listas:{" "}
+                <b
+                  className={
+                    tables.every((t) => t.ready)
+                      ? "text-green-700"
+                      : "text-slate-700"
+                  }
+                >
+                  {tables.filter((t) => t.ready).length}
+                </b>{" "}
+                / {tables.length}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {tables.map((t) => (
+                <span
+                  key={t.table}
+                  title={`${t.people} persona(s)`}
+                  className={`rounded-full px-3 py-1 text-sm font-medium ${
+                    t.ready
+                      ? "bg-green-100 text-green-800"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {t.ready ? "✅" : "⏳"} Mesa {t.table}
+                </span>
+              ))}
+            </div>
+            {!tables.every((t) => t.ready) && (
+              <p className="mt-2 text-xs text-amber-700">
+                Faltan por marcarse listas: mesas{" "}
+                {tables
+                  .filter((t) => !t.ready)
+                  .map((t) => t.table)
+                  .join(", ")}
+                .
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Alerta: en fase "Mesa asignada" pero nadie tiene mesa (falta distribuir) */}
         {currentPhaseId === "TABLE_ASSIGNED" &&
