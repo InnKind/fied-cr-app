@@ -6,7 +6,6 @@ import { getParticipant, type LocalParticipant } from "@/lib/participant";
 import { useEventState } from "@/hooks/useEventState";
 import Register from "@/components/Register";
 import Waiting from "@/components/Waiting";
-import Results from "@/components/Results";
 import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
 import MomentSelection from "@/components/MomentSelection";
@@ -63,12 +62,14 @@ export default function Home() {
     return <IdeaEntry participantId={participant.id} accent={roleColor} />;
   }
 
-  // RESULTS: presentación de la síntesis.
+  // RESULTS: los resultados se proyectan en la pantalla principal (/presentation).
   if (phaseId === "RESULTS") {
     return (
-      <main className="flex-1 flex items-start justify-center p-6 bg-slate-50">
-        <Results round={eventState.current_round || 1} />
-      </main>
+      <Waiting
+        accent={roleColor}
+        title="Mira la pantalla principal"
+        message="Los resultados de la Ronda 1 se están presentando. ¡Míralos con tu grupo!"
+      />
     );
   }
 

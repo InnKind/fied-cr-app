@@ -283,6 +283,28 @@ export default function AdminPage() {
             );
           })}
         </div>
+
+        <p className="mt-6 text-sm font-semibold text-slate-700">
+          Pantallas para proyectar
+        </p>
+        <div className="mt-2 flex gap-2">
+          <a
+            href="/presentation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-center font-medium text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50"
+          >
+            📺 Presentación ↗
+          </a>
+          <a
+            href="/curate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-center font-medium text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50"
+          >
+            🎬 Curaduría ↗
+          </a>
+        </div>
       </div>
     </main>
   );
