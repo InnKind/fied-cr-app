@@ -11,7 +11,12 @@ export default function AdminPage() {
   const [codeInput, setCodeInput] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [state, setState] = useState<EventState | null>(null);
-  const [counts, setCounts] = useState({ participants: 0, r1: 0 });
+  const [counts, setCounts] = useState({
+    participants: 0,
+    r1: 0,
+    themed: 0,
+    assigned: 0,
+  });
   const [msg, setMsg] = useState("");
   const [generating, setGenerating] = useState(false);
   const [distributing, setDistributing] = useState(false);
@@ -42,9 +47,22 @@ export default function AdminPage() {
         .from("responses")
         .select("*", { count: "exact", head: true })
         .eq("round", 1);
+      const { count: themedC } = await supabase
+        .from("participants")
+        .select("*", { count: "exact", head: true })
+        .not("selected_theme", "is", null);
+      const { count: assignedC } = await supabase
+        .from("participants")
+        .select("*", { count: "exact", head: true })
+        .not("current_table", "is", null);
       if (active) {
         if (es) setState(es as EventState);
-        setCounts({ participants: pc ?? 0, r1: r1c ?? 0 });
+        setCounts({
+          participants: pc ?? 0,
+          r1: r1c ?? 0,
+          themed: themedC ?? 0,
+          assigned: assignedC ?? 0,
+        });
       }
     }
     load();
@@ -173,18 +191,71 @@ export default function AdminPage() {
         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-sm text-slate-500">Fase actual</p>
           <p className="mt-1 text-lg font-semibold text-slate-900">{currentLabel}</p>
-          <p className="mt-2 text-sm text-slate-600">
-            Participantes: <b>{counts.participants}</b> · Respuestas Ronda 1:{" "}
-            <b>{counts.r1}</b>
-          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-600">
+            <span>Participantes: <b>{counts.participants}</b></span>
+            <span>Eligieron tema: <b>{counts.themed}</b></span>
+            <span>Con mesa: <b>{counts.assigned}</b></span>
+            <span>Respuestas R1: <b>{counts.r1}</b></span>
+          </div>
         </div>
 
-        <p className="mt-6 text-sm font-medium text-slate-500">
-          Fases del ejercicio (toca una para cambiar a esa fase)
+        {/* Alerta: en fase "Mesa asignada" pero nadie tiene mesa (falta distribuir) */}
+        {currentPhaseId === "TABLE_ASSIGNED" &&
+          counts.participants > 0 &&
+          counts.assigned === 0 && (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+              ⚠️ Nadie tiene mesa asignada. Toca <b>“🎲 Distribuir mesas”</b> aquí
+              abajo para repartir las mesas.
+            </div>
+          )}
+
+        {/* ACCIONES: los botones que SÍ hacen el trabajo (arriba, bien visibles) */}
+        <p className="mt-6 text-sm font-semibold text-slate-700">
+          Acciones principales <span className="font-normal text-slate-400">— estas reparten mesas o corren la IA</span>
+        </p>
+        <div className="mt-2 grid gap-2">
+          <div>
+            <button
+              className="w-full rounded-lg bg-blue-700 px-4 py-3 text-center font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-50"
+              disabled={distributing}
+              onClick={distributeTables}
+            >
+              {distributing ? "🎲 Distribuyendo mesas…" : "🎲 Distribuir mesas"}
+            </button>
+            <p className="mt-1 text-xs text-slate-400">
+              Reparte las mesas a quienes eligieron tema y pasa a “Mesa asignada”.
+            </p>
+          </div>
+          <div className="mt-1">
+            <button
+              className="w-full rounded-lg bg-violet-700 px-4 py-3 text-center font-semibold text-white shadow-sm hover:bg-violet-800 disabled:opacity-50"
+              disabled={generating}
+              onClick={() => generateAndShow(1)}
+            >
+              {generating ? "✨ Generando síntesis…" : "✨ Generar síntesis (R1)"}
+            </button>
+            <p className="mt-1 text-xs text-slate-400">
+              Corre la IA sobre la Ronda 1 y pasa a “Resultados”.
+            </p>
+          </div>
+        </div>
+
+        {msg && <p className="mt-4 text-sm font-medium text-slate-700">{msg}</p>}
+
+        {/* FASES: solo cambian lo que ven los participantes */}
+        <p className="mt-6 text-sm font-semibold text-slate-700">
+          Fases del ejercicio{" "}
+          <span className="font-normal text-slate-400">— solo cambian lo que ven los participantes</span>
         </p>
         <div className="mt-2 grid gap-2">
           {PHASES.map((p) => {
             const isCurrent = currentPhaseId === p.id;
+            const needsAction =
+              p.id === "TABLE_ASSIGNED"
+                ? "🎲 Distribuir mesas"
+                : p.id === "RESULTS"
+                ? "✨ Generar síntesis"
+                : null;
             return (
               <button
                 key={p.id}
@@ -195,34 +266,15 @@ export default function AdminPage() {
               >
                 {isCurrent ? "● " : ""}
                 {p.label}
+                {needsAction && (
+                  <span className="block text-xs font-normal text-slate-400">
+                    Mejor usa “{needsAction}” (arriba) para llegar aquí.
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
-
-        <p className="mt-6 text-sm font-medium text-slate-500">Acciones</p>
-        <div className="mt-2 grid gap-2">
-          <button
-            className={`${btn} disabled:opacity-50`}
-            disabled={distributing}
-            onClick={distributeTables}
-          >
-            {distributing
-              ? "🎲 Distribuyendo mesas…"
-              : "🎲 Distribuir mesas → Mesa asignada"}
-          </button>
-          <button
-            className={`${btn} disabled:opacity-50`}
-            disabled={generating}
-            onClick={() => generateAndShow(1)}
-          >
-            {generating
-              ? "✨ Generando síntesis…"
-              : "✨ Generar síntesis de la Ronda 1 → Resultados"}
-          </button>
-        </div>
-
-        {msg && <p className="mt-4 text-sm font-medium text-slate-700">{msg}</p>}
       </div>
     </main>
   );
