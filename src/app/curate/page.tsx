@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Round1Payload } from "@/lib/round1";
+import BrandBar from "@/components/BrandBar";
 
 export default function CuratePage() {
   const [authed, setAuthed] = useState(false);
@@ -98,6 +99,7 @@ export default function CuratePage() {
     return (
       <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
         <div className="w-full max-w-sm">
+          <BrandBar />
           <h1 className="text-2xl font-bold text-slate-900">Curaduría</h1>
           <input
             type="password"
@@ -127,6 +129,7 @@ export default function CuratePage() {
   return (
     <main className="flex-1 p-6 bg-slate-50">
       <div className="mx-auto w-full max-w-2xl">
+        <BrandBar />
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900">Curaduría</h1>
           <a

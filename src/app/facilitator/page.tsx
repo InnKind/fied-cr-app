@@ -17,6 +17,7 @@ import {
 import FacilitatorMoments from "@/components/FacilitatorMoments";
 import FacilitatorPhotos from "@/components/FacilitatorPhotos";
 import FacilitatorReady from "@/components/FacilitatorReady";
+import BrandBar from "@/components/BrandBar";
 
 export default function FacilitatorPage() {
   const [table, setTable] = useState<number | null>(null);
@@ -85,6 +86,7 @@ export default function FacilitatorPage() {
     return (
       <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
         <div className="w-full max-w-sm">
+          <BrandBar />
           <h1 className="text-2xl font-bold text-slate-900">
             Panel del facilitador
           </h1>
@@ -125,6 +127,7 @@ export default function FacilitatorPage() {
   return (
     <main className="flex-1 p-6 bg-slate-50">
       <div className="mx-auto w-full max-w-lg">
+        <BrandBar />
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { PHASES, getPhase, normalizePhaseId } from "@/config/event";
+import BrandBar from "@/components/BrandBar";
 
 type EventState = { current_round: number; phase: string };
 
@@ -212,6 +213,7 @@ export default function AdminPage() {
     return (
       <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
         <div className="w-full max-w-sm">
+          <BrandBar />
           <h1 className="text-2xl font-bold text-slate-900">Panel de administrador</h1>
           <input
             type="password"
@@ -241,6 +243,7 @@ export default function AdminPage() {
   return (
     <main className="flex-1 p-6 bg-slate-50">
       <div className="mx-auto w-full max-w-lg">
+        <BrandBar />
         <h1 className="text-2xl font-bold text-slate-900">Panel de administrador</h1>
 
         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">

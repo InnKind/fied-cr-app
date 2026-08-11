@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { EVENT, numberedThemeTitle } from "@/config/event";
+import BrandBar from "@/components/BrandBar";
 
 type Moment = { id: string; ord: number; text: string };
 type Idea = { moment_id: string; ai_text: string | null; agency_text: string | null };
@@ -52,6 +53,7 @@ export default function ArchivoPage() {
   return (
     <main className="flex-1 p-6 bg-slate-50">
       <div className="mx-auto w-full max-w-2xl">
+        <BrandBar />
         <h1 className="text-2xl font-bold text-slate-900">Memoria del ejercicio</h1>
         <p className="mt-2 text-slate-600">
           Consulta lo que trabajó tu mesa. Ingresa el número de mesa donde
