@@ -9,6 +9,7 @@ import {
   type IdeaTriple,
   type Round1Payload,
 } from "@/lib/round1";
+import { BRAND_BG } from "@/lib/brand";
 
 const CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
   { key: "mostRepeated", label: "Más repetida" },
@@ -19,7 +20,7 @@ const CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
 function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
   return (
     <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-bold text-blue-700">{title}</h3>
+      <h3 className="text-lg font-bold text-[#0c7d75]">{title}</h3>
       <ul className="mt-3 space-y-3">
         {CRITERIA.map((c) => {
           const val = ideas?.[c.key];
@@ -92,20 +93,20 @@ export default function PresentationPage() {
 
   if (!loaded) {
     return (
-      <main className="flex-1 flex items-center justify-center bg-slate-50">
-        <p className="text-slate-400">Cargando…</p>
+      <main className="flex-1 flex items-center justify-center" style={{ background: BRAND_BG }}>
+        <p className="text-white/60">Cargando…</p>
       </main>
     );
   }
 
   if (slides.length === 0) {
     return (
-      <main className="flex-1 flex items-center justify-center bg-slate-50 p-6 text-center">
+      <main className="flex-1 flex items-center justify-center p-6 text-center" style={{ background: BRAND_BG }}>
         <div>
-          <p className="text-2xl font-semibold text-slate-700">
+          <p className="text-2xl font-semibold text-white">
             Aún no hay resultados que mostrar.
           </p>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-white/70">
             El administrador procesa la Ronda 1 y aquí aparecen las diapositivas.
           </p>
         </div>
@@ -116,10 +117,10 @@ export default function PresentationPage() {
   const s = slides[i];
 
   return (
-    <main className="flex-1 bg-slate-50 p-6 sm:p-10">
+    <main className="flex-1 p-6 sm:p-10" style={{ background: BRAND_BG }}>
       <div className="mx-auto flex h-full max-w-5xl flex-col">
-        <div className="flex items-center justify-between text-sm text-slate-400">
-          <span className="font-semibold uppercase tracking-wider text-blue-700">
+        <div className="flex items-center justify-between text-sm text-white/50">
+          <span className="font-semibold uppercase tracking-wider text-teal-200">
             {s.themeTitle}
           </span>
           <span>
@@ -128,7 +129,7 @@ export default function PresentationPage() {
         </div>
 
         <div className="mt-3 flex items-baseline gap-3">
-          <h1 className="text-3xl font-bold text-slate-900 sm:text-5xl">
+          <h1 className="text-3xl font-bold text-white sm:text-5xl">
             {s.moment}
           </h1>
           {s.tables > 1 && (
@@ -143,7 +144,7 @@ export default function PresentationPage() {
           <IdeaColumn title="Más agency (voz y decisión)" ideas={s.agency} />
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-6 text-center text-xs text-white/50">
           La IA eligió, de todo lo que escribieron las mesas, la idea más
           repetida, la más fácil de implementar y la más disruptiva de cada
           dimensión.
@@ -153,14 +154,14 @@ export default function PresentationPage() {
           <button
             onClick={() => go(-1)}
             disabled={i === 0}
-            className="rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-40"
+            className="rounded-lg border border-white/30 bg-white/10 px-5 py-3 font-semibold text-white shadow-sm hover:bg-white/20 disabled:opacity-30"
           >
             ← Anterior
           </button>
           <button
             onClick={() => go(1)}
             disabled={i === slides.length - 1}
-            className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-40"
+            className="rounded-lg bg-[#c8103e] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] disabled:opacity-40"
           >
             Siguiente →
           </button>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { THEMES, EVENT, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
+import { BRAND_BG } from "@/lib/brand";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
 // ("no estoy en esa mesa"). Lee current_table/selected_theme desde la base.
@@ -63,8 +64,8 @@ export default function TableAssigned({
 
   if (!loaded) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <p className="text-slate-500">Cargando…</p>
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
+        <p className="text-white/80">Cargando…</p>
       </main>
     );
   }
@@ -74,38 +75,40 @@ export default function TableAssigned({
   // Corrección manual de mesa.
   if (editing) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
-          <h1 className="text-xl font-semibold text-slate-800">
+          <h1 className="text-xl font-semibold text-white">
             ¿En qué mesa estás realmente?
           </h1>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={EVENT.numberOfTables}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setError(null);
-            }}
-            placeholder="Ej: 7"
-            className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-          {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
-          <button
-            onClick={saveTable}
-            disabled={saving}
-            className="mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
-          >
-            {saving ? "Guardando…" : "Guardar mi mesa"}
-          </button>
+          <div className="mt-4 rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={EVENT.numberOfTables}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setError(null);
+              }}
+              placeholder="Ej: 7"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
+            />
+            {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+            <button
+              onClick={saveTable}
+              disabled={saving}
+              className="mt-4 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b] disabled:opacity-60"
+            >
+              {saving ? "Guardando…" : "Guardar mi mesa"}
+            </button>
+          </div>
           <button
             onClick={() => {
               setEditing(false);
               setError(null);
             }}
-            className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+            className="mt-3 text-sm font-medium text-white/70 hover:text-white"
           >
             Cancelar
           </button>
@@ -117,7 +120,7 @@ export default function TableAssigned({
   // Sin mesa aún (p. ej. llegó tarde y no entró en la distribución).
   if (table == null) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
           {accent && (
             <span
@@ -125,15 +128,15 @@ export default function TableAssigned({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-xl font-semibold text-slate-800">
+          <h1 className="text-xl font-semibold text-white">
             Aún no tienes mesa
           </h1>
-          <p className="mt-3 text-slate-600">
+          <p className="mt-3 text-white/80">
             Acércate a un organizador para que te ubique, o ingresa tu mesa aquí.
           </p>
           <button
             onClick={() => setEditing(true)}
-            className="mt-6 rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800"
+            className="mt-6 rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b]"
           >
             Ingresar mi mesa
           </button>
@@ -144,7 +147,7 @@ export default function TableAssigned({
 
   // Mesa asignada.
   return (
-    <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+    <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-sm text-center">
         {accent && (
           <span
@@ -152,10 +155,10 @@ export default function TableAssigned({
             style={{ backgroundColor: accent }}
           />
         )}
-        {t && <p className="text-sm text-slate-500">{numberedThemeTitle(t.id)}</p>}
-        <p className="mt-6 text-slate-600">Ve a la</p>
-        <p className="text-6xl font-bold text-blue-700">Mesa {table}</p>
-        <p className="mt-6 text-sm text-slate-400">
+        {t && <p className="text-sm text-white/80">{numberedThemeTitle(t.id)}</p>}
+        <p className="mt-6 text-white/80">Ve a la</p>
+        <p className="text-6xl font-bold text-white">Mesa {table}</p>
+        <p className="mt-6 text-sm text-white/60">
           Ahí vas a trabajar con tu grupo. Sigue al facilitador.
         </p>
         <button
@@ -163,7 +166,7 @@ export default function TableAssigned({
             setInput(String(table));
             setEditing(true);
           }}
-          className="mt-8 text-sm font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800"
+          className="mt-8 text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
         >
           No estoy en esa mesa
         </button>

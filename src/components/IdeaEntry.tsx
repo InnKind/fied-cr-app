@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
+import { BRAND_BG } from "@/lib/brand";
 
 type Ctx = {
   table: number | null;
@@ -98,8 +99,11 @@ export default function IdeaEntry({
 
   if (!loaded) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <p className="text-slate-500">Cargando…</p>
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
+        <p className="text-white/80">Cargando…</p>
       </main>
     );
   }
@@ -124,7 +128,10 @@ export default function IdeaEntry({
   // Pantalla posterior al envío: Athenea + enviar más ideas.
   if (justSent) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
         <div className="w-full max-w-sm text-center">
           {accent && (
             <span
@@ -132,14 +139,14 @@ export default function IdeaEntry({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-2xl font-bold text-slate-900">¡Idea enviada!</h1>
-          <p className="mt-2 text-slate-600">
+          <h1 className="text-2xl font-bold text-white">¡Idea enviada!</h1>
+          <p className="mt-2 text-white/80">
             Llevas {sentCount} {sentCount === 1 ? "idea enviada" : "ideas enviadas"}.
           </p>
           <div className="mt-8 space-y-3">
             <button
               onClick={() => setJustSent(false)}
-              className="w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800"
+              className="w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b]"
             >
               Enviar otra idea
             </button>
@@ -147,18 +154,18 @@ export default function IdeaEntry({
               href={ATHENEA_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50"
+              className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 shadow-sm hover:border-[#0c7d75] hover:bg-[#0c7d75]/5"
             >
               Explorar más con Athenea ↗
             </a>
           </div>
           <button
             onClick={() => setChanging(true)}
-            className="mt-6 text-sm font-medium text-slate-500 underline underline-offset-2 hover:text-slate-700"
+            className="mt-6 text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
           >
             Cambiar de momento
           </button>
-          <p className="mt-4 text-xs text-slate-400">
+          <p className="mt-4 text-xs text-white/60">
             Mientras tanto, comparte tus ideas con tu subgrupo.
           </p>
         </div>
@@ -168,71 +175,78 @@ export default function IdeaEntry({
 
   // Formulario de captura.
   return (
-    <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+    <main
+      className="flex-1 flex items-center justify-center p-6"
+      style={{ background: BRAND_BG }}
+    >
       <div className="w-full max-w-md">
-        {ctx.momentText && (
-          <div className="rounded-lg bg-blue-50 px-4 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-                Tu momento
-              </p>
-              <button
-                onClick={() => setChanging(true)}
-                className="shrink-0 text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900"
-              >
-                Cambiar momento
-              </button>
+        <div className="rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
+          {ctx.momentText && (
+            <div className="rounded-lg bg-[#0c7d75]/10 px-4 py-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
+                  Tu momento
+                </p>
+                <button
+                  onClick={() => setChanging(true)}
+                  className="shrink-0 text-xs font-medium text-[#0c7d75] underline underline-offset-2 hover:text-[#0a635c]"
+                >
+                  Cambiar momento
+                </button>
+              </div>
+              <p className="mt-0.5 font-medium text-slate-800">{ctx.momentText}</p>
             </div>
-            <p className="mt-0.5 font-medium text-slate-800">{ctx.momentText}</p>
+          )}
+
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-slate-700">
+              {IDEA_PROMPTS.ai}
+            </label>
+            <textarea
+              value={ai}
+              onChange={(e) => {
+                setAi(e.target.value);
+                setError(null);
+              }}
+              rows={3}
+              placeholder="Tus ideas sobre la IA…"
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
+            />
           </div>
-        )}
 
-        <div className="mt-5">
-          <label className="block text-sm font-medium text-slate-700">
-            {IDEA_PROMPTS.ai}
-          </label>
-          <textarea
-            value={ai}
-            onChange={(e) => {
-              setAi(e.target.value);
-              setError(null);
-            }}
-            rows={3}
-            placeholder="Tus ideas sobre la IA…"
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700">
+              {IDEA_PROMPTS.agency}
+            </label>
+            <textarea
+              value={agency}
+              onChange={(e) => {
+                setAgency(e.target.value);
+                setError(null);
+              }}
+              rows={3}
+              placeholder="Tus ideas sobre la autonomía / voz…"
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
+            />
+          </div>
+
+          {error && (
+            <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
+          )}
+
+          <button
+            onClick={submit}
+            disabled={saving}
+            className="mt-5 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b] disabled:opacity-60"
+          >
+            {saving ? "Enviando…" : "Enviar idea"}
+          </button>
+          {sentCount > 0 && (
+            <p className="mt-3 text-center text-xs text-slate-400">
+              Ya enviaste {sentCount} {sentCount === 1 ? "idea" : "ideas"}.
+            </p>
+          )}
         </div>
-
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-slate-700">
-            {IDEA_PROMPTS.agency}
-          </label>
-          <textarea
-            value={agency}
-            onChange={(e) => {
-              setAgency(e.target.value);
-              setError(null);
-            }}
-            rows={3}
-            placeholder="Tus ideas sobre la autonomía / voz…"
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-
-        {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
-
-        <button
-          onClick={submit}
-          disabled={saving}
-          className="mt-5 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
-        >
-          {saving ? "Enviando…" : "Enviar idea"}
-        </button>
-        {sentCount > 0 && (
-          <p className="mt-3 text-center text-xs text-slate-400">
-            Ya enviaste {sentCount} {sentCount === 1 ? "idea" : "ideas"}.
-          </p>
-        )}
       </div>
     </main>
   );

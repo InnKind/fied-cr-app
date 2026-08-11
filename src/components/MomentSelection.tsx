@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import { EVENT } from "@/config/event";
+import { BRAND_BG } from "@/lib/brand";
 
 type Moment = { id: string; ord: number; text: string };
 
@@ -145,8 +146,11 @@ export default function MomentSelection({
 
   if (!loaded) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <p className="text-slate-500">Cargando…</p>
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
+        <p className="text-white/80">Cargando…</p>
       </main>
     );
   }
@@ -155,40 +159,45 @@ export default function MomentSelection({
   // (sin mesa, o con la mesa equivocada). Va ANTES del gate de tableNumber.
   if (editing) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
         <div className="w-full max-w-sm text-center">
-          <h1 className="text-xl font-semibold text-slate-800">
+          <h1 className="text-xl font-semibold text-white">
             ¿En qué mesa estás?
           </h1>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={EVENT.numberOfTables}
-            value={manualInput}
-            onChange={(e) => {
-              setManualInput(e.target.value);
-              setTableErr(null);
-            }}
-            placeholder="Ej: 7"
-            className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-          {tableErr && (
-            <p className="mt-3 text-sm font-medium text-red-600">{tableErr}</p>
-          )}
-          <button
-            onClick={saveTable}
-            disabled={savingTable}
-            className="mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
-          >
-            {savingTable ? "Guardando…" : "Guardar mi mesa"}
-          </button>
+          <div className="mt-4 rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={EVENT.numberOfTables}
+              value={manualInput}
+              onChange={(e) => {
+                setManualInput(e.target.value);
+                setTableErr(null);
+              }}
+              placeholder="Ej: 7"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
+            />
+            {tableErr && (
+              <p className="mt-3 text-sm font-medium text-red-600">{tableErr}</p>
+            )}
+            <button
+              onClick={saveTable}
+              disabled={savingTable}
+              className="mt-4 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-[#a50d33] active:bg-[#8a0b2b] disabled:opacity-60"
+            >
+              {savingTable ? "Guardando…" : "Guardar mi mesa"}
+            </button>
+          </div>
           <button
             onClick={() => {
               setEditing(false);
               setTableErr(null);
             }}
-            className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+            className="mt-3 text-sm font-medium text-white/70 hover:text-white"
           >
             Cancelar
           </button>
@@ -200,7 +209,10 @@ export default function MomentSelection({
   // Sin mesa asignada aún: permitir ingresarla a mano (rescate para rezagados).
   if (tableNumber == null) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
         <div className="w-full max-w-sm text-center">
           {accent && (
             <span
@@ -208,15 +220,15 @@ export default function MomentSelection({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-xl font-semibold text-slate-800">
+          <h1 className="text-xl font-semibold text-white">
             Aún no tienes mesa
           </h1>
-          <p className="mt-3 text-slate-600">
+          <p className="mt-3 text-white/80">
             Acércate a un organizador para que te ubique, o ingresa tu mesa aquí.
           </p>
           <button
             onClick={() => setEditing(true)}
-            className="mt-6 rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800"
+            className="mt-6 rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-[#a50d33] active:bg-[#8a0b2b]"
           >
             Ingresar mi mesa
           </button>
@@ -228,8 +240,11 @@ export default function MomentSelection({
   // Con mesa, pero los momentos aún cargando.
   if (moments === null) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <p className="text-slate-500">Cargando…</p>
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
+        <p className="text-white/80">Cargando…</p>
       </main>
     );
   }
@@ -237,7 +252,10 @@ export default function MomentSelection({
   // El facilitador todavía no registra los momentos.
   if (moments.length === 0) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
         <div className="w-full max-w-sm text-center">
           {accent && (
             <span
@@ -245,21 +263,21 @@ export default function MomentSelection({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-xl font-semibold text-slate-800">Un momento…</h1>
-          <p className="mt-3 text-slate-600">
+          <h1 className="text-xl font-semibold text-white">Un momento…</h1>
+          <p className="mt-3 text-white/80">
             El facilitador está registrando los momentos de la Mesa {tableNumber}.
           </p>
           <div className="mt-8 flex justify-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce [animation-delay:-0.2s]" />
-            <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce [animation-delay:-0.1s]" />
-            <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" />
+            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.2s]" />
+            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.1s]" />
+            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce" />
           </div>
           <button
             onClick={() => {
               setManualInput(String(tableNumber));
               setEditing(true);
             }}
-            className="mt-8 text-sm font-medium text-slate-400 underline underline-offset-2 hover:text-slate-600"
+            className="mt-8 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
           >
             No es mi mesa
           </button>
@@ -270,15 +288,18 @@ export default function MomentSelection({
 
   // Elegir 1 de los 3 momentos.
   return (
-    <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+    <main
+      className="flex-1 flex items-center justify-center p-6"
+      style={{ background: BRAND_BG }}
+    >
       <div className="w-full max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
           Mesa {tableNumber}
         </p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">
+        <h2 className="mt-1 text-2xl font-bold text-white">
           ¿Qué momento quieres trabajar?
         </h2>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-white/80">
           Elige uno. Puedes cambiarlo tocando otro.
         </p>
         <div className="mt-5 space-y-3">
@@ -291,8 +312,8 @@ export default function MomentSelection({
                 onClick={() => pick(m.id)}
                 className={`w-full rounded-lg border p-4 text-left shadow-sm transition disabled:opacity-60 ${
                   isSel
-                    ? "border-blue-500 bg-blue-50 ring-1 ring-blue-300"
-                    : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50"
+                    ? "border-[#0c7d75] bg-[#0c7d75]/10 ring-1 ring-[#0c7d75]/40"
+                    : "border-slate-300 bg-white hover:border-[#0c7d75] hover:bg-[#0c7d75]/5"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -300,7 +321,7 @@ export default function MomentSelection({
                     <b className="text-slate-400">{m.ord}.</b> {m.text}
                   </span>
                   {isSel && (
-                    <span className="shrink-0 text-sm font-semibold text-blue-700">
+                    <span className="shrink-0 text-sm font-semibold text-[#0c7d75]">
                       ✓ elegido
                     </span>
                   )}
@@ -317,7 +338,7 @@ export default function MomentSelection({
             setManualInput(String(tableNumber));
             setEditing(true);
           }}
-          className="mt-5 text-sm font-medium text-slate-400 underline underline-offset-2 hover:text-slate-600"
+          className="mt-5 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
         >
           No es mi mesa
         </button>

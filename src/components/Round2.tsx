@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { THEMES, ROUND2_QUESTIONS, numberedThemeTitle } from "@/config/event";
+import { BRAND_BG } from "@/lib/brand";
 
 // Fase ROUND2: reflexión final (3 preguntas). La mesa NO importa.
 // Guarda en round2_responses (una por persona; upsert). Resiliente a recargar.
@@ -75,15 +76,15 @@ export default function Round2({
 
   if (!loaded) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-        <p className="text-slate-500">Cargando…</p>
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
+        <p className="text-white/80">Cargando…</p>
       </main>
     );
   }
 
   if (done) {
     return (
-      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+      <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
           {accent && (
             <span
@@ -91,14 +92,14 @@ export default function Round2({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-2xl font-bold text-slate-900">¡Gracias!</h1>
-          <p className="mt-3 text-slate-600">
+          <h1 className="text-2xl font-bold text-white">¡Gracias!</h1>
+          <p className="mt-3 text-white/80">
             Guardamos tu reflexión. Ahora compártela con la persona de al lado:
             tu tema, tus 3 roles y tu idea.
           </p>
           <button
             onClick={() => setDone(false)}
-            className="mt-6 text-sm font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800"
+            className="mt-6 text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
           >
             Editar mis respuestas
           </button>
@@ -108,16 +109,17 @@ export default function Round2({
   }
 
   return (
-    <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+    <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
           Ronda 2 · Reflexión
         </p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">
+        <h2 className="mt-1 text-2xl font-bold text-white">
           Llévalo a tu contexto
         </h2>
 
-        <div className="mt-5">
+        <div className="mt-5 rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
+        <div>
           <label className="block text-sm font-medium text-slate-700">
             {ROUND2_QUESTIONS.theme}
           </label>
@@ -127,7 +129,7 @@ export default function Round2({
               setTheme(e.target.value);
               setError(null);
             }}
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
           >
             <option value="" disabled>
               Selecciona un tema…
@@ -149,19 +151,19 @@ export default function Round2({
               value={role1}
               onChange={(e) => setRole1(e.target.value)}
               placeholder="Rol 1 (ej: Decano/a)"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
             <input
               value={role2}
               onChange={(e) => setRole2(e.target.value)}
               placeholder="Rol 2 (ej: Jefatura de TI)"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
             <input
               value={role3}
               onChange={(e) => setRole3(e.target.value)}
               placeholder="Rol 3 (ej: Representante estudiantil)"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
           </div>
         </div>
@@ -175,7 +177,7 @@ export default function Round2({
             onChange={(e) => setExp(e.target.value)}
             rows={3}
             placeholder="La experiencia o el próximo paso que vas a diseñar…"
-            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
           />
         </div>
 
@@ -184,10 +186,11 @@ export default function Round2({
         <button
           onClick={submit}
           disabled={saving}
-          className="mt-5 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
+          className="mt-5 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b] disabled:opacity-60"
         >
           {saving ? "Enviando…" : "Enviar mi reflexión"}
         </button>
+        </div>
       </div>
     </main>
   );
