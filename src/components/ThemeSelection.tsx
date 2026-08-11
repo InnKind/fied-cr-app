@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { THEMES, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 // Fase THEME_SELECTION: la persona elige 1 de los 3 temas según su rol.
 // Guarda el tema en participants.selected_theme. NO asigna mesa: eso lo hace
@@ -76,6 +77,7 @@ export default function ThemeSelection({
     return (
       <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-md text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -107,6 +109,7 @@ export default function ThemeSelection({
   return (
     <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-md">
+        <BrandLogo className="mb-6" />
         <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
           Elige tu tema
         </p>

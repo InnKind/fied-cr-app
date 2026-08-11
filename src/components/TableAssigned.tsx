@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { THEMES, EVENT, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
 // ("no estoy en esa mesa"). Lee current_table/selected_theme desde la base.
@@ -77,6 +78,7 @@ export default function TableAssigned({
     return (
       <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           <h1 className="text-xl font-semibold text-white">
             ¿En qué mesa estás realmente?
           </h1>
@@ -122,6 +124,7 @@ export default function TableAssigned({
     return (
       <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -149,6 +152,7 @@ export default function TableAssigned({
   return (
     <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-sm text-center">
+        <BrandLogo className="mx-auto mb-6" />
         {accent && (
           <span
             className="mb-4 inline-block h-3 w-3 rounded-full"

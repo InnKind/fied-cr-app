@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { EVENT, numberedThemeTitle } from "@/config/event";
-import BrandBar from "@/components/BrandBar";
+import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 type Moment = { id: string; ord: number; text: string };
 type Idea = { moment_id: string; ai_text: string | null; agency_text: string | null };
@@ -51,11 +52,11 @@ export default function ArchivoPage() {
   const themeTitle = table && theme ? numberedThemeTitle(theme) : null;
 
   return (
-    <main className="flex-1 p-6 bg-slate-50">
+    <main className="flex-1 p-6" style={{ background: BRAND_BG }}>
       <div className="mx-auto w-full max-w-2xl">
-        <BrandBar />
-        <h1 className="text-2xl font-bold text-slate-900">Memoria del ejercicio</h1>
-        <p className="mt-2 text-slate-600">
+        <BrandLogo className="mb-5" />
+        <h1 className="text-2xl font-bold text-white">Memoria del ejercicio</h1>
+        <p className="mt-2 text-white/80">
           Consulta lo que trabajó tu mesa. Ingresa el número de mesa donde
           estuviste.
         </p>
@@ -72,12 +73,12 @@ export default function ArchivoPage() {
               setError(null);
             }}
             placeholder="Ej: 7"
-            className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="w-32 rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
           />
           <button
             onClick={load}
             disabled={loading}
-            className="rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
+            className="rounded-lg bg-[#c8103e] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] disabled:opacity-60"
           >
             {loading ? "Buscando…" : "Buscar"}
           </button>
@@ -86,15 +87,15 @@ export default function ArchivoPage() {
 
         {searched && !loading && table && (
           <div className="mt-8">
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               Mesa {table}
               {themeTitle && (
-                <span className="font-normal text-slate-500"> · {themeTitle}</span>
+                <span className="font-normal text-white/70"> · {themeTitle}</span>
               )}
             </h2>
 
             {moments.length === 0 ? (
-              <p className="mt-3 text-slate-500">
+              <p className="mt-3 text-white/70">
                 No encontramos datos para esta mesa.
               </p>
             ) : (
@@ -113,7 +114,7 @@ export default function ArchivoPage() {
                       </h3>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
                             Ideas de IA
                           </p>
                           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
@@ -125,7 +126,7 @@ export default function ArchivoPage() {
                           </ul>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
                             Ideas de Agency
                           </p>
                           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
@@ -145,7 +146,7 @@ export default function ArchivoPage() {
 
             {photos.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70">
                   Fotos de los post-its
                 </h3>
                 <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">

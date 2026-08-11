@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
+import BrandLogo from "@/components/BrandLogo";
 import { BRAND_BG } from "@/lib/brand";
 
 type Ctx = {
@@ -133,6 +134,7 @@ export default function IdeaEntry({
         style={{ background: BRAND_BG }}
       >
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -180,6 +182,7 @@ export default function IdeaEntry({
       style={{ background: BRAND_BG }}
     >
       <div className="w-full max-w-md">
+        <BrandLogo className="mx-auto mb-6" />
         <div className="rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
           {ctx.momentText && (
             <div className="rounded-lg bg-[#0c7d75]/10 px-4 py-3">

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import { EVENT } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 type Moment = { id: string; ord: number; text: string };
 
@@ -164,6 +165,7 @@ export default function MomentSelection({
         style={{ background: BRAND_BG }}
       >
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           <h1 className="text-xl font-semibold text-white">
             ¿En qué mesa estás?
           </h1>
@@ -214,6 +216,7 @@ export default function MomentSelection({
         style={{ background: BRAND_BG }}
       >
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -257,6 +260,7 @@ export default function MomentSelection({
         style={{ background: BRAND_BG }}
       >
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -293,6 +297,7 @@ export default function MomentSelection({
       style={{ background: BRAND_BG }}
     >
       <div className="w-full max-w-md">
+        <BrandLogo className="mb-6" />
         <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
           Mesa {tableNumber}
         </p>

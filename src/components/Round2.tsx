@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { THEMES, ROUND2_QUESTIONS, numberedThemeTitle } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 // Fase ROUND2: reflexión final (3 preguntas). La mesa NO importa.
 // Guarda en round2_responses (una por persona; upsert). Resiliente a recargar.
@@ -86,6 +87,7 @@ export default function Round2({
     return (
       <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
         <div className="w-full max-w-sm text-center">
+          <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
               className="mb-4 inline-block h-3 w-3 rounded-full"
@@ -111,6 +113,7 @@ export default function Round2({
   return (
     <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-md">
+        <BrandLogo className="mb-6" />
         <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
           Ronda 2 · Reflexión
         </p>

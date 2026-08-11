@@ -2,6 +2,7 @@
 
 import { ATHENEA_URL } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 // Pantalla de cierre (fases ROUND1_COMPLETE y FINISHED). Muestra un mensaje y,
 // según el caso, enlaces a Atenea y al archivo post-evento.
@@ -24,6 +25,7 @@ export default function Closing({
       style={{ background: BRAND_BG }}
     >
       <div className="w-full max-w-sm text-center">
+        <BrandLogo className="mx-auto mb-6" />
         {accent && (
           <span
             className="mb-4 inline-block h-3 w-3 rounded-full"

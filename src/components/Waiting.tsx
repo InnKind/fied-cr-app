@@ -1,4 +1,5 @@
 import { BRAND_BG } from "@/lib/brand";
+import BrandLogo from "@/components/BrandLogo";
 
 // Pantalla de espera genérica: se muestra entre pasos, mientras el
 // administrador avanza el ejercicio para todo el salón.
@@ -17,6 +18,7 @@ export default function Waiting({
       style={{ background: BRAND_BG }}
     >
       <div className="w-full max-w-md text-center">
+        <BrandLogo className="mx-auto mb-6" />
         {accent && (
           <span
             className="inline-block h-3 w-3 rounded-full mb-4"
