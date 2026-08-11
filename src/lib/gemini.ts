@@ -164,8 +164,27 @@ export async function processRound1(
     `{"slides":[{"moment":"...","tables":0,"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
     `Sin texto fuera del JSON.`;
 
-  const text = await geminiGenerate(prompt, { json: true });
-  return JSON.parse(text) as { slides: Slide[] };
+  // La IA a veces devuelve JSON válido pero con OTRA forma (sin el arreglo
+  // "slides"). Validamos la forma y reintentamos para no dejar un tema vacío.
+  let lastErr = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const text = await geminiGenerate(prompt, { json: true });
+    try {
+      const parsed = JSON.parse(text) as { slides?: Slide[] } | Slide[];
+      const slides = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed?.slides)
+          ? parsed.slides
+          : null;
+      if (slides) return { slides };
+      lastErr = "la respuesta no traía un arreglo 'slides'";
+    } catch (e) {
+      lastErr = e instanceof Error ? e.message : "JSON inválido";
+    }
+  }
+  throw new Error(
+    `processRound1 no pudo interpretar la respuesta de la IA: ${lastErr}`
+  );
 }
 
 // ---- Agregación de la Ronda 2 (reflexión) ----

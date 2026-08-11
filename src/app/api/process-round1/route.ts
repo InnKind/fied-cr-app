@@ -39,11 +39,19 @@ export async function POST(req: NextRequest) {
   const liveKeys = new Set<string>();
   const prevThemes =
     (prev?.payload as {
-      themes?: { themeId?: string; slides?: { moment?: string; live?: boolean }[] }[];
+      themes?: {
+        themeId?: string;
+        slides?: { moment?: string; live?: boolean }[];
+      }[];
     } | null)?.themes ?? [];
-  for (const pt of prevThemes)
+  // Diapositivas previas por tema (para no pisar datos buenos si un reproceso
+  // deja un tema vacío por un fallo transitorio de la IA).
+  const prevSlidesByTheme = new Map<string, unknown[]>();
+  for (const pt of prevThemes) {
+    if (pt.themeId) prevSlidesByTheme.set(pt.themeId, pt.slides ?? []);
     for (const ps of pt.slides ?? [])
       if (ps.live) liveKeys.add(`${pt.themeId}::${(ps.moment || "").trim().toLowerCase()}`);
+  }
 
   const themesOut: unknown[] = [];
   for (const theme of THEMES) {
@@ -64,22 +72,34 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    let slidesForTheme: unknown[] = [];
     try {
       const { slides } = await processRound1(theme.title, momentInputs);
-      const withLive = slides.map((s) =>
+      slidesForTheme = slides.map((s) =>
         liveKeys.has(`${theme.id}::${(s.moment || "").trim().toLowerCase()}`)
           ? { ...s, live: true }
           : s
       );
-      themesOut.push({ themeId: theme.id, themeTitle: theme.title, slides: withLive });
     } catch (e) {
-      themesOut.push({
-        themeId: theme.id,
-        themeTitle: theme.title,
-        slides: [],
-        error: e instanceof Error ? e.message : "error",
-      });
+      console.error(
+        "R1 IA falló para",
+        theme.id,
+        e instanceof Error ? e.message : e
+      );
+      slidesForTheme = [];
     }
+
+    // Si esta corrida quedó vacía pero antes había diapositivas, conservarlas.
+    const prevSlides = prevSlidesByTheme.get(theme.id) ?? [];
+    if (slidesForTheme.length === 0 && prevSlides.length > 0) {
+      slidesForTheme = prevSlides;
+    }
+
+    themesOut.push({
+      themeId: theme.id,
+      themeTitle: theme.title,
+      slides: slidesForTheme,
+    });
   }
 
   if (themesOut.length === 0) {

@@ -10,12 +10,17 @@ import {
   type Round1Payload,
 } from "@/lib/round1";
 import { BRAND_BG } from "@/lib/brand";
+import { HBars, type BarDatum } from "@/components/Charts";
+import { THEMES, numberedThemeTitle } from "@/config/event";
 
 const CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
   { key: "mostRepeated", label: "Más repetida" },
   { key: "easiest", label: "Más fácil de implementar" },
   { key: "mostDisruptive", label: "Más disruptiva" },
 ];
+
+// Colores por tema (mismo orden que THEMES), consistentes con /resultados.
+const THEME_COLORS = ["#0c7d75", "#c8103e", "#d97706"];
 
 function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
   return (
@@ -40,21 +45,130 @@ function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
   );
 }
 
+// Diapositiva-resumen (panorama) que abre la presentación: qué tema exploró
+// cada quién y los momentos que aparecieron en más mesas.
+function SummarySlide({
+  themeCounts,
+  slides,
+}: {
+  themeCounts: Record<string, number>;
+  slides: FlatSlide[];
+}) {
+  const themeData: BarDatum[] = THEMES.filter(
+    (t) => (themeCounts[t.id] ?? 0) > 0
+  ).map((t, i) => ({
+    label: numberedThemeTitle(t.id),
+    value: themeCounts[t.id] ?? 0,
+    color: THEME_COLORS[THEMES.findIndex((x) => x.id === t.id)] ?? THEME_COLORS[i],
+  }));
+
+  const topMoments: BarDatum[] = slides
+    .slice()
+    .sort((a, b) => b.tables - a.tables)
+    .slice(0, 6)
+    .map((s) => ({ label: s.moment, value: s.tables }));
+
+  const totalPeople = Object.values(themeCounts).reduce((a, b) => a + b, 0);
+
+  return (
+    <>
+      <h1 className="text-3xl font-bold text-white sm:text-5xl">
+        El panorama de la Ronda 1
+      </h1>
+      <p className="mt-2 text-white/70">
+        {totalPeople > 0
+          ? `${totalPeople} personas · ${slides.length} momentos trabajados`
+          : `${slides.length} momentos trabajados`}
+      </p>
+
+      <div className="mt-8 flex flex-col gap-5 sm:flex-row">
+        <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-bold text-[#0c7d75]">
+            ¿Qué tema exploró cada quién?
+          </h3>
+          <p className="mb-4 mt-1 text-sm text-slate-500">
+            Personas que eligieron cada tema.
+          </p>
+          {themeData.length ? (
+            <HBars data={themeData} big />
+          ) : (
+            <p className="text-sm text-slate-400">Sin datos de temas todavía.</p>
+          )}
+        </div>
+
+        <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-bold text-[#0c7d75]">
+            Los momentos que más se repitieron
+          </h3>
+          <p className="mb-4 mt-1 text-sm text-slate-500">
+            En cuántas mesas apareció cada momento.
+          </p>
+          {topMoments.length ? (
+            <HBars data={topMoments} big color="#c8103e" valueSuffix=" mesas" />
+          ) : (
+            <p className="text-sm text-slate-400">Sin momentos todavía.</p>
+          )}
+        </div>
+      </div>
+
+      <p className="mt-6 text-center text-xs text-white/50">
+        Cuando un mismo momento surge en varias mesas, es señal de que resuena en
+        el grupo. A continuación, las ideas de cada uno.
+      </p>
+    </>
+  );
+}
+
+function MomentSlide({ s }: { s: FlatSlide }) {
+  return (
+    <>
+      <div className="mt-3 flex items-baseline gap-3">
+        <h1 className="text-3xl font-bold text-white sm:text-5xl">{s.moment}</h1>
+        {s.tables > 1 && (
+          <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
+            en {s.tables} mesas
+          </span>
+        )}
+      </div>
+
+      <div className="mt-8 flex flex-col gap-5 sm:flex-row">
+        <IdeaColumn title="Integrar mejor la IA" ideas={s.ai} />
+        <IdeaColumn title="Más agency (voz y decisión)" ideas={s.agency} />
+      </div>
+
+      <p className="mt-6 text-center text-xs text-white/50">
+        La IA eligió, de todo lo que escribieron las mesas, la idea más repetida,
+        la más fácil de implementar y la más disruptiva de cada dimensión.
+      </p>
+    </>
+  );
+}
+
 export default function PresentationPage() {
   const [slides, setSlides] = useState<FlatSlide[]>([]);
+  const [themeCounts, setThemeCounts] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
   const [i, setI] = useState(0);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("synthesis")
-      .select("payload")
-      .eq("round", 1)
-      .maybeSingle();
-    const flat = flattenSlides((data?.payload as Round1Payload | null) ?? null);
+    const [{ data: synth }, { data: parts }] = await Promise.all([
+      supabase.from("synthesis").select("payload").eq("round", 1).maybeSingle(),
+      supabase
+        .from("participants")
+        .select("selected_theme")
+        .not("selected_theme", "is", null),
+    ]);
+    const flat = flattenSlides((synth?.payload as Round1Payload | null) ?? null);
+    const counts: Record<string, number> = {};
+    for (const p of parts ?? []) {
+      const t = p.selected_theme as string;
+      counts[t] = (counts[t] ?? 0) + 1;
+    }
+    setThemeCounts(counts);
     setSlides(flat);
     setLoaded(true);
-    setI((cur) => (cur >= flat.length ? Math.max(0, flat.length - 1) : cur));
+    // total de vistas = resumen (1) + momentos
+    setI((cur) => (cur > flat.length ? flat.length : cur));
   }, []);
 
   useEffect(() => {
@@ -76,9 +190,12 @@ export default function PresentationPage() {
     };
   }, [load]);
 
+  // Vistas: índice 0 = resumen; 1..N = momentos.
+  const total = slides.length > 0 ? slides.length + 1 : 0;
+
   const go = useCallback(
-    (d: number) => setI((cur) => Math.min(slides.length - 1, Math.max(0, cur + d))),
-    [slides.length]
+    (d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))),
+    [total]
   );
 
   // Navegación con flechas del teclado.
@@ -114,41 +231,26 @@ export default function PresentationPage() {
     );
   }
 
-  const s = slides[i];
+  const isSummary = i === 0;
+  const s = slides[i - 1];
 
   return (
     <main className="flex-1 p-6 sm:p-10" style={{ background: BRAND_BG }}>
       <div className="mx-auto flex h-full max-w-5xl flex-col">
         <div className="flex items-center justify-between text-sm text-white/50">
           <span className="font-semibold uppercase tracking-wider text-teal-200">
-            {s.themeTitle}
+            {isSummary ? "Ronda 1 · Panorama" : s.themeTitle}
           </span>
           <span>
-            {i + 1} / {slides.length}
+            {i + 1} / {total}
           </span>
         </div>
 
-        <div className="mt-3 flex items-baseline gap-3">
-          <h1 className="text-3xl font-bold text-white sm:text-5xl">
-            {s.moment}
-          </h1>
-          {s.tables > 1 && (
-            <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
-              en {s.tables} mesas
-            </span>
-          )}
-        </div>
-
-        <div className="mt-8 flex flex-col gap-5 sm:flex-row">
-          <IdeaColumn title="Integrar mejor la IA" ideas={s.ai} />
-          <IdeaColumn title="Más agency (voz y decisión)" ideas={s.agency} />
-        </div>
-
-        <p className="mt-6 text-center text-xs text-white/50">
-          La IA eligió, de todo lo que escribieron las mesas, la idea más
-          repetida, la más fácil de implementar y la más disruptiva de cada
-          dimensión.
-        </p>
+        {isSummary ? (
+          <SummarySlide themeCounts={themeCounts} slides={slides} />
+        ) : (
+          <MomentSlide s={s} />
+        )}
 
         <div className="mt-auto flex items-center justify-between pt-8">
           <button
@@ -160,7 +262,7 @@ export default function PresentationPage() {
           </button>
           <button
             onClick={() => go(1)}
-            disabled={i === slides.length - 1}
+            disabled={i === total - 1}
             className="rounded-lg bg-[#c8103e] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] disabled:opacity-40"
           >
             Siguiente →
