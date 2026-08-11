@@ -25,17 +25,39 @@ export default function FacilitatorMoments({
   const themeTitle = numberedThemeTitle(theme);
 
   const loadMoments = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("selected_moments")
       .select("id, ord, text")
       .eq("table_number", tableNumber)
       .order("ord");
+    if (error) return; // ante error de red no pisar con [] (se reintenta por realtime/foreground)
     setMoments((data as Moment[]) ?? []);
   }, [tableNumber]);
 
   useEffect(() => {
     loadMoments();
-  }, [loadMoments]);
+    // En vivo: si otro dispositivo (o esta misma tras un guardado cuya respuesta
+    // se perdió) registra los momentos, esta pantalla pasa sola a modo conteo,
+    // así el formulario desaparece y no se puede insertar un segundo set.
+    const channel = supabase
+      .channel(`rt-selmoments-${tableNumber}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "selected_moments",
+          filter: `table_number=eq.${tableNumber}`,
+        },
+        () => loadMoments()
+      )
+      .subscribe();
+    const stop = onForeground(loadMoments);
+    return () => {
+      supabase.removeChannel(channel);
+      stop();
+    };
+  }, [tableNumber, loadMoments]);
 
   // Conteo en vivo de selecciones por momento.
   const loadCounts = useCallback(async (ids: string[]) => {
@@ -92,6 +114,12 @@ export default function FacilitatorMoments({
     const { error: dbErr } = await supabase.from("selected_moments").insert(rows);
     setSaving(false);
     if (dbErr) {
+      // 23505 = ya existían momentos para esta mesa (restricción única): no
+      // dupliques; solo recarga y muestra los que ya están.
+      if ((dbErr as { code?: string }).code === "23505") {
+        loadMoments();
+        return;
+      }
       setError("No se pudo guardar. Intenta de nuevo.");
       return;
     }

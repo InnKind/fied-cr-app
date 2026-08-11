@@ -28,6 +28,23 @@ export async function POST(req: NextRequest) {
   const allMoments = moments ?? [];
   const allIdeas = ideas ?? [];
 
+  // Preservar la curaduría: si al reprocesar un momento reaparece con el mismo
+  // texto, mantené su marca "en vivo" (best-effort; si la IA lo reformula, no
+  // coincide y simplemente se pierde la marca, sin romper nada).
+  const { data: prev } = await supabaseAdmin
+    .from("synthesis")
+    .select("payload")
+    .eq("round", 1)
+    .maybeSingle();
+  const liveKeys = new Set<string>();
+  const prevThemes =
+    (prev?.payload as {
+      themes?: { themeId?: string; slides?: { moment?: string; live?: boolean }[] }[];
+    } | null)?.themes ?? [];
+  for (const pt of prevThemes)
+    for (const ps of pt.slides ?? [])
+      if (ps.live) liveKeys.add(`${pt.themeId}::${(ps.moment || "").trim().toLowerCase()}`);
+
   const themesOut: unknown[] = [];
   for (const theme of THEMES) {
     const tMoments = allMoments.filter((m) => m.theme === theme.id);
@@ -49,7 +66,12 @@ export async function POST(req: NextRequest) {
 
     try {
       const { slides } = await processRound1(theme.title, momentInputs);
-      themesOut.push({ themeId: theme.id, themeTitle: theme.title, slides });
+      const withLive = slides.map((s) =>
+        liveKeys.has(`${theme.id}::${(s.moment || "").trim().toLowerCase()}`)
+          ? { ...s, live: true }
+          : s
+      );
+      themesOut.push({ themeId: theme.id, themeTitle: theme.title, slides: withLive });
     } catch (e) {
       themesOut.push({
         themeId: theme.id,

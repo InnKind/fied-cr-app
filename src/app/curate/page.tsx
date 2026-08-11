@@ -32,7 +32,21 @@ export default function CuratePage() {
   }, []);
 
   useEffect(() => {
-    if (authed) load();
+    if (!authed) return;
+    load();
+    // En vivo: si el admin reprocesa la Ronda 1, recargamos para no guardar
+    // encima con una versión vieja (perdiendo diapositivas nuevas).
+    const channel = supabase
+      .channel("rt-curate")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "synthesis", filter: "round=eq.1" },
+        () => load()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [authed, load]);
 
   async function login() {
