@@ -30,7 +30,13 @@ export default function FacilitatorMoments({
       .select("id, ord, text")
       .eq("table_number", tableNumber)
       .order("ord");
-    if (error) return; // ante error de red no pisar con [] (se reintenta por realtime/foreground)
+    if (error) {
+      // Ante error: no colgar en "Cargando…" en el primer load (muestra el
+      // formulario con []), pero no pisar una lista buena con [] en una recarga
+      // transitoria (deja la que ya había).
+      setMoments((prev) => prev ?? []);
+      return;
+    }
     setMoments((data as Moment[]) ?? []);
   }, [tableNumber]);
 

@@ -24,7 +24,8 @@ export default function MomentSelection({
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Entrada manual de mesa (rescate si el participante quedó sin mesa asignada).
+  // Entrada/corrección manual de mesa (rescate si quedó sin mesa o con la mesa
+  // equivocada).
   const [editing, setEditing] = useState(false);
   const [manualInput, setManualInput] = useState("");
   const [savingTable, setSavingTable] = useState(false);
@@ -83,6 +84,7 @@ export default function MomentSelection({
 
   useEffect(() => {
     if (tableNumber == null) return;
+    setMoments(null); // al cambiar de mesa, no mostrar los momentos de la anterior
     loadMoments(tableNumber);
     const channel = supabase
       .channel(`rt-moments-${tableNumber}`)
@@ -136,10 +138,9 @@ export default function MomentSelection({
       setTableErr("No se pudo actualizar. Intenta de nuevo.");
       return;
     }
-    setTableNumber(n);
-    setMoments(null); // recargará los momentos de la mesa nueva
     setEditing(false);
     setManualInput("");
+    setTableNumber(n); // el efecto de momentos recargará los de la mesa nueva
   }
 
   if (!loaded) {
@@ -150,51 +151,54 @@ export default function MomentSelection({
     );
   }
 
+  // Corrección/ingreso manual de mesa — alcanzable desde cualquier estado
+  // (sin mesa, o con la mesa equivocada). Va ANTES del gate de tableNumber.
+  if (editing) {
+    return (
+      <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
+        <div className="w-full max-w-sm text-center">
+          <h1 className="text-xl font-semibold text-slate-800">
+            ¿En qué mesa estás?
+          </h1>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={EVENT.numberOfTables}
+            value={manualInput}
+            onChange={(e) => {
+              setManualInput(e.target.value);
+              setTableErr(null);
+            }}
+            placeholder="Ej: 7"
+            className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          />
+          {tableErr && (
+            <p className="mt-3 text-sm font-medium text-red-600">{tableErr}</p>
+          )}
+          <button
+            onClick={saveTable}
+            disabled={savingTable}
+            className="mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
+          >
+            {savingTable ? "Guardando…" : "Guardar mi mesa"}
+          </button>
+          <button
+            onClick={() => {
+              setEditing(false);
+              setTableErr(null);
+            }}
+            className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            Cancelar
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   // Sin mesa asignada aún: permitir ingresarla a mano (rescate para rezagados).
   if (tableNumber == null) {
-    if (editing) {
-      return (
-        <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
-          <div className="w-full max-w-sm text-center">
-            <h1 className="text-xl font-semibold text-slate-800">
-              ¿En qué mesa estás?
-            </h1>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={EVENT.numberOfTables}
-              value={manualInput}
-              onChange={(e) => {
-                setManualInput(e.target.value);
-                setTableErr(null);
-              }}
-              placeholder="Ej: 7"
-              className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-lg text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            />
-            {tableErr && (
-              <p className="mt-3 text-sm font-medium text-red-600">{tableErr}</p>
-            )}
-            <button
-              onClick={saveTable}
-              disabled={savingTable}
-              className="mt-4 w-full rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-60"
-            >
-              {savingTable ? "Guardando…" : "Guardar mi mesa"}
-            </button>
-            <button
-              onClick={() => {
-                setEditing(false);
-                setTableErr(null);
-              }}
-              className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700"
-            >
-              Cancelar
-            </button>
-          </div>
-        </main>
-      );
-    }
     return (
       <main className="flex-1 flex items-center justify-center p-6 bg-slate-50">
         <div className="w-full max-w-sm text-center">
@@ -308,6 +312,15 @@ export default function MomentSelection({
         {error && (
           <p className="mt-3 text-sm font-medium text-red-600">{error}</p>
         )}
+        <button
+          onClick={() => {
+            setManualInput(String(tableNumber));
+            setEditing(true);
+          }}
+          className="mt-5 text-sm font-medium text-slate-400 underline underline-offset-2 hover:text-slate-600"
+        >
+          No es mi mesa
+        </button>
       </div>
     </main>
   );
