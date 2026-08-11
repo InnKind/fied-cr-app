@@ -149,11 +149,15 @@ export async function processRound1(
     `distintas (p. ej. "elegir mis cursos" y "decidir qué materias estudiar" son el mismo). ` +
     `Dale a cada grupo un título corto y claro.\n` +
     `2. Para cada grupo, indica en cuántas MESAS distintas apareció ("tables").\n` +
-    `3. Para cada grupo, elige 3 ideas de IA y 3 de Agency, TOMADAS de las ideas escritas para ` +
-    `ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de implementar) ` +
-    `y "mostDisruptive" (la más radical/transformadora). Si faltan ideas para un criterio, deja ` +
-    `ese campo como "". NO inventes ideas que nadie escribió; puedes parafrasear para que sean ` +
-    `breves y claras.\n` +
+    `3. Para cada grupo, elige HASTA 3 ideas de IA y HASTA 3 de Agency, TOMADAS de las ideas ` +
+    `escritas para ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de ` +
+    `implementar) y "mostDisruptive" (la más radical/transformadora). REGLAS IMPORTANTES: ` +
+    `(a) las tres ideas de cada dimensión deben ser DISTINTAS entre sí; NUNCA repitas la misma ` +
+    `idea (ni una versión apenas reformulada) en más de un criterio. ` +
+    `(b) Si para ese momento hay menos de 3 ideas distintas y con sustancia, llena solo los ` +
+    `criterios que puedas con ideas reales y deja los demás como cadena vacía "". Es mejor ` +
+    `mostrar 1 idea buena que 3 repetidas o de relleno. ` +
+    `(c) NO inventes ideas que nadie escribió; puedes parafrasear para que sean breves y claras.\n` +
     `4. Ordena los grupos por número de mesas (más repetidos primero) y luego por riqueza (los ` +
     `que tienen ideas en ambas dimensiones primero).\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
