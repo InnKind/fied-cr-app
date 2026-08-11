@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import {
@@ -21,6 +21,28 @@ const CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
 
 // Colores por tema (mismo orden que THEMES), consistentes con /resultados.
 const THEME_COLORS = ["#0c7d75", "#c8103e", "#d97706"];
+
+function themeColor(themeId: string): string {
+  const i = THEMES.findIndex((t) => t.id === themeId);
+  return THEME_COLORS[i] ?? THEME_COLORS[0];
+}
+
+// Fila de puntos: uno por mesa donde apareció el momento (convergencia visible).
+function MesasDots({ n, color }: { n: number; color: string }) {
+  const shown = Math.min(n, 16);
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5 align-middle">
+      {Array.from({ length: shown }).map((_, k) => (
+        <span
+          key={k}
+          className="inline-block h-3.5 w-3.5 rounded-full ring-2 ring-white/40"
+          style={{ background: color }}
+        />
+      ))}
+      {n > shown && <span className="text-sm font-semibold text-white/70">+{n - shown}</span>}
+    </span>
+  );
+}
 
 function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
   return (
@@ -56,10 +78,10 @@ function SummarySlide({
 }) {
   const themeData: BarDatum[] = THEMES.filter(
     (t) => (themeCounts[t.id] ?? 0) > 0
-  ).map((t, i) => ({
+  ).map((t) => ({
     label: numberedThemeTitle(t.id),
     value: themeCounts[t.id] ?? 0,
-    color: THEME_COLORS[THEMES.findIndex((x) => x.id === t.id)] ?? THEME_COLORS[i],
+    color: themeColor(t.id),
   }));
 
   const topMoments: BarDatum[] = slides
@@ -113,23 +135,86 @@ function SummarySlide({
 
       <p className="mt-6 text-center text-xs text-white/50">
         Cuando un mismo momento surge en varias mesas, es señal de que resuena en
-        el grupo. A continuación, las ideas de cada uno.
+        el grupo. A continuación, tema por tema.
+      </p>
+    </>
+  );
+}
+
+// Divisor de tema: abre la sección de cada tema con sus cifras y un gráfico de
+// los momentos de ESE tema, ordenados por en cuántas mesas aparecieron.
+function ThemeDividerSlide({
+  themeId,
+  moments,
+  people,
+}: {
+  themeId: string;
+  moments: FlatSlide[];
+  people: number;
+}) {
+  const color = themeColor(themeId);
+  const data: BarDatum[] = moments
+    .slice()
+    .sort((a, b) => b.tables - a.tables)
+    .map((m) => ({ label: m.moment, value: m.tables }));
+
+  return (
+    <>
+      <div className="flex items-center gap-3">
+        <span
+          className="inline-block h-8 w-1.5 rounded-full"
+          style={{ background: color }}
+        />
+        <span
+          className="text-sm font-bold uppercase tracking-widest"
+          style={{ color }}
+        >
+          Tema
+        </span>
+      </div>
+      <h1 className="mt-2 text-3xl font-bold text-white sm:text-5xl">
+        {numberedThemeTitle(themeId)}
+      </h1>
+      <p className="mt-2 text-white/70">
+        {people > 0 && (
+          <>
+            {people} {people === 1 ? "persona" : "personas"} ·{" "}
+          </>
+        )}
+        {moments.length} {moments.length === 1 ? "momento" : "momentos"}
+      </p>
+
+      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="text-lg font-bold" style={{ color }}>
+          Los momentos de este tema
+        </h3>
+        <p className="mb-4 mt-1 text-sm text-slate-500">
+          En cuántas mesas apareció cada uno.
+        </p>
+        <HBars data={data} big color={color} valueSuffix=" mesas" />
+      </div>
+
+      <p className="mt-6 text-center text-xs text-white/50">
+        Veamos cada momento con las ideas de IA y de Agency.
       </p>
     </>
   );
 }
 
 function MomentSlide({ s }: { s: FlatSlide }) {
+  const color = themeColor(s.themeId);
   return (
     <>
-      <div className="mt-3 flex items-baseline gap-3">
-        <h1 className="text-3xl font-bold text-white sm:text-5xl">{s.moment}</h1>
-        {s.tables > 1 && (
-          <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
-            en {s.tables} mesas
+      <h1 className="text-3xl font-bold text-white sm:text-5xl">{s.moment}</h1>
+
+      {s.tables > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <MesasDots n={s.tables} color={color} />
+          <span className="text-sm font-semibold text-white/80">
+            {s.tables > 1 ? `en ${s.tables} mesas` : "en 1 mesa"}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="mt-8 flex flex-col gap-5 sm:flex-row">
         <IdeaColumn title="Integrar mejor la IA" ideas={s.ai} />
@@ -143,6 +228,12 @@ function MomentSlide({ s }: { s: FlatSlide }) {
     </>
   );
 }
+
+// Una "vista" del deck: resumen, divisor de tema, o un momento.
+type View =
+  | { kind: "summary" }
+  | { kind: "divider"; themeId: string; moments: FlatSlide[]; people: number }
+  | { kind: "moment"; slide: FlatSlide };
 
 export default function PresentationPage() {
   const [slides, setSlides] = useState<FlatSlide[]>([]);
@@ -167,8 +258,6 @@ export default function PresentationPage() {
     setThemeCounts(counts);
     setSlides(flat);
     setLoaded(true);
-    // total de vistas = resumen (1) + momentos. Acota el índice por ambos lados.
-    setI((cur) => Math.max(0, Math.min(cur, flat.length)));
   }, []);
 
   useEffect(() => {
@@ -190,12 +279,32 @@ export default function PresentationPage() {
     };
   }, [load]);
 
-  // Vistas: índice 0 = resumen; 1..N = momentos.
-  const total = slides.length > 0 ? slides.length + 1 : 0;
+  // Construye la secuencia de vistas: resumen → (divisor de tema → momentos)…
+  const views = useMemo<View[]>(() => {
+    if (slides.length === 0) return [];
+    const out: View[] = [{ kind: "summary" }];
+    for (const t of THEMES) {
+      const moments = slides.filter((s) => s.themeId === t.id);
+      if (moments.length === 0) continue;
+      out.push({
+        kind: "divider",
+        themeId: t.id,
+        moments,
+        people: themeCounts[t.id] ?? 0,
+      });
+      for (const m of moments) out.push({ kind: "moment", slide: m });
+    }
+    return out;
+  }, [slides, themeCounts]);
+
+  const total = views.length;
+
+  // Si el deck se acorta (reproceso), reencuadra el índice dentro de rango.
+  useEffect(() => {
+    setI((cur) => Math.max(0, Math.min(cur, Math.max(0, total - 1))));
+  }, [total]);
 
   const go = useCallback(
-    // Math.max(0, ...) va PRIMERO para que la cota inferior gane cuando total=0
-    // (evita índices negativos que luego romperían slides[i-1]).
     (d: number) => setI((cur) => Math.max(0, Math.min(total - 1, cur + d))),
     [total]
   );
@@ -218,7 +327,7 @@ export default function PresentationPage() {
     );
   }
 
-  if (slides.length === 0) {
+  if (total === 0) {
     return (
       <main className="flex-1 flex items-center justify-center p-6 text-center" style={{ background: BRAND_BG }}>
         <div>
@@ -233,42 +342,66 @@ export default function PresentationPage() {
     );
   }
 
-  const isSummary = i === 0;
-  const s = slides[i - 1];
+  // Acota el índice DURANTE el render (no dependas del useEffect asíncrono):
+  // si el deck se encoge en caliente (p. ej. curaduría), i podría exceder total.
+  const clampedI = Math.max(0, Math.min(i, total - 1));
+  const view = views[clampedI];
+  const topLabel =
+    view.kind === "summary"
+      ? "Ronda 1 · Panorama"
+      : view.kind === "divider"
+        ? numberedThemeTitle(view.themeId)
+        : numberedThemeTitle(view.slide.themeId);
 
   return (
     <main className="flex-1 p-6 sm:p-10" style={{ background: BRAND_BG }}>
       <div className="mx-auto flex h-full max-w-5xl flex-col">
         <div className="flex items-center justify-between text-sm text-white/50">
           <span className="font-semibold uppercase tracking-wider text-teal-200">
-            {isSummary ? "Ronda 1 · Panorama" : s.themeTitle}
+            {topLabel}
           </span>
           <span>
-            {i + 1} / {total}
+            {clampedI + 1} / {total}
           </span>
         </div>
 
-        {isSummary ? (
+        {view.kind === "summary" && (
           <SummarySlide themeCounts={themeCounts} slides={slides} />
-        ) : (
-          <MomentSlide s={s} />
         )}
+        {view.kind === "divider" && (
+          <ThemeDividerSlide
+            themeId={view.themeId}
+            moments={view.moments}
+            people={view.people}
+          />
+        )}
+        {view.kind === "moment" && <MomentSlide s={view.slide} />}
 
-        <div className="mt-auto flex items-center justify-between pt-8">
-          <button
-            onClick={() => go(-1)}
-            disabled={i === 0}
-            className="rounded-lg border border-white/30 bg-white/10 px-5 py-3 font-semibold text-white shadow-sm hover:bg-white/20 disabled:opacity-30"
-          >
-            ← Anterior
-          </button>
-          <button
-            onClick={() => go(1)}
-            disabled={i === total - 1}
-            className="rounded-lg bg-[#c8103e] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] disabled:opacity-40"
-          >
-            Siguiente →
-          </button>
+        {/* Barra de progreso del deck */}
+        <div className="mt-auto pt-8">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
+            <div
+              className="h-full rounded-full bg-teal-300 transition-all"
+              style={{ width: `${((clampedI + 1) / total) * 100}%` }}
+            />
+          </div>
+
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              onClick={() => go(-1)}
+              disabled={clampedI === 0}
+              className="rounded-lg border border-white/30 bg-white/10 px-5 py-3 font-semibold text-white shadow-sm hover:bg-white/20 disabled:opacity-30"
+            >
+              ← Anterior
+            </button>
+            <button
+              onClick={() => go(1)}
+              disabled={clampedI === total - 1}
+              className="rounded-lg bg-[#c8103e] px-5 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] disabled:opacity-40"
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
       </div>
     </main>
