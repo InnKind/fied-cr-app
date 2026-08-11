@@ -1,5 +1,5 @@
 // Base de conocimiento condensada de Inn.Kind / FIED (generada por un workflow, 2026-08-06).
-// La usa Athenea para responder preguntas fundamentadas (contraste IA-vs-sala).
+// La usa Atenea para responder preguntas fundamentadas (contraste IA-vs-sala).
 export const ATHENEA_KB = `# Base de conocimiento: Inn.Kind / FIED — Educación superior en la era de la IA
 
 ## 1. Qué es Inn.Kind / FIED: narrativa y propósito

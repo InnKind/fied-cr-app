@@ -4,18 +4,18 @@ import { ATHENEA_URL } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 
 // Pantalla de cierre (fases ROUND1_COMPLETE y FINISHED). Muestra un mensaje y,
-// según el caso, enlaces a Athenea y al archivo post-evento.
+// según el caso, enlaces a Atenea y al archivo post-evento.
 export default function Closing({
   title,
   message,
   accent,
-  showAthenea = false,
+  showAtenea = false,
   showArchive = false,
 }: {
   title: string;
   message: string;
   accent?: string;
-  showAthenea?: boolean;
+  showAtenea?: boolean;
   showArchive?: boolean;
 }) {
   return (
@@ -33,7 +33,7 @@ export default function Closing({
         <h1 className="text-2xl font-bold text-white">{title}</h1>
         <p className="mt-3 text-white/80">{message}</p>
 
-        {(showAthenea || showArchive) && (
+        {(showAtenea || showArchive) && (
           <div className="mt-8 space-y-3">
             {showArchive && (
               <a
@@ -43,14 +43,14 @@ export default function Closing({
                 Ver lo que trabajó tu mesa
               </a>
             )}
-            {showAthenea && (
+            {showAtenea && (
               <a
                 href={ATHENEA_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 shadow-sm hover:border-[#0c7d75] hover:bg-[#0c7d75]/5"
               >
-                Explorar con Athenea ↗
+                Explorar con Atenea ↗
               </a>
             )}
           </div>

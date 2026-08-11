@@ -125,7 +125,7 @@ export default function IdeaEntry({
     );
   }
 
-  // Pantalla posterior al envío: Athenea + enviar más ideas.
+  // Pantalla posterior al envío: Atenea + enviar más ideas.
   if (justSent) {
     return (
       <main
@@ -156,7 +156,7 @@ export default function IdeaEntry({
               rel="noopener noreferrer"
               className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 shadow-sm hover:border-[#0c7d75] hover:bg-[#0c7d75]/5"
             >
-              Explorar más con Athenea ↗
+              Explorar más con Atenea ↗
             </a>
           </div>
           <button

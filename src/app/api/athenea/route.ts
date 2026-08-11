@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { athenaAnswer } from "@/lib/athenea";
 
-// Prueba/uso del cerebro de Athenea: POST /api/athenea?q=<pregunta>
+// Prueba/uso del cerebro de Atenea: POST /api/athenea?q=<pregunta>
 export async function POST(req: NextRequest) {
   const q = new URL(req.url).searchParams.get("q") || "";
   if (!q.trim()) {

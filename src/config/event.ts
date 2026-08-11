@@ -91,7 +91,7 @@ export const IDEA_PROMPTS = {
     "¿Cómo podría la persona involucrada tener más autonomía, voz o poder de decisión en ese momento?",
 };
 
-// Enlace a Athenea (GPT externo) para seguir explorando tras enviar ideas.
+// Enlace a Atenea (GPT externo) para seguir explorando tras enviar ideas.
 export const ATHENEA_URL =
   "https://chatgpt.com/g/g-jGO4zaEiC-fied-foro-internacional-de-educacion";
 
