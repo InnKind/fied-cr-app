@@ -415,6 +415,14 @@ export default function AdminPage() {
           >
             🎬 Curaduría ↗
           </a>
+          <a
+            href="/resultados"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-center font-medium text-slate-800 shadow-sm hover:border-blue-400 hover:bg-blue-50"
+          >
+            📊 Resultados R2 ↗
+          </a>
         </div>
       </div>
     </main>
