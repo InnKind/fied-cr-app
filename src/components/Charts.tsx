@@ -23,7 +23,10 @@ export function HBars({
   if (data.length === 0) {
     return <p className="text-sm text-slate-400">Sin datos.</p>;
   }
-  const max = Math.max(...data.map((d) => d.value), 1);
+  // Sanea valores: si alguno viene undefined/NaN (p. ej. un dato mal formado de
+  // la IA), lo trata como 0 para no romper TODO el gráfico con un max=NaN.
+  const safe = (v: number) => (Number.isFinite(v) ? v : 0);
+  const max = Math.max(...data.map((d) => safe(d.value)), 1);
   return (
     <ul className={big ? "space-y-3" : "space-y-2.5"}>
       {data.map((d, i) => (
@@ -38,7 +41,7 @@ export function HBars({
               className={`shrink-0 font-bold tabular-nums ${big ? "text-lg" : "text-sm"}`}
               style={{ color: d.color ?? color }}
             >
-              {d.value}
+              {safe(d.value)}
               {valueSuffix}
             </span>
           </div>
@@ -50,7 +53,7 @@ export function HBars({
             <div
               className="h-full rounded-full transition-all"
               style={{
-                width: `${(d.value / max) * 100}%`,
+                width: `${Math.max(0, Math.min(100, (safe(d.value) / max) * 100))}%`,
                 background: d.color ?? color,
               }}
             />

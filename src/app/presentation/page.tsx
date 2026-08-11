@@ -167,8 +167,8 @@ export default function PresentationPage() {
     setThemeCounts(counts);
     setSlides(flat);
     setLoaded(true);
-    // total de vistas = resumen (1) + momentos
-    setI((cur) => (cur > flat.length ? flat.length : cur));
+    // total de vistas = resumen (1) + momentos. Acota el índice por ambos lados.
+    setI((cur) => Math.max(0, Math.min(cur, flat.length)));
   }, []);
 
   useEffect(() => {
@@ -194,7 +194,9 @@ export default function PresentationPage() {
   const total = slides.length > 0 ? slides.length + 1 : 0;
 
   const go = useCallback(
-    (d: number) => setI((cur) => Math.min(total - 1, Math.max(0, cur + d))),
+    // Math.max(0, ...) va PRIMERO para que la cota inferior gane cuando total=0
+    // (evita índices negativos que luego romperían slides[i-1]).
+    (d: number) => setI((cur) => Math.max(0, Math.min(total - 1, cur + d))),
     [total]
   );
 

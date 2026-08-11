@@ -44,12 +44,12 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function ThemeSection({ block }: { block: Round2ThemeBlock }) {
-  const rolesData: BarDatum[] = block.topRoles.map((r) => ({
+  const rolesData: BarDatum[] = (block.topRoles ?? []).map((r) => ({
     label: r.role,
     value: r.count,
   }));
 
-  const distData: BarDatum[] = Object.entries(block.roleDistribution)
+  const distData: BarDatum[] = Object.entries(block.roleDistribution ?? {})
     .sort((a, b) => b[1] - a[1])
     .map(([id, count]) => ({
       label: roleLabel(id),

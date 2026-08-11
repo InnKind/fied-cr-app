@@ -227,6 +227,29 @@ export async function processRound2(
     `{"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
     `Sin texto fuera del JSON.`;
 
-  const text = await geminiGenerate(prompt, { json: true });
-  return JSON.parse(text) as Round2Aggregation;
+  // Igual que processRound1: la IA a veces devuelve JSON válido con otra forma.
+  // Validamos que traiga 'topRoles' (arreglo) y reintentamos; normalizamos
+  // 'experiences' a un objeto para no romper a quien lo consuma.
+  let lastErr = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const text = await geminiGenerate(prompt, { json: true });
+    try {
+      const parsed = JSON.parse(text) as Partial<Round2Aggregation>;
+      if (Array.isArray(parsed?.topRoles)) {
+        return {
+          topRoles: parsed.topRoles,
+          experiences:
+            parsed.experiences && typeof parsed.experiences === "object"
+              ? (parsed.experiences as IdeaTriple)
+              : { mostRepeated: "", easiest: "", mostDisruptive: "" },
+        };
+      }
+      lastErr = "la respuesta no traía un arreglo 'topRoles'";
+    } catch (e) {
+      lastErr = e instanceof Error ? e.message : "JSON inválido";
+    }
+  }
+  throw new Error(
+    `processRound2 no pudo interpretar la respuesta de la IA: ${lastErr}`
+  );
 }
