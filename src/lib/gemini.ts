@@ -199,9 +199,11 @@ export async function processRound2(
     `Tu tarea:\n` +
     `1. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
     `y cuenta cuántas veces aparece cada uno. Devuelve los más frecuentes primero (máx 6).\n` +
-    `2. De las EXPERIENCIAS elige 3 según: "mostRepeated" (la más común), "easiest" (la más ` +
-    `fácil de implementar) y "mostDisruptive" (la más radical). Parafrasea breve; no inventes. ` +
-    `Si faltan, deja "".\n\n` +
+    `2. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
+    `más fácil de implementar) y "mostDisruptive" (la más radical). Las tres deben ser DISTINTAS ` +
+    `entre sí; NUNCA repitas la misma experiencia (ni apenas reformulada) en más de un criterio. ` +
+    `Si hay menos de 3 experiencias distintas y con sustancia, deja los demás campos como "". ` +
+    `Parafrasea breve; no inventes.\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
     `{"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
     `Sin texto fuera del JSON.`;
