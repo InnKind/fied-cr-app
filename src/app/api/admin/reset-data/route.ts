@@ -56,6 +56,14 @@ export async function POST(req: NextRequest) {
     if (error) failed["table_status"] = error.message;
     else done.push("table_status");
   }
+  {
+    const { error } = await supabaseAdmin
+      .from("table_themes")
+      .delete()
+      .gte("table_number", 0);
+    if (error) failed["table_themes"] = error.message;
+    else done.push("table_themes");
+  }
 
   // Reiniciar el estado del evento.
   const { error: esErr } = await supabaseAdmin

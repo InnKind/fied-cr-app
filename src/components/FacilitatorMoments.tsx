@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import { numberedThemeTitle } from "@/config/event";
-import { themeForTable } from "@/lib/tables";
 
 type Moment = { id: string; ord: number; text: string };
 
@@ -12,8 +11,10 @@ type Moment = { id: string; ord: number; text: string };
 // cuántos participantes eligieron cada uno.
 export default function FacilitatorMoments({
   tableNumber,
+  theme,
 }: {
   tableNumber: number;
+  theme: string | null;
 }) {
   const [moments, setMoments] = useState<Moment[] | null>(null); // null = cargando
   const [inputs, setInputs] = useState(["", "", ""]);
@@ -21,7 +22,6 @@ export default function FacilitatorMoments({
   const [error, setError] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
 
-  const theme = themeForTable(tableNumber);
   const themeTitle = numberedThemeTitle(theme);
 
   const loadMoments = useCallback(async () => {

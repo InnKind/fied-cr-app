@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { themeForTable } from "@/lib/tables";
 
 // Facilitador: sube múltiples fotos de los post-its de su mesa (Supabase Storage,
 // bucket 'postits') y registra cada una en table_images.
 export default function FacilitatorPhotos({
   tableNumber,
+  theme,
 }: {
   tableNumber: number;
+  theme: string | null;
 }) {
   const [count, setCount] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const theme = themeForTable(tableNumber);
 
   const loadCount = useCallback(async () => {
     const { count: c } = await supabase

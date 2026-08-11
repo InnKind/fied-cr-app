@@ -22,7 +22,12 @@ export const ROLES: Role[] = [
 
 // --- Mesas ---
 export const SEATS_PER_TABLE = 8;
-export const TABLES_PER_THEME = 12; // PLACEHOLDER: ajustar según el # real de mesas del salón
+// Nº REAL de mesas físicas del salón. La app las reparte entre los 3 temas
+// según la demanda al momento de distribuir (mesas dinámicas). AJUSTAR al salón.
+export const TOTAL_TABLES = 24;
+// LEGACY: bloque fijo por tema. Solo lo usan el demo viejo (/demo/tema) y
+// helpers legacy en lib/tables.ts. El flujo real ya NO lo usa.
+export const TABLES_PER_THEME = 12;
 
 // --- 3 TEMAS (Agenda V2) — las provocaciones están POR DEFINIR ---
 export const THEMES: Theme[] = [
@@ -104,7 +109,7 @@ export const EVENT = {
   exerciseTitle: "Ejercicio de Prototipado",
   tableSize: SEATS_PER_TABLE,
   // Solo lo usa el registro viejo (flujo en vivo). En Agenda V2 la mesa la asigna la app.
-  numberOfTables: THEMES.length * TABLES_PER_THEME,
+  numberOfTables: TOTAL_TABLES,
 };
 
 // --- Máquina de estados del workshop (diseño de 2 rondas, reunión 7-ago) ---

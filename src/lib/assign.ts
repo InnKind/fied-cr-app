@@ -1,13 +1,14 @@
-import { THEMES, SEATS_PER_TABLE, TABLES_PER_THEME } from "@/config/event";
+import { THEMES, SEATS_PER_TABLE } from "@/config/event";
 
-// Distribución de mesas (batch, la dispara el administrador).
+// Distribución DINÁMICA de mesas (batch, la dispara el administrador).
 // Reglas (diseño 2 rondas):
-//  - Respeta el TEMA elegido (cada tema tiene su bloque de mesas).
-//  - BALANCEA la ocupación (coloca en la mesa menos ocupada del tema).
-//  - SEPARA a quienes venían de la misma mesa inicial (base_table).
-//  - NO optimiza por distancia física.
-//  - PRESERVA las mesas ya asignadas: solo coloca a quienes aún no tienen mesa
-//    (idempotente: re-correrlo ubica a los rezagados sin reordenar al resto).
+//  - Reparte las mesas REALES del salón entre los temas según la DEMANDA
+//    (~8 por mesa), sin bloques fijos ni tope por tema.
+//  - El tema de cada mesa se decide aquí y se devuelve en `mapEntries` para
+//    guardarlo (tabla table_themes) — ya no se deduce por número de mesa.
+//  - BALANCEA la ocupación y SEPARA a quienes venían de la misma mesa inicial.
+//  - PRESERVA lo ya asignado: solo coloca a quienes no tienen mesa y solo agrega
+//    mesas nuevas si un tema las necesita (idempotente para rezagados).
 // PENDIENTE: la mezcla de roles por tema (regla del equipo) se engancha aquí.
 
 export type AssignInput = {
@@ -18,33 +19,45 @@ export type AssignInput = {
 };
 
 export type AssignResult = { id: string; current_table: number };
+export type MapEntry = { table_number: number; theme: string };
+export type AssignOutput = { results: AssignResult[]; mapEntries: MapEntry[] };
 
-export function assignTables(participants: AssignInput[]): AssignResult[] {
+export function assignTables(
+  participants: AssignInput[],
+  existingMap: Record<number, string>,
+  totalTables: number
+): AssignOutput {
   const results: AssignResult[] = [];
+  const mapEntries: MapEntry[] = [];
 
-  THEMES.forEach((theme, idx) => {
-    // Bloque de números de mesa de este tema.
-    const themeTables: number[] = [];
-    for (let t = 0; t < TABLES_PER_THEME; t++) {
-      themeTables.push(idx * TABLES_PER_THEME + t + 1);
-    }
+  // Pool de mesas libres: 1..totalTables que aún no pertenecen a ningún tema.
+  const used = new Set<number>(Object.keys(existingMap).map(Number));
+  const freePool: number[] = [];
+  for (let t = 1; t <= totalTables; t++) if (!used.has(t)) freePool.push(t);
 
+  for (const theme of THEMES) {
     const inTheme = participants.filter((p) => p.selected_theme === theme.id);
-    if (inTheme.length === 0) return;
+    if (inTheme.length === 0) continue;
 
-    // Usa solo tantas mesas como hagan falta (~8 por mesa), no todo el bloque.
-    const tablesNeeded = Math.min(
-      TABLES_PER_THEME,
-      Math.max(1, Math.ceil(inTheme.length / SEATS_PER_TABLE))
-    );
-    const activeTables = themeTables.slice(0, tablesNeeded);
+    // Mesas que este tema YA tiene (de una distribución previa) + las nuevas que
+    // necesite según la demanda total, tomadas del pool libre.
+    const themeTables: number[] = Object.entries(existingMap)
+      .filter(([, th]) => th === theme.id)
+      .map(([t]) => Number(t))
+      .sort((a, b) => a - b);
 
-    // Ocupación actual y mesas-iniciales ya presentes en cada mesa (por
-    // asignaciones previas, para preservarlas y seguir balanceando).
+    const needed = Math.max(1, Math.ceil(inTheme.length / SEATS_PER_TABLE));
+    while (themeTables.length < needed && freePool.length > 0) {
+      const t = freePool.shift()!;
+      themeTables.push(t);
+      mapEntries.push({ table_number: t, theme: theme.id });
+    }
+    if (themeTables.length === 0) continue; // salón sin mesas libres
+
+    // Ocupación actual + gente por mesa inicial (para preservar y balancear).
     const occ = new Map<number, number>();
-    // Por mesa: cuántas personas de cada mesa inicial hay (para dispersarlas).
     const baseCount = new Map<number, Map<number, number>>();
-    activeTables.forEach((t) => {
+    themeTables.forEach((t) => {
       occ.set(t, 0);
       baseCount.set(t, new Map());
     });
@@ -58,13 +71,12 @@ export function assignTables(participants: AssignInput[]): AssignResult[] {
       }
     }
 
-    // Personas sin mesa aún, intercaladas por mesa inicial para dispersarlas.
+    // Personas sin mesa, intercaladas por mesa inicial para dispersarlas.
     const ordered = spreadByBase(inTheme.filter((p) => p.current_table == null));
-
     for (const p of ordered) {
-      // 1) Balancear: entre las mesas MENOS ocupadas...
-      const minOcc = Math.min(...activeTables.map((t) => occ.get(t)!));
-      const candidates = activeTables.filter((t) => occ.get(t)! === minOcc);
+      // 1) Balancear: entre las mesas MENOS ocupadas del tema...
+      const minOcc = Math.min(...themeTables.map((t) => occ.get(t)!));
+      const candidates = themeTables.filter((t) => occ.get(t)! === minOcc);
       // 2) Separar: ...la que tenga MENOS gente de mi misma mesa inicial.
       let chosen = candidates[0];
       if (p.base_table != null && candidates.length > 1) {
@@ -84,9 +96,9 @@ export function assignTables(participants: AssignInput[]): AssignResult[] {
       }
       results.push({ id: p.id, current_table: chosen });
     }
-  });
+  }
 
-  return results;
+  return { results, mapEntries };
 }
 
 // Intercala por mesa inicial (round-robin de "buckets") para que quienes venían

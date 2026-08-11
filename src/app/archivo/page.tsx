@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { EVENT, numberedThemeTitle } from "@/config/event";
-import { themeForTable } from "@/lib/tables";
 
 type Moment = { id: string; ord: number; text: string };
 type Idea = { moment_id: string; ai_text: string | null; agency_text: string | null };
@@ -17,6 +16,7 @@ export default function ArchivoPage() {
   const [moments, setMoments] = useState<Moment[]>([]);
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [theme, setTheme] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
 
@@ -29,13 +29,15 @@ export default function ArchivoPage() {
     setLoading(true);
     setError(null);
     setTable(n);
-    const [{ data: m }, { data: i }, { data: img }] = await Promise.all([
+    const [{ data: m }, { data: i }, { data: img }, { data: tt }] = await Promise.all([
       supabase.from("selected_moments").select("id, ord, text").eq("table_number", n).order("ord"),
       supabase.from("idea_submissions").select("moment_id, ai_text, agency_text").eq("table_number", n),
       supabase.from("table_images").select("image_path").eq("table_number", n),
+      supabase.from("table_themes").select("theme").eq("table_number", n).maybeSingle(),
     ]);
     setMoments((m as Moment[]) ?? []);
     setIdeas((i as Idea[]) ?? []);
+    setTheme((tt?.theme as string | null) ?? null);
     setPhotos(
       ((img as { image_path: string }[]) ?? []).map(
         (r) => supabase.storage.from("postits").getPublicUrl(r.image_path).data.publicUrl
@@ -45,7 +47,7 @@ export default function ArchivoPage() {
     setSearched(true);
   }
 
-  const themeTitle = table ? numberedThemeTitle(themeForTable(table)) : null;
+  const themeTitle = table && theme ? numberedThemeTitle(theme) : null;
 
   return (
     <main className="flex-1 p-6 bg-slate-50">

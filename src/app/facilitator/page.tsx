@@ -7,7 +7,7 @@ import {
   normalizePhaseId,
   numberedThemeTitle,
 } from "@/config/event";
-import { themeForTable } from "@/lib/tables";
+import { supabase } from "@/lib/supabase";
 import { useEventState } from "@/hooks/useEventState";
 import {
   getFacilitatorTable,
@@ -23,12 +23,45 @@ export default function FacilitatorPage() {
   const [loaded, setLoaded] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<string | null>(null);
   const eventState = useEventState();
 
   useEffect(() => {
     setTable(getFacilitatorTable());
     setLoaded(true);
   }, []);
+
+  // Tema de la mesa (decidido al distribuir, guardado en table_themes). En vivo:
+  // si el admin distribuye después de que el facilitador entró, su tema aparece.
+  useEffect(() => {
+    if (table == null) {
+      setTheme(null);
+      return;
+    }
+    let active = true;
+    const load = () =>
+      supabase
+        .from("table_themes")
+        .select("theme")
+        .eq("table_number", table)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (active) setTheme((data?.theme as string | null) ?? null);
+        });
+    load();
+    const channel = supabase
+      .channel(`rt-tabletheme-${table}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "table_themes", filter: `table_number=eq.${table}` },
+        () => load()
+      )
+      .subscribe();
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [table]);
 
   if (!loaded) {
     return (
@@ -85,7 +118,6 @@ export default function FacilitatorPage() {
     );
   }
 
-  const theme = themeForTable(table);
   const themeTitle = numberedThemeTitle(theme) || "—";
   const phaseLabel =
     getPhase(normalizePhaseId(eventState?.phase))?.label ?? "…";
@@ -115,11 +147,11 @@ export default function FacilitatorPage() {
         </div>
 
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <FacilitatorMoments tableNumber={table} />
+          <FacilitatorMoments tableNumber={table} theme={theme} />
         </div>
 
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <FacilitatorPhotos tableNumber={table} />
+          <FacilitatorPhotos tableNumber={table} theme={theme} />
         </div>
 
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
