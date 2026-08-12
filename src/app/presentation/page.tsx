@@ -126,7 +126,13 @@ function SummarySlide({
             En cuántas mesas apareció cada momento.
           </p>
           {topMoments.length ? (
-            <HBars data={topMoments} big color="#c8103e" valueSuffix=" mesas" />
+            <HBars
+              data={topMoments}
+              big
+              color="#c8103e"
+              valueSuffix=" mesas"
+              singularSuffix=" mesa"
+            />
           ) : (
             <p className="text-sm text-slate-400">Sin momentos todavía.</p>
           )}
@@ -191,7 +197,13 @@ function ThemeDividerSlide({
         <p className="mb-4 mt-1 text-sm text-slate-500">
           En cuántas mesas apareció cada uno.
         </p>
-        <HBars data={data} big color={color} valueSuffix=" mesas" />
+        <HBars
+          data={data}
+          big
+          color={color}
+          valueSuffix=" mesas"
+          singularSuffix=" mesa"
+        />
       </div>
 
       <p className="mt-6 text-center text-xs text-white/50">

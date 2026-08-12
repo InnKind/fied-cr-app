@@ -187,7 +187,12 @@ export default function ArchivoPage() {
                   En cuántas mesas apareció cada momento.
                 </p>
                 {pano.topMoments.length ? (
-                  <HBars data={pano.topMoments} color="#c8103e" valueSuffix=" mesas" />
+                  <HBars
+                    data={pano.topMoments}
+                    color="#c8103e"
+                    valueSuffix=" mesas"
+                    singularSuffix=" mesa"
+                  />
                 ) : (
                   <p className="text-sm text-slate-400">Sin momentos registrados.</p>
                 )}

@@ -14,11 +14,14 @@ export function HBars({
   color = "#0c7d75",
   big = false,
   valueSuffix = "",
+  singularSuffix,
 }: {
   data: BarDatum[];
   color?: string;
   big?: boolean;
   valueSuffix?: string;
+  // Sufijo alternativo cuando el valor es 1 (p. ej. "mesa" en vez de "mesas").
+  singularSuffix?: string;
 }) {
   if (data.length === 0) {
     return <p className="text-sm text-slate-400">Sin datos.</p>;
@@ -42,7 +45,9 @@ export function HBars({
               style={{ color: d.color ?? color }}
             >
               {safe(d.value)}
-              {valueSuffix}
+              {safe(d.value) === 1 && singularSuffix !== undefined
+                ? singularSuffix
+                : valueSuffix}
             </span>
           </div>
           <div
