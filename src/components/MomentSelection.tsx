@@ -68,7 +68,11 @@ export default function MomentSelection({
         },
         () => loadParticipant()
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Refetch al (re)suscribir: cubre una asignación de mesa que ocurra
+        // justo en la ventana de suscripción (consistente con el canal de momentos).
+        if (status === "SUBSCRIBED") loadParticipant();
+      });
     const stop = onForeground(loadParticipant);
     return () => {
       supabase.removeChannel(channel);
@@ -94,7 +98,12 @@ export default function MomentSelection({
       .channel(`rt-moments-${tableNumber}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "selected_moments" },
+        {
+          event: "*",
+          schema: "public",
+          table: "selected_moments",
+          filter: `table_number=eq.${tableNumber}`,
+        },
         () => loadMoments(tableNumber)
       )
       .subscribe((status) => {
