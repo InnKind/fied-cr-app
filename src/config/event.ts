@@ -174,14 +174,16 @@ export const PHASES: Phase[] = [
   { id: "THEME_SELECTION", round: 1, label: "1 · Elección de tema", waitTitle: "Elección de tema", waitMessage: "Pantalla en construcción." },
   { id: "WAITING_ASSIGNMENT", round: 1, label: "2 · Esperando asignación de mesa", waitTitle: "Asignando mesas…", waitMessage: "Espera un momento mientras te ubicamos en una mesa." },
   { id: "TABLE_ASSIGNED", round: 1, label: "3 · Mesa asignada", waitTitle: "Ve a tu mesa", waitMessage: "Pantalla en construcción." },
-  { id: "ROUND1_PHYSICAL_ACTIVITY", round: 1, label: "4 · Actividad en mesa (post-its)", waitTitle: "Actividad en tu mesa", waitMessage: "Sigue al facilitador. Por ahora no necesitas el celular." },
-  { id: "MOMENT_SELECTION", round: 1, label: "5 · Selección de momento", waitTitle: "Elige tu momento", waitMessage: "Pantalla en construcción." },
-  { id: "IDEA_ENTRY", round: 1, label: "6 · Captura de ideas (IA + Agency)", waitTitle: "Escribe tus ideas", waitMessage: "Pantalla en construcción." },
-  { id: "ROUND1_COMPLETE", round: 1, label: "7 · Ronda 1 completa (coffee break)", waitTitle: "¡Terminaste la Ronda 1!", waitMessage: "Toma tu café. Ya volvemos con los resultados." },
-  { id: "PROCESSING", round: 1, label: "8 · Procesando con IA", waitTitle: "Procesando…", waitMessage: "La IA está resumiendo las ideas de todas las mesas." },
-  { id: "RESULTS", round: 1, label: "9 · Resultados (presentación)" }, // pantalla real: Results
-  { id: "ROUND2", round: 2, label: "10 · Ronda 2 (reflexión)", waitTitle: "Ronda 2", waitMessage: "Pantalla en construcción." },
-  { id: "FINISHED", round: 2, label: "11 · Cierre", waitTitle: "¡Gracias por participar!", waitMessage: "El ejercicio terminó. Pronto podrás consultar los resultados." },
+  // Prototipado (Ronda 1): UN solo paso. Adentro, cada mesa y cada persona
+  // avanza a su ritmo (actividad → elegir momento → ideas), orquestado por
+  // Round1Prototyping. Ya NO hay fases globales separadas de "selección" e
+  // "ideas"; el admin solo pone "Prototipado" y monitorea con "Mesa lista".
+  { id: "ROUND1_PHYSICAL_ACTIVITY", round: 1, label: "4 · Prototipado en las mesas (a su ritmo)", waitTitle: "Actividad en tu mesa", waitMessage: "Sigue al facilitador. Por ahora no necesitas el celular." },
+  { id: "ROUND1_COMPLETE", round: 1, label: "5 · Ronda 1 completa (coffee break)", waitTitle: "¡Terminaste la Ronda 1!", waitMessage: "Toma tu café. Ya volvemos con los resultados." },
+  { id: "PROCESSING", round: 1, label: "6 · Procesando con IA", waitTitle: "Procesando…", waitMessage: "La IA está resumiendo las ideas de todas las mesas." },
+  { id: "RESULTS", round: 1, label: "7 · Resultados (presentación)" }, // pantalla real: Results
+  { id: "ROUND2", round: 2, label: "8 · Ronda 2 (reflexión)", waitTitle: "Ronda 2", waitMessage: "Pantalla en construcción." },
+  { id: "FINISHED", round: 2, label: "9 · Cierre", waitTitle: "¡Gracias por participar!", waitMessage: "El ejercicio terminó. Pronto podrás consultar los resultados." },
 ];
 
 // Alias de las fases viejas por si event_state todavía trae un valor legacy.

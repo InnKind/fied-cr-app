@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
 import BrandLogo from "@/components/BrandLogo";
@@ -70,6 +71,9 @@ export default function IdeaEntry({
 
   useEffect(() => {
     loadCtx();
+    // Refresca al volver a primer plano (p. ej. si cambió tu mesa/momento).
+    const stop = onForeground(loadCtx);
+    return () => stop();
   }, [loadCtx]);
 
   async function submit() {

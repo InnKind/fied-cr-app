@@ -8,9 +8,7 @@ import Register from "@/components/Register";
 import Waiting from "@/components/Waiting";
 import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
-import MomentSelection from "@/components/MomentSelection";
-import PhysicalActivity from "@/components/PhysicalActivity";
-import IdeaEntry from "@/components/IdeaEntry";
+import Round1Prototyping from "@/components/Round1Prototyping";
 import Round2 from "@/components/Round2";
 import Closing from "@/components/Closing";
 
@@ -55,20 +53,19 @@ export default function Home() {
     return <TableAssigned participantId={participant.id} accent={roleColor} />;
   }
 
-  // ROUND1_PHYSICAL_ACTIVITY: actividad en la mesa; se muestra la provocación
-  // por escrito mientras el facilitador guía al grupo.
-  if (phaseId === "ROUND1_PHYSICAL_ACTIVITY") {
-    return <PhysicalActivity participantId={participant.id} accent={roleColor} />;
-  }
-
-  // MOMENT_SELECTION: elegir 1 de los 3 momentos que registró el facilitador.
-  if (phaseId === "MOMENT_SELECTION") {
-    return <MomentSelection participantId={participant.id} accent={roleColor} />;
-  }
-
-  // IDEA_ENTRY: escribir ideas (IA + Agency) para el momento elegido.
-  if (phaseId === "IDEA_ENTRY") {
-    return <IdeaEntry participantId={participant.id} accent={roleColor} />;
+  // PROTOTIPADO RONDA 1 (a ritmo por mesa/persona): mientras la fase global sea
+  // la ventana de prototipado, cada quien avanza por su cuenta — actividad en la
+  // mesa → elegir momento (cuando el facilitador guarda) → escribir ideas
+  // (cuando elige). Se enrutan también los ids viejos MOMENT_SELECTION/IDEA_ENTRY
+  // por si event_state trae un valor previo.
+  if (
+    phaseId === "ROUND1_PHYSICAL_ACTIVITY" ||
+    phaseId === "MOMENT_SELECTION" ||
+    phaseId === "IDEA_ENTRY"
+  ) {
+    return (
+      <Round1Prototyping participantId={participant.id} accent={roleColor} />
+    );
   }
 
   // ROUND2: reflexión final (tema + 3 roles + experiencia). La mesa no importa.
