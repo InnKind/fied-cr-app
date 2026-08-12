@@ -6,8 +6,17 @@ export type Theme = {
   id: string;
   title: string;
   provocation: string; // la "provocación" del tema (POR DEFINIR)
+  // Pregunta de apertura que el facilitador lee en la mesa y que el participante
+  // también ve por escrito durante la actividad (opcional, POR DEFINIR).
+  openingQuestion?: string;
   roles: string[]; // roles a los que este tema "les calza" (guía la elección)
 };
+
+// ¿El texto sigue en placeholder ("POR DEFINIR")? Sirve para no mostrarle a los
+// participantes un texto de relleno si el equipo aún no puso el contenido real.
+export function isPlaceholder(text: string | null | undefined): boolean {
+  return !text || /POR DEFINIR/i.test(text);
+}
 export type RoundQuestion = { id: string; prompt: string };
 
 // --- Roles / sectores (para el registro y para las preguntas por rol) ---
@@ -35,18 +44,21 @@ export const THEMES: Theme[] = [
     id: "aula",
     title: "La experiencia en el aula",
     provocation: "POR DEFINIR (provocación del tema 1 — perspectiva del estudiante).",
+    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 1).",
     roles: ["estudiante", "docente"],
   },
   {
     id: "organizacional",
     title: "El modelo organizacional de la universidad",
     provocation: "POR DEFINIR (provocación del tema 2 — perspectiva docente/facultad).",
+    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 2).",
     roles: ["docente", "admin-universitario"],
   },
   {
     id: "regulatorio",
     title: "Calidad y regulación del sistema",
     provocation: "POR DEFINIR (provocación del tema 3 — perspectiva del regulador).",
+    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 3).",
     roles: ["regulador", "gobierno", "sector-productivo"],
   },
 ];
@@ -58,6 +70,37 @@ export function numberedThemeTitle(id: string | null | undefined): string {
   if (i < 0) return "";
   return `Tema ${i + 1}: ${THEMES[i].title}`;
 }
+
+// --- Guía del facilitador (run-of-show de la actividad en la mesa) ---
+// Recordatorio de los pasos que sigue el facilitador durante el prototipado.
+// (Los "guiones" verbatim los aporta el equipo; aquí van las instrucciones.)
+export type FacilitatorStep = { title: string; detail: string; script?: string };
+export const FACILITATOR_GUIDE: FacilitatorStep[] = [
+  {
+    title: "1 · Presenta la provocación",
+    detail: "Lee en voz alta la provocación y la pregunta de tu grupo.",
+    script: "", // guion verbatim POR DEFINIR (opcional)
+  },
+  {
+    title: "2 · Generen momentos",
+    detail: "Invita a cada quien a pensar en 2 o 3 momentos y escribirlos en post-its.",
+  },
+  {
+    title: "3 · Compartan y agrupen",
+    detail:
+      "Pide que lean sus momentos en voz alta y los coloquen en la mesa. Agrupa las ideas parecidas.",
+  },
+  {
+    title: "4 · Voten los mejores",
+    detail:
+      "Invita a votar por sus 2 momentos favoritos con los stickers. Ayuda al grupo a identificar los 3 mejores.",
+  },
+  {
+    title: "5 · Registra en la app",
+    detail:
+      "Escribe aquí abajo los 3 momentos ganadores, guárdalos y marca tu mesa como lista.",
+  },
+];
 
 // --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
 export const ROUND_1_QUESTION: RoundQuestion = {

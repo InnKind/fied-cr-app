@@ -227,7 +227,9 @@ export default function MomentSelection({
             Aún no tienes mesa
           </h1>
           <p className="mt-3 text-white/80">
-            Acércate a un organizador para que te ubique, o ingresa tu mesa aquí.
+            No apareces en ninguna mesa. Acércate a un organizador para que te
+            ubique en la mesa de tu tema. Cuando sepas tu número de mesa,
+            ingrésalo aquí.
           </p>
           <button
             onClick={() => setEditing(true)}

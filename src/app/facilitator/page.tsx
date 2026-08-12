@@ -17,6 +17,7 @@ import {
 import FacilitatorMoments from "@/components/FacilitatorMoments";
 import FacilitatorPhotos from "@/components/FacilitatorPhotos";
 import FacilitatorReady from "@/components/FacilitatorReady";
+import FacilitatorGuide from "@/components/FacilitatorGuide";
 import BrandBar from "@/components/BrandBar";
 
 export default function FacilitatorPage() {
@@ -120,9 +121,11 @@ export default function FacilitatorPage() {
     );
   }
 
+  const currentPhaseId = normalizePhaseId(eventState?.phase);
   const themeTitle = numberedThemeTitle(theme) || "—";
-  const phaseLabel =
-    getPhase(normalizePhaseId(eventState?.phase))?.label ?? "…";
+  const phaseLabel = getPhase(currentPhaseId)?.label ?? "…";
+  // La guía se abre sola durante la actividad en la mesa (cuando más se usa).
+  const guideOpen = currentPhaseId === "ROUND1_PHYSICAL_ACTIVITY";
 
   return (
     <main className="flex-1 p-6 bg-slate-50">
@@ -149,7 +152,11 @@ export default function FacilitatorPage() {
           </button>
         </div>
 
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mt-6">
+          <FacilitatorGuide defaultOpen={guideOpen} />
+        </div>
+
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <FacilitatorMoments tableNumber={table} theme={theme} />
         </div>
 

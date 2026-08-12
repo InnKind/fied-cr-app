@@ -9,6 +9,7 @@ import Waiting from "@/components/Waiting";
 import ThemeSelection from "@/components/ThemeSelection";
 import TableAssigned from "@/components/TableAssigned";
 import MomentSelection from "@/components/MomentSelection";
+import PhysicalActivity from "@/components/PhysicalActivity";
 import IdeaEntry from "@/components/IdeaEntry";
 import Round2 from "@/components/Round2";
 import Closing from "@/components/Closing";
@@ -52,6 +53,12 @@ export default function Home() {
   // TABLE_ASSIGNED: la persona ve su mesa asignada (con opción de corregirla).
   if (phaseId === "TABLE_ASSIGNED") {
     return <TableAssigned participantId={participant.id} accent={roleColor} />;
+  }
+
+  // ROUND1_PHYSICAL_ACTIVITY: actividad en la mesa; se muestra la provocación
+  // por escrito mientras el facilitador guía al grupo.
+  if (phaseId === "ROUND1_PHYSICAL_ACTIVITY") {
+    return <PhysicalActivity participantId={participant.id} accent={roleColor} />;
   }
 
   // MOMENT_SELECTION: elegir 1 de los 3 momentos que registró el facilitador.
