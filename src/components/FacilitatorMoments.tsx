@@ -104,6 +104,7 @@ export default function FacilitatorMoments({
   }, [moments, tableNumber, loadCounts]);
 
   async function submit() {
+    if (saving) return; // evita doble envío
     const texts = inputs.map((s) => s.trim());
     if (texts.some((t) => !t)) {
       setError("Escribe los 3 momentos antes de guardar.");
@@ -111,9 +112,42 @@ export default function FacilitatorMoments({
     }
     setSaving(true);
     setError(null);
+
+    // Resuelve el tema de la mesa de forma robusta: si el prop viene null
+    // (p. ej. una mesa fuera de la distribución, sin fila en table_themes),
+    // lo busca en table_themes y, si aún falta, en el tema que eligió alguien
+    // sentado en esa mesa. Guardar momentos con theme=null los haría invisibles
+    // en el procesamiento de la Ronda 1 (se descartan por tema).
+    let effectiveTheme = theme;
+    if (!effectiveTheme) {
+      const { data: tt } = await supabase
+        .from("table_themes")
+        .select("theme")
+        .eq("table_number", tableNumber)
+        .maybeSingle();
+      effectiveTheme = (tt?.theme as string | null) ?? null;
+    }
+    if (!effectiveTheme) {
+      const { data: p } = await supabase
+        .from("participants")
+        .select("selected_theme")
+        .eq("current_table", tableNumber)
+        .not("selected_theme", "is", null)
+        .limit(1)
+        .maybeSingle();
+      effectiveTheme = (p?.selected_theme as string | null) ?? null;
+    }
+    if (!effectiveTheme) {
+      setSaving(false);
+      setError(
+        "No pudimos determinar el tema de tu mesa. Avisa a un organizador antes de guardar."
+      );
+      return;
+    }
+
     const rows = texts.map((text, i) => ({
       table_number: tableNumber,
-      theme,
+      theme: effectiveTheme,
       ord: i + 1,
       text,
     }));

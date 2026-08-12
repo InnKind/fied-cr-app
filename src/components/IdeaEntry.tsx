@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
 import BrandLogo from "@/components/BrandLogo";
@@ -70,9 +71,40 @@ export default function IdeaEntry({
 
   useEffect(() => {
     loadCtx();
-  }, [loadCtx]);
+    // En vivo: si cambia tu mesa (reasignación) o tu selección de momento en
+    // otro dispositivo, el contexto se refresca (no solo al volver a primer plano).
+    const channel = supabase
+      .channel(`rt-idea-${participantId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `id=eq.${participantId}`,
+        },
+        () => loadCtx()
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "moment_selections",
+          filter: `participant_id=eq.${participantId}`,
+        },
+        () => loadCtx()
+      )
+      .subscribe();
+    const stop = onForeground(loadCtx);
+    return () => {
+      supabase.removeChannel(channel);
+      stop();
+    };
+  }, [loadCtx, participantId]);
 
   async function submit() {
+    if (saving) return; // evita doble envío
     if (!ai.trim() && !agency.trim()) {
       setError("Escribe al menos una idea (IA o Agency) antes de enviar.");
       return;
@@ -109,10 +141,11 @@ export default function IdeaEntry({
     );
   }
 
-  // Elegir o CAMBIAR de momento: cuando no eligió ninguno (no alcanzó antes de
-  // que avanzara la fase) o cuando lo pide desde el formulario. Al elegir,
-  // volvemos a las ideas del nuevo momento.
-  if (changing || !ctx?.momentId) {
+  // Elegir o CAMBIAR de momento: cuando no eligió ninguno, cuando lo pide desde
+  // el formulario, o cuando su momento quedó "colgante" (el momentId existe pero
+  // el momento fue borrado/reescrito, así que no hay texto). Al elegir, volvemos
+  // a las ideas del nuevo momento.
+  if (changing || !ctx?.momentId || !ctx?.momentText) {
     return (
       <MomentSelection
         participantId={participantId}

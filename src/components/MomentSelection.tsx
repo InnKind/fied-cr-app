@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
-import { EVENT } from "@/config/event";
+import { EVENT, THEMES, isPlaceholder, numberedThemeTitle } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 
@@ -21,6 +21,7 @@ export default function MomentSelection({
   onSelected?: () => void;
 }) {
   const [tableNumber, setTableNumber] = useState<number | null>(null);
+  const [theme, setTheme] = useState<string | null>(null);
   const [moments, setMoments] = useState<Moment[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -39,10 +40,11 @@ export default function MomentSelection({
   const loadParticipant = useCallback(async () => {
     const { data: p } = await supabase
       .from("participants")
-      .select("current_table")
+      .select("current_table, selected_theme")
       .eq("id", participantId)
       .single();
     setTableNumber((p?.current_table as number | null) ?? null);
+    setTheme((p?.selected_theme as string | null) ?? null);
     const { data: sel } = await supabase
       .from("moment_selections")
       .select("moment_id")
@@ -66,7 +68,11 @@ export default function MomentSelection({
         },
         () => loadParticipant()
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Refetch al (re)suscribir: cubre una asignación de mesa que ocurra
+        // justo en la ventana de suscripción (consistente con el canal de momentos).
+        if (status === "SUBSCRIBED") loadParticipant();
+      });
     const stop = onForeground(loadParticipant);
     return () => {
       supabase.removeChannel(channel);
@@ -92,7 +98,12 @@ export default function MomentSelection({
       .channel(`rt-moments-${tableNumber}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "selected_moments" },
+        {
+          event: "*",
+          schema: "public",
+          table: "selected_moments",
+          filter: `table_number=eq.${tableNumber}`,
+        },
         () => loadMoments(tableNumber)
       )
       .subscribe((status) => {
@@ -254,14 +265,21 @@ export default function MomentSelection({
     );
   }
 
-  // El facilitador todavía no registra los momentos.
+  // El facilitador todavía no registra los momentos: actividad en la mesa. Se
+  // muestra la provocación por escrito (si el equipo ya la puso) mientras el
+  // facilitador guía el post-it. En cuanto guarda los momentos, aparece el
+  // selector (en vivo). El botón "No es mi mesa" evita que un rezagado que
+  // tecleó mal su mesa quede sin salida.
   if (moments.length === 0) {
+    const t = THEMES.find((x) => x.id === theme);
+    const showProvocation = t && !isPlaceholder(t.provocation);
+    const showQuestion = t && !isPlaceholder(t.openingQuestion);
     return (
       <main
         className="flex-1 flex items-center justify-center p-6"
         style={{ background: BRAND_BG }}
       >
-        <div className="w-full max-w-sm text-center">
+        <div className="w-full max-w-md text-center">
           <BrandLogo className="mx-auto mb-6" />
           {accent && (
             <span
@@ -269,9 +287,27 @@ export default function MomentSelection({
               style={{ backgroundColor: accent }}
             />
           )}
-          <h1 className="text-xl font-semibold text-white">Un momento…</h1>
-          <p className="mt-3 text-white/80">
-            El facilitador está registrando los momentos de la Mesa {tableNumber}.
+          <h1 className="text-xl font-semibold text-white">Actividad en tu mesa</h1>
+
+          {(showProvocation || showQuestion) && (
+            <div className="mt-5 rounded-2xl bg-white/10 p-5 text-left ring-1 ring-white/15">
+              {t && (
+                <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
+                  {numberedThemeTitle(t.id)}
+                </p>
+              )}
+              {showProvocation && (
+                <p className="mt-2 text-lg font-medium text-white">{t!.provocation}</p>
+              )}
+              {showQuestion && (
+                <p className="mt-3 text-white/85">{t!.openingQuestion}</p>
+              )}
+            </div>
+          )}
+
+          <p className="mt-5 text-white/80">
+            Sigue al facilitador. Cuando tu mesa tenga los momentos, aquí vas a
+            elegir el tuyo.
           </p>
           <div className="mt-8 flex justify-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.2s]" />
