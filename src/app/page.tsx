@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { ROLES, getPhase, normalizePhaseId } from "@/config/event";
-import { getParticipant, type LocalParticipant } from "@/lib/participant";
+import {
+  getParticipant,
+  clearParticipant,
+  type LocalParticipant,
+} from "@/lib/participant";
+import { supabase } from "@/lib/supabase";
 import { useEventState } from "@/hooks/useEventState";
 import Register from "@/components/Register";
 import Waiting from "@/components/Waiting";
@@ -17,10 +22,41 @@ export default function Home() {
   const [identityLoaded, setIdentityLoaded] = useState(false);
   const eventState = useEventState();
 
-  // Cargar identidad anónima del navegador (solo en el cliente).
+  // Cargar identidad anónima del navegador (solo en el cliente) y VERIFICAR que
+  // ese participante todavía exista en la base. Si el id guardado quedó huérfano
+  // (p. ej. se reseteó la base entre pruebas), se limpia y la persona vuelve a
+  // registrarse — así no queda con un id que no está en la BD (que hacía que el
+  // admin no la contara ni le asignara mesa).
   useEffect(() => {
-    setParticipant(getParticipant());
-    setIdentityLoaded(true);
+    let active = true;
+    (async () => {
+      const local = getParticipant();
+      if (!local) {
+        if (active) {
+          setParticipant(null);
+          setIdentityLoaded(true);
+        }
+        return;
+      }
+      const { data, error } = await supabase
+        .from("participants")
+        .select("id")
+        .eq("id", local.id)
+        .maybeSingle();
+      if (!active) return;
+      // Solo limpiar si la consulta funcionó Y el participante NO existe. Ante un
+      // error de red no arriesgamos a "desloguear" a alguien válido.
+      if (!error && !data) {
+        clearParticipant();
+        setParticipant(null);
+      } else {
+        setParticipant(local);
+      }
+      setIdentityLoaded(true);
+    })();
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (!identityLoaded || !eventState) {
