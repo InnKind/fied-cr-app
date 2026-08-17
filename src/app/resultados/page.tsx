@@ -44,6 +44,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 function ThemeSection({ block }: { block: Round2ThemeBlock }) {
+  const ideasData: BarDatum[] = (block.topIdeas ?? []).map((x) => ({
+    label: x.idea,
+    value: x.count,
+  }));
+
   const rolesData: BarDatum[] = (block.topRoles ?? []).map((r) => ({
     label: r.role,
     value: r.count,
@@ -73,6 +78,18 @@ function ThemeSection({ block }: { block: Round2ThemeBlock }) {
           {block.peopleCount === 1 ? "persona" : "personas"}
         </span>
       </div>
+
+      {ideasData.length > 0 && (
+        <div className="mt-4">
+          <Card>
+            <SectionTitle>Ideas para empezar</SectionTitle>
+            <p className="mb-3 mt-1 text-sm text-slate-500">
+              Con qué idea se sienten motivados a empezar.
+            </p>
+            <HBars data={ideasData} color="#0c7d75" valueSuffix="×" />
+          </Card>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <Card>
@@ -172,6 +189,7 @@ export default function ResultadosPage() {
     );
 
   const totalPeople = themes.reduce((n, t) => n + t.peopleCount, 0);
+  const cantCommit = payload?.cantCommitCount ?? 0;
 
   const themePopularity: BarDatum[] = themes.map((t) => ({
     label: numberedThemeTitle(t.themeId),
@@ -234,6 +252,19 @@ export default function ResultadosPage() {
             <HBars data={themePopularity} big valueSuffix="" />
           </Card>
         </div>
+
+        {cantCommit > 0 && (
+          <div className="mt-4">
+            <Card>
+              <SectionTitle>No pueden accionar ahora</SectionTitle>
+              <p className="mt-1 text-slate-700">
+                <b className="text-2xl text-slate-900">{cantCommit}</b>{" "}
+                {cantCommit === 1 ? "persona indicó" : "personas indicaron"} que
+                no pueden comprometerse a tomar acción en este momento.
+              </p>
+            </Card>
+          </div>
+        )}
 
         {themes.map((block) => (
           <ThemeSection key={block.themeId} block={block} />

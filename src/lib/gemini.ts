@@ -192,14 +192,19 @@ export async function processRound1(
 export type Round2Aggregation = {
   topRoles: { role: string; count: number }[];
   experiences: IdeaTriple;
+  // Ideas motivadoras agrupadas (Cambio #1): "¿con qué idea te sientes
+  // motivado/a a empezar?" — la IA junta las parecidas con su conteo.
+  topIdeas: { idea: string; count: number }[];
 };
 
-// Para un TEMA: agrupa los roles-a-involucrar equivalentes (con conteo) y
-// resume las experiencias por los 3 criterios (más repetida/fácil/disruptiva).
+// Para un TEMA: agrupa los roles-a-involucrar equivalentes (con conteo), las
+// ideas motivadoras parecidas (con conteo) y resume las experiencias por los 3
+// criterios (más repetida/fácil/disruptiva).
 export async function processRound2(
   themeTitle: string,
   roles: string[],
-  experiences: string[]
+  experiences: string[],
+  ideas: string[]
 ): Promise<Round2Aggregation> {
   const rolesBlock = roles.length
     ? roles.map((r) => `  - ${r}`).join("\n")
@@ -207,24 +212,31 @@ export async function processRound2(
   const expBlock = experiences.length
     ? experiences.map((e, i) => `  ${i + 1}. ${e}`).join("\n")
     : "  (ninguna)";
+  const ideasBlock = ideas.length
+    ? ideas.map((x) => `  - ${x}`).join("\n")
+    : "  (ninguna)";
 
   const prompt =
     `Eres un analista de un foro de educación superior (FIED). Tema: "${themeTitle}".\n\n` +
-    `Los participantes que quieren accionar este tema indicaron los ROLES que necesitan ` +
-    `involucrar y una EXPERIENCIA que diseñarían para inspirarlos.\n\n` +
-    `ROLES a involucrar (escritos por la gente; pueden repetirse con otras palabras):\n` +
-    `${rolesBlock}\n\n` +
+    `Los participantes que quieren accionar este tema indicaron: una IDEA con la que se ` +
+    `sienten motivados a empezar, los ROLES que necesitan involucrar, y una EXPERIENCIA ` +
+    `que diseñarían para inspirarlos.\n\n` +
+    `IDEAS con las que quieren empezar (escritas por la gente; pueden repetirse con otras palabras):\n` +
+    `${ideasBlock}\n\n` +
+    `ROLES a involucrar (pueden repetirse con otras palabras):\n${rolesBlock}\n\n` +
     `EXPERIENCIAS propuestas:\n${expBlock}\n\n` +
     `Tu tarea:\n` +
-    `1. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
+    `1. Agrupa las IDEAS equivalentes (aunque estén dichas con otras palabras) y cuenta ` +
+    `cuántas veces aparece cada una. Devuelve las más frecuentes primero (máx 6). No inventes.\n` +
+    `2. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
     `y cuenta cuántas veces aparece cada uno. Devuelve los más frecuentes primero (máx 6).\n` +
-    `2. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
+    `3. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
     `más fácil de implementar) y "mostDisruptive" (la más radical). Las tres deben ser DISTINTAS ` +
     `entre sí; NUNCA repitas la misma experiencia (ni apenas reformulada) en más de un criterio. ` +
     `Si hay menos de 3 experiencias distintas y con sustancia, deja los demás campos como "". ` +
     `Parafrasea breve; no inventes.\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
-    `{"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
+    `{"topIdeas":[{"idea":"...","count":0}],"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
     `Sin texto fuera del JSON.`;
 
   // Igual que processRound1: la IA a veces devuelve JSON válido con otra forma.
@@ -238,6 +250,7 @@ export async function processRound2(
       if (Array.isArray(parsed?.topRoles)) {
         return {
           topRoles: parsed.topRoles,
+          topIdeas: Array.isArray(parsed.topIdeas) ? parsed.topIdeas : [],
           experiences:
             parsed.experiences && typeof parsed.experiences === "object"
               ? (parsed.experiences as IdeaTriple)

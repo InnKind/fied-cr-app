@@ -183,11 +183,18 @@ export const ATHENEA_URL =
 // --- Ronda 2 (reflexión) — 3 preguntas. La mesa ya no importa. ---
 export const ROUND2_QUESTIONS = {
   theme: "¿En cuál de los 3 temas quieres tomar acción en tu contexto real?",
+  // Nueva pregunta (Cambio #1), va después del tema.
+  motivatingIdea: "¿Con qué idea te sientes motivado/a a empezar?",
   roles:
     "¿Cuáles son los 3 roles que necesitas involucrar para llevar esta iniciativa adelante? (roles, no nombres)",
   experience:
     "¿Qué experiencia podrías diseñar para inspirar a esos roles a apoyarte?",
+  // 4ª opción del dropdown de tema y su pregunta de seguimiento (Cambio #1).
+  cantCommitOption: "No puedo comprometerme a tomar acción en este momento.",
+  cantCommitReason: "¿Por qué no puedes tomar acción en este momento?",
 };
+// Valor centinela para la 4ª opción "no puedo comprometerme".
+export const R2_CANT_COMMIT = "__cant_commit__";
 
 export const EVENT = {
   name: "Inn.Kind · FIEd Costa Rica",

@@ -11,6 +11,8 @@ export type Round2ThemeBlock = {
   roleDistribution: Record<string, number>;
   // roles a involucrar (texto libre, agrupados por la IA) con su conteo
   topRoles: { role: string; count: number }[];
+  // ideas con las que quieren empezar (agrupadas por la IA) con su conteo
+  topIdeas?: { idea: string; count: number }[];
   // experiencias que inspiran, elegidas por los 3 criterios
   experiences: IdeaTriple;
 };
@@ -18,4 +20,6 @@ export type Round2ThemeBlock = {
 export type Round2Payload = {
   kind?: string;
   themes: Round2ThemeBlock[];
+  // Cuántas personas eligieron "no puedo comprometerme a tomar acción" (Cambio #1).
+  cantCommitCount?: number;
 };

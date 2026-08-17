@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
 
   const { data: responses, error: rErr } = await supabaseAdmin
     .from("round2_responses")
-    .select("participant_id, selected_theme, role_1, role_2, role_3, experience_text");
+    .select(
+      "participant_id, selected_theme, motivating_idea, role_1, role_2, role_3, experience_text, cant_commit"
+    );
   if (rErr) return NextResponse.json({ error: rErr.message }, { status: 500 });
 
   const { data: parts, error: pErr } = await supabaseAdmin
@@ -55,18 +57,19 @@ export async function POST(req: NextRequest) {
     const experiences = inTheme
       .map((r) => (r.experience_text as string | null)?.trim())
       .filter((x): x is string => !!x);
+    const ideas = inTheme
+      .map((r) => (r.motivating_idea as string | null)?.trim())
+      .filter((x): x is string => !!x);
 
-    let ai: { topRoles: { role: string; count: number }[]; experiences: unknown } = {
-      topRoles: [],
-      experiences: {},
-    };
+    let ai: {
+      topRoles: { role: string; count: number }[];
+      topIdeas: { idea: string; count: number }[];
+      experiences: unknown;
+    } = { topRoles: [], topIdeas: [], experiences: {} };
     try {
-      ai = await processRound2(theme.title, roles, experiences);
+      ai = await processRound2(theme.title, roles, experiences, ideas);
     } catch (e) {
-      ai = {
-        topRoles: [],
-        experiences: {},
-      };
+      ai = { topRoles: [], topIdeas: [], experiences: {} };
       console.error("R2 IA falló para", theme.id, e instanceof Error ? e.message : e);
     }
 
@@ -76,11 +79,15 @@ export async function POST(req: NextRequest) {
       peopleCount: inTheme.length,
       roleDistribution,
       topRoles: ai.topRoles,
+      topIdeas: ai.topIdeas,
       experiences: ai.experiences,
     });
   }
 
-  const payload = { kind: "round2", themes: themesOut };
+  // Conteo global de quienes eligieron "no puedo comprometerme" (Cambio #1).
+  const cantCommitCount = all.filter((r) => r.cant_commit === true).length;
+
+  const payload = { kind: "round2", themes: themesOut, cantCommitCount };
   const { error: upErr } = await supabaseAdmin
     .from("synthesis")
     .upsert({ round: 2, payload }, { onConflict: "round" });
