@@ -79,6 +79,7 @@ export default function Round1Prototyping({
       participantId={participantId}
       accent={accent}
       onSelected={load}
+      guided
     />
   );
 }

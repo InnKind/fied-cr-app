@@ -9,6 +9,8 @@ import {
   isPlaceholder,
   numberedThemeTitle,
   ACTIVITY_STEPS,
+  ACTIVITY_THINK_HINT,
+  MOMENT_STEPS,
 } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
@@ -17,15 +19,24 @@ type Moment = { id: string; ord: number; text: string };
 
 // Fase MOMENT_SELECTION: la persona elige 1 de los 3 momentos que registró el
 // facilitador de su mesa. Espera (en vivo) a que aparezcan si aún no están.
+// `guided` (true desde el flujo real) activa las pantallas de instrucciones
+// (Cambio #2): pasos → "Empezar" → tema+preguntas mientras espera; y otra
+// pantalla de pasos antes de elegir el momento. En "Cambiar momento" va false.
 export default function MomentSelection({
   participantId,
   accent,
   onSelected,
+  guided = false,
 }: {
   participantId: string;
   accent?: string;
   onSelected?: () => void;
+  guided?: boolean;
 }) {
+  // Instrucciones (Cambio #2): "Empezar" (pantalla de pasos -> tema+preguntas)
+  // y "Continuar" (pantalla de pasos antes del selector de momento).
+  const [activityStarted, setActivityStarted] = useState(false);
+  const [readyToPick, setReadyToPick] = useState(false);
   const [tableNumber, setTableNumber] = useState<number | null>(null);
   const [theme, setTheme] = useState<string | null>(null);
   const [moments, setMoments] = useState<Moment[] | null>(null);
@@ -271,15 +282,22 @@ export default function MomentSelection({
     );
   }
 
-  // El facilitador todavía no registra los momentos: actividad en la mesa. Se
-  // muestra la provocación por escrito (si el equipo ya la puso) mientras el
-  // facilitador guía el post-it. En cuanto guarda los momentos, aparece el
-  // selector (en vivo). El botón "No es mi mesa" evita que un rezagado que
-  // tecleó mal su mesa quede sin salida.
-  if (moments.length === 0) {
-    const t = THEMES.find((x) => x.id === theme);
-    const showProvocation = t && !isPlaceholder(t.provocation);
-    const showQuestion = t && !isPlaceholder(t.openingQuestion);
+  // Botón de rescate ("No es mi mesa"), reutilizado en varias pantallas.
+  const rescueLink = (
+    <button
+      onClick={() => {
+        setManualInput(String(tableNumber));
+        setEditing(true);
+      }}
+      className="mt-8 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
+    >
+      No es mi mesa
+    </button>
+  );
+
+  // PANTALLA A (Cambio #2): al llegar a la mesa, los pasos del proceso + "Empezar".
+  // Solo en el flujo guiado y mientras aún no hay momentos y no tocó "Empezar".
+  if (moments.length === 0 && guided && !activityStarted) {
     return (
       <main
         className="flex-1 flex items-center justify-center p-6"
@@ -294,27 +312,10 @@ export default function MomentSelection({
             />
           )}
           <h1 className="text-xl font-semibold text-white">Actividad en tu mesa</h1>
-
-          {(showProvocation || showQuestion) && (
-            <div className="mt-5 rounded-2xl bg-white/10 p-5 text-left ring-1 ring-white/15">
-              {t && (
-                <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
-                  {numberedThemeTitle(t.id)}
-                </p>
-              )}
-              {showProvocation && (
-                <p className="mt-2 text-lg font-medium text-white">{t!.provocation}</p>
-              )}
-              {showQuestion && (
-                <p className="mt-3 text-white/85">{t!.openingQuestion}</p>
-              )}
-            </div>
-          )}
-
           {ACTIVITY_STEPS.length > 0 && (
             <div className="mt-5 rounded-2xl bg-white p-5 text-left shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
-                Qué hacer en tu mesa
+                Qué van a hacer en la mesa
               </p>
               <ol className="mt-3 space-y-2.5">
                 {ACTIVITY_STEPS.map((step, i) => (
@@ -328,25 +329,138 @@ export default function MomentSelection({
               </ol>
             </div>
           )}
-
-          <p className="mt-5 text-white/80">
-            Sigue al facilitador. Cuando tu mesa tenga los momentos, aquí vas a
-            elegir el tuyo.
-          </p>
-          <div className="mt-8 flex justify-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.2s]" />
-            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.1s]" />
-            <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce" />
-          </div>
           <button
-            onClick={() => {
-              setManualInput(String(tableNumber));
-              setEditing(true);
-            }}
-            className="mt-8 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
+            onClick={() => setActivityStarted(true)}
+            className="mt-6 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-[#a50d33] active:bg-[#8a0b2b]"
           >
-            No es mi mesa
+            Empezar
           </button>
+          {rescueLink}
+        </div>
+      </main>
+    );
+  }
+
+  // PANTALLA B (Cambio #2): tu tema + preguntas de apoyo + la pregunta clave para
+  // definir tus "momentos", mientras el facilitador guía el post-it. En cuanto
+  // guarda los momentos, esta pantalla cambia sola (en vivo).
+  if (moments.length === 0) {
+    const t = THEMES.find((x) => x.id === theme);
+    const showProvocation = t && !isPlaceholder(t.provocation);
+    const supportQs = (t?.supportingQuestions ?? []).filter(
+      (q) => !isPlaceholder(q)
+    );
+    const showMomentsQ = t && !isPlaceholder(t.momentsQuestion);
+    return (
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
+        <div className="w-full max-w-md">
+          <BrandLogo className="mb-6" />
+          {accent && (
+            <span
+              className="mb-4 inline-block h-3 w-3 rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+          )}
+          {t && (
+            <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
+              {numberedThemeTitle(t.id)}
+            </p>
+          )}
+          {showProvocation && (
+            <p className="mt-1 text-white/80">{t!.provocation}</p>
+          )}
+
+          {(supportQs.length > 0 || showMomentsQ) && (
+            <div className="mt-4 rounded-2xl bg-white p-5 text-left shadow-sm">
+              {supportQs.length > 0 && (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
+                    Para pensar
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1.5 pl-5 text-slate-700">
+                    {supportQs.map((q, i) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {showMomentsQ && (
+                <div
+                  className={
+                    supportQs.length > 0
+                      ? "mt-4 border-t border-slate-100 pt-4"
+                      : ""
+                  }
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#c8103e]">
+                    La pregunta clave
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-slate-900">
+                    {t!.momentsQuestion}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="mt-4 text-white/85">{ACTIVITY_THINK_HINT}</p>
+
+          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/70">
+            <span className="flex gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.2s]" />
+              <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.1s]" />
+              <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce" />
+            </span>
+            <span>Cuando tu mesa tenga los momentos, aquí eliges el tuyo.</span>
+          </div>
+          <div className="text-center">{rescueLink}</div>
+        </div>
+      </main>
+    );
+  }
+
+  // PANTALLA C (Cambio #2): ya hay momentos guardados; antes de elegir, los pasos
+  // de la siguiente etapa (elegir, pensar, enviar ideas, conversar, presentar).
+  if (guided && !readyToPick) {
+    return (
+      <main
+        className="flex-1 flex items-center justify-center p-6"
+        style={{ background: BRAND_BG }}
+      >
+        <div className="w-full max-w-md text-center">
+          <BrandLogo className="mx-auto mb-6" />
+          {accent && (
+            <span
+              className="mb-4 inline-block h-3 w-3 rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+          )}
+          <h1 className="text-xl font-semibold text-white">¡Ya están los momentos!</h1>
+          <p className="mt-2 text-white/80">Ahora sigue así:</p>
+          {MOMENT_STEPS.length > 0 && (
+            <div className="mt-4 rounded-2xl bg-white p-5 text-left shadow-sm">
+              <ol className="space-y-2.5">
+                {MOMENT_STEPS.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c7d75]/10 text-sm font-bold text-[#0c7d75]">
+                      {i + 1}
+                    </span>
+                    <span className="text-slate-700">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          <button
+            onClick={() => setReadyToPick(true)}
+            className="mt-6 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-[#a50d33] active:bg-[#8a0b2b]"
+          >
+            Continuar
+          </button>
+          {rescueLink}
         </div>
       </main>
     );

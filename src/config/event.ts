@@ -9,6 +9,12 @@ export type Theme = {
   // Pregunta de apertura que el facilitador lee en la mesa y que el participante
   // también ve por escrito durante la actividad (opcional, POR DEFINIR).
   openingQuestion?: string;
+  // Preguntas de apoyo (2-3) que estimulan el pensamiento del participante en la
+  // pantalla de actividad (Cambio #2). POR DEFINIR — las afina el equipo.
+  supportingQuestions?: string[];
+  // Pregunta principal que guía a la persona a definir sus "momentos". Es la más
+  // importante de la pantalla (se resalta). POR DEFINIR.
+  momentsQuestion?: string;
   roles: string[]; // roles a los que este tema "les calza" (guía la elección)
 };
 
@@ -45,6 +51,13 @@ export const THEMES: Theme[] = [
     title: "La experiencia en el aula",
     provocation: "POR DEFINIR (provocación del tema 1 — perspectiva del estudiante).",
     openingQuestion: "POR DEFINIR (pregunta de apertura del tema 1).",
+    // Ejemplo del word de cambios (Tema 1). El equipo lo afina.
+    supportingQuestions: [
+      "¿Qué es pensamiento realmente crítico y dónde puedo apoyarme en la IA?",
+      "¿Cómo evaluar el aprendizaje: asistencia y exámenes, o portafolios?",
+    ],
+    momentsQuestion:
+      "¿En qué momentos del proceso de aprendizaje del estudiante podría mejorar el resultado aprovechando la IA y empoderando al estudiante a dirigir su propio proceso?",
     roles: ["estudiante", "docente"],
   },
   {
@@ -52,6 +65,8 @@ export const THEMES: Theme[] = [
     title: "El modelo organizacional de la universidad",
     provocation: "POR DEFINIR (provocación del tema 2 — perspectiva docente/facultad).",
     openingQuestion: "POR DEFINIR (pregunta de apertura del tema 2).",
+    supportingQuestions: ["POR DEFINIR (pregunta de apoyo 1 del tema 2)."],
+    momentsQuestion: "POR DEFINIR (pregunta para definir momentos del tema 2).",
     roles: ["docente", "admin-universitario"],
   },
   {
@@ -59,6 +74,8 @@ export const THEMES: Theme[] = [
     title: "Calidad y regulación del sistema",
     provocation: "POR DEFINIR (provocación del tema 3 — perspectiva del regulador).",
     openingQuestion: "POR DEFINIR (pregunta de apertura del tema 3).",
+    supportingQuestions: ["POR DEFINIR (pregunta de apoyo 1 del tema 3)."],
+    momentsQuestion: "POR DEFINIR (pregunta para definir momentos del tema 3).",
     roles: ["regulador", "gobierno", "sector-productivo"],
   },
 ];
@@ -102,15 +119,29 @@ export const FACILITATOR_GUIDE: FacilitatorStep[] = [
   },
 ];
 
-// --- Instrucciones para el PARTICIPANTE durante la actividad en la mesa ---
-// Se muestran en la pantalla "Actividad en tu mesa" (mientras la mesa trabaja),
-// para que el app oriente la atención sin depender de un facilitador por mesa.
-// El equipo puede editar estos pasos.
+// --- Instrucciones para el PARTICIPANTE (Cambio #2) ---
+// Pantalla A ("Actividad en tu mesa"): los pasos del proceso, al llegar a la
+// mesa. Luego un botón "Empezar" lleva a la pantalla del tema + preguntas.
+// El equipo edita estos textos.
 export const ACTIVITY_STEPS: string[] = [
-  "Primero, tómate un par de minutos para pensar en silencio, tú solo/a.",
-  "Anota tus \"momentos\" en post-its y colócalos en la mesa.",
-  "Entre todos, agrupen los parecidos y voten los más importantes con las calcomanías.",
-  "Una persona de la mesa registra los 3 momentos ganadores en el app.",
+  "Piensa en los momentos y anota tus ideas en post-its.",
+  "Preséntate, lee tus post-its en voz alta y agrupen los parecidos.",
+  "Voten por sus 2 momentos favoritos con las calcomanías.",
+  "Ayuden al grupo a elegir los 3 mejores momentos.",
+  "Elige el momento en el que quieres trabajar y siéntate con ese subgrupo.",
+];
+
+// Instrucción fija bajo las preguntas del tema (pantalla B, tras "Empezar").
+export const ACTIVITY_THINK_HINT =
+  "Tómate un par de minutos para pensar en silencio y anota 2 o 3 “momentos” en post-its.";
+
+// Pantalla C: pasos de la SIGUIENTE etapa, cuando el facilitador ya guardó los
+// 3 momentos y la persona va a elegir el suyo y trabajar las ideas.
+export const MOMENT_STEPS: string[] = [
+  "Elige el momento en el que quieras trabajar y siéntate junto a quienes trabajen en el mismo.",
+  "Tómate un par de minutos para pensar en silencio y envía tus ideas por la app.",
+  "En tu subgrupo, conversen y mejoren las ideas que generaron para su momento.",
+  "Una persona de cada subgrupo presenta las mejores ideas a los demás subgrupos.",
 ];
 
 // --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
