@@ -76,7 +76,17 @@ export default function Round2({
     setSaving(true);
     setError(null);
 
-    const row = cantCommit
+    const row: {
+      participant_id: string;
+      selected_theme: string | null;
+      cant_commit: boolean;
+      cant_commit_reason: string | null;
+      motivating_idea: string | null;
+      role_1: string | null;
+      role_2: string | null;
+      role_3: string | null;
+      experience_text: string | null;
+    } = cantCommit
       ? {
           participant_id: participantId,
           selected_theme: null,
