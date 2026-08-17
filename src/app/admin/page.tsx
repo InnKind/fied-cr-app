@@ -2,10 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { PHASES, getPhase, normalizePhaseId } from "@/config/event";
+import {
+  PHASES,
+  THEMES,
+  getPhase,
+  normalizePhaseId,
+  numberedThemeTitle,
+} from "@/config/event";
 import BrandBar from "@/components/BrandBar";
 
 type EventState = { current_round: number; phase: string };
+
+// Colores por tema (mismo orden que THEMES), consistentes con el resto de la app.
+const THEME_COLORS = ["#0c7d75", "#c8103e", "#d97706"];
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
@@ -20,6 +29,10 @@ export default function AdminPage() {
   });
   const [tables, setTables] = useState<
     { table: number; people: number; ready: boolean }[]
+  >([]);
+  // Mapa mesa -> tema (se llena al distribuir; para ubicar rezagados por tema).
+  const [tableThemes, setTableThemes] = useState<
+    { table_number: number; theme: string }[]
   >([]);
   const [msg, setMsg] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -65,6 +78,9 @@ export default function AdminPage() {
       const { data: statuses } = await supabase
         .from("table_status")
         .select("table_number, ready");
+      const { data: tThemes } = await supabase
+        .from("table_themes")
+        .select("table_number, theme");
       const perTable: Record<number, number> = {};
       (parts ?? []).forEach((p) => {
         const t = p.current_table as number;
@@ -88,6 +104,9 @@ export default function AdminPage() {
           assigned: assignedC ?? 0,
         });
         setTables(tbls);
+        setTableThemes(
+          (tThemes ?? []) as { table_number: number; theme: string }[]
+        );
       }
     }
     load();
@@ -256,6 +275,42 @@ export default function AdminPage() {
             <span>Ideas R1: <b>{counts.r1}</b></span>
           </div>
         </div>
+
+        {/* Mesas por tema: para ubicar a un rezagado según el tema que quiere. */}
+        {tableThemes.length > 0 && (
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-semibold text-slate-700">Mesas por tema</p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              Para ubicar a alguien: su tema está en estas mesas.
+            </p>
+            <div className="mt-3 space-y-2.5">
+              {THEMES.map((t, i) => {
+                const mesas = tableThemes
+                  .filter((x) => x.theme === t.id)
+                  .map((x) => x.table_number)
+                  .sort((a, b) => a - b);
+                if (mesas.length === 0) return null;
+                return (
+                  <div key={t.id} className="flex items-start gap-2">
+                    <span
+                      className="mt-1.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: THEME_COLORS[i] ?? "#0c7d75" }}
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        {numberedThemeTitle(t.id)}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {mesas.length === 1 ? "Mesa " : "Mesas "}
+                        {mesas.join(", ")}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Estado de las mesas: cuáles marcó "listas" su facilitador */}
         {tables.length > 0 && (
