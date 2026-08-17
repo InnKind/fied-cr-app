@@ -102,6 +102,17 @@ export const FACILITATOR_GUIDE: FacilitatorStep[] = [
   },
 ];
 
+// --- Instrucciones para el PARTICIPANTE durante la actividad en la mesa ---
+// Se muestran en la pantalla "Actividad en tu mesa" (mientras la mesa trabaja),
+// para que el app oriente la atención sin depender de un facilitador por mesa.
+// El equipo puede editar estos pasos.
+export const ACTIVITY_STEPS: string[] = [
+  "Primero, tómate un par de minutos para pensar en silencio, tú solo/a.",
+  "Anota tus \"momentos\" en post-its y colócalos en la mesa.",
+  "Entre todos, agrupen los parecidos y voten los más importantes con las calcomanías.",
+  "Una persona de la mesa registra los 3 momentos ganadores en el app.",
+];
+
 // --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
 export const ROUND_1_QUESTION: RoundQuestion = {
   id: "r1",

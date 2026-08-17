@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
-import { EVENT, THEMES, isPlaceholder, numberedThemeTitle } from "@/config/event";
+import {
+  EVENT,
+  THEMES,
+  isPlaceholder,
+  numberedThemeTitle,
+  ACTIVITY_STEPS,
+} from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 
@@ -302,6 +308,24 @@ export default function MomentSelection({
               {showQuestion && (
                 <p className="mt-3 text-white/85">{t!.openingQuestion}</p>
               )}
+            </div>
+          )}
+
+          {ACTIVITY_STEPS.length > 0 && (
+            <div className="mt-5 rounded-2xl bg-white p-5 text-left shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
+                Qué hacer en tu mesa
+              </p>
+              <ol className="mt-3 space-y-2.5">
+                {ACTIVITY_STEPS.map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c7d75]/10 text-sm font-bold text-[#0c7d75]">
+                      {i + 1}
+                    </span>
+                    <span className="text-slate-700">{step}</span>
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
 
