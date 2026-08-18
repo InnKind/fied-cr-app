@@ -174,13 +174,14 @@ export async function processRound1(
     `Tu tarea:\n` +
     `1. AGRUPA los momentos que son esencialmente el mismo aunque estén dichos con palabras ` +
     `distintas (p. ej. "elegir mis cursos" y "decidir qué materias estudiar" son el mismo). ` +
-    `Dale a cada grupo un título corto y claro. LÍMITES DEL AGRUPAMIENTO: agrupa SOLO si ` +
-    `describen la MISMA situación concreta; NO crees categorías temáticas amplias que metan ` +
-    `situaciones distintas en un mismo saco (p. ej. "trámites lentos" no es un grupo válido si ` +
-    `junta autorizar una carrera con convalidar un título). Ante la duda, DÉJALOS SEPARADOS: es ` +
-    `preferible una diapositiva de más que perder el momento que trabajó una mesa. ` +
+    `Dale a cada grupo un título corto y claro. Agrupa con generosidad las REFORMULACIONES: es ` +
+    `normal que la misma situación aparezca escrita de dos o tres maneras distintas en mesas ` +
+    `distintas, y esas van juntas. NO agrupes, en cambio, situaciones que ocurren en pasos ` +
+    `distintos del proceso solo porque comparten una causa común (p. ej. "autorizar una carrera ` +
+    `nueva" y "convalidar el título de un profesor" comparten la lentitud del trámite pero NO ` +
+    `son el mismo momento). ` +
     `COBERTURA OBLIGATORIA: cada momento de la lista debe quedar en EXACTAMENTE UN grupo y ` +
-    `NINGUNO puede quedar fuera; si un momento no se parece a otro, va solo en su propio grupo.\n` +
+    `NINGUNO puede quedar fuera; si un momento no se parece a ningún otro, va solo en su grupo.\n` +
     `2. Para cada grupo, lista en "tableNumbers" los números de MESA de los momentos que lo ` +
     `componen (tal como aparecen entre paréntesis arriba; repite el número si hace falta).\n` +
     `3. Para cada grupo, elige HASTA 3 ideas de empoderamiento (campo "agency") y HASTA 3 de ` +
