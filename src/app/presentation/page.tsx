@@ -361,7 +361,7 @@ export default function PresentationPage() {
     // desplaza si el contenido no cabe, en vez de empujar la página entera
     // (en un proyector la barra de navegación quedaba abajo del corte).
     <main
-      className="flex h-[100dvh] flex-col overflow-hidden p-6 sm:p-10"
+      className="flex h-[100dvh] flex-col overflow-hidden p-6 sm:px-10 sm:py-6"
       style={{ background: BRAND_BG }}
     >
       <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
@@ -391,7 +391,7 @@ export default function PresentationPage() {
         </div>
 
         {/* Barra de progreso del deck */}
-        <div className="mt-auto pt-8">
+        <div className="mt-auto pt-5">
           <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
             <div
               className="h-full rounded-full bg-teal-300 transition-all"
