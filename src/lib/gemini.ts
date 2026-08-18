@@ -160,11 +160,15 @@ function buildSlides(
     // Si dos grupos reclaman el mismo momento, se queda en el primero.
     const propios = idx.filter((i) => !usados.has(i));
     propios.forEach((i) => usados.add(i));
+    // Grupo cuyos momentos ya estaban todos en otro grupo: es un duplicado, se
+    // descarta (si se dejara, el deck mostraría dos veces lo mismo).
+    if (idx.length > 0 && propios.length === 0) continue;
     const mesas = new Set(
       propios.map((i) => moments[i - 1].table).filter((t) => t != null)
     );
-    // Respaldo si el modelo ignoró "momentIndexes" (respuesta vieja).
-    const tables = mesas.size || Number(s?.tables) || 0;
+    // El respaldo al conteo del modelo SOLO aplica si no mandó "momentIndexes"
+    // (respuesta al estilo viejo); si los mandó, manda el cálculo real.
+    const tables = idx.length > 0 ? mesas.size : Number(s?.tables) || 0;
     out.push({
       moment: s?.moment ?? "",
       tables,
