@@ -1,4 +1,4 @@
-# FIEd Costa Rica — App del Ejercicio de Prototipado — Spec (fuente de verdad)
+# FIEd Costa Rica — App del Ejercicio de Ideación — Spec (fuente de verdad)
 
 > Documento maestro de este proyecto. Escrito a partir de dos reuniones de diseño (2026-07-29 y 2026-08-03) y la sesión de grilling.
 > Si la realidad y este documento se contradicen, **se actualiza este documento**.

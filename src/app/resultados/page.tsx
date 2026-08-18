@@ -278,11 +278,11 @@ export default function ResultadosPage() {
         {cantCommit > 0 && (
           <div className="mt-4">
             <Card>
-              <SectionTitle>No pueden accionar ahora</SectionTitle>
+              <SectionTitle>Prefieren no accionar ahora</SectionTitle>
               <p className="mt-1 text-slate-700">
                 <b className="text-2xl text-slate-900">{cantCommit}</b>{" "}
-                {cantCommit === 1 ? "persona indicó" : "personas indicaron"} que
-                no pueden comprometerse a tomar acción en este momento.
+                {cantCommit === 1 ? "persona prefiere" : "personas prefieren"} no
+                tomar acción en este momento.
               </p>
             </Card>
           </div>

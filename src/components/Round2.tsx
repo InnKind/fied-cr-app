@@ -205,7 +205,7 @@ export default function Round2({
                 value={cantReason}
                 onChange={(e) => setCantReason(e.target.value)}
                 rows={3}
-                placeholder="Cuéntanos por qué…"
+                placeholder="Qué te frena…"
                 className={`mt-2 ${inputCls}`}
               />
             </div>
@@ -258,7 +258,7 @@ export default function Round2({
                   value={exp}
                   onChange={(e) => setExp(e.target.value)}
                   rows={3}
-                  placeholder="La experiencia o el próximo paso que vas a diseñar…"
+                  placeholder="El paso que vas a dar…"
                   className={`mt-2 ${inputCls}`}
                 />
               </div>

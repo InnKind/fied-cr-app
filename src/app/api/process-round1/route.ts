@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { processRound1, type MomentInput } from "@/lib/gemini";
-import { THEMES } from "@/config/event";
+import { THEMES, ideaPromptsFor } from "@/config/event";
 
 // Procesamiento de la Ronda 1 (coffee break, SOLO admin): reúne los momentos y
 // las ideas por tema, corre la IA (agrupa momentos + arma diapositivas con 3
@@ -74,7 +74,11 @@ export async function POST(req: NextRequest) {
 
     let slidesForTheme: unknown[] = [];
     try {
-      const { slides } = await processRound1(theme.title, momentInputs);
+      const p = ideaPromptsFor(theme.id);
+      const { slides } = await processRound1(theme.title, momentInputs, {
+        agency: p.agency.label,
+        ai: p.ai.label,
+      });
       slidesForTheme = slides.map((s) =>
         liveKeys.has(`${theme.id}::${(s.moment || "").trim().toLowerCase()}`)
           ? { ...s, live: true }

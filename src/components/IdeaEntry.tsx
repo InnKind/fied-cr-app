@@ -47,13 +47,18 @@ export default function IdeaEntry({
       .maybeSingle();
     const momentId = (sel?.moment_id as string | null) ?? null;
     let momentText: string | null = null;
+    // El tema del MOMENTO manda sobre el que la persona eligió al registrarse:
+    // si se cambió a una mesa de otro tema, las preguntas deben ser las de esa
+    // mesa (y la idea debe quedar archivada en ese tema).
+    let momentTheme: string | null = null;
     if (momentId) {
       const { data: m } = await supabase
         .from("selected_moments")
-        .select("text")
+        .select("text, theme")
         .eq("id", momentId)
         .single();
       momentText = (m?.text as string | null) ?? null;
+      momentTheme = (m?.theme as string | null) ?? null;
     }
     const { count } = await supabase
       .from("idea_submissions")
@@ -61,7 +66,7 @@ export default function IdeaEntry({
       .eq("participant_id", participantId);
     setCtx({
       table: (p?.current_table as number | null) ?? null,
-      theme: (p?.selected_theme as string | null) ?? null,
+      theme: momentTheme ?? (p?.selected_theme as string | null) ?? null,
       momentId,
       momentText,
     });

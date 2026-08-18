@@ -111,6 +111,25 @@ export type IdeaTriple = {
   mostDisruptive: string;
 };
 
+// La IA a veces devuelve un criterio como arreglo, número o null. Las vistas
+// hacen `.trim()` sobre estos valores, así que se normalizan SIEMPRE a texto.
+function asText(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v))
+    return v.filter((x) => typeof x === "string" && x.trim()).join(" · ");
+  if (typeof v === "number") return String(v);
+  return "";
+}
+
+export function asTriple(v: unknown): IdeaTriple {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  return {
+    mostRepeated: asText(o.mostRepeated),
+    easiest: asText(o.easiest),
+    mostDisruptive: asText(o.mostDisruptive),
+  };
+}
+
 export type Slide = {
   moment: string;
   tables: number;
@@ -123,7 +142,10 @@ export type Slide = {
 // y 3 de Agency según los criterios: más repetida / más fácil / más disruptiva.
 export async function processRound1(
   themeTitle: string,
-  moments: MomentInput[]
+  moments: MomentInput[],
+  // Las 2 preguntas EXACTAS que se le hicieron a la gente en este tema
+  // (empoderamiento e IA). Sin ellas la IA interpreta las dimensiones a ciegas.
+  questions?: { agency: string; ai: string }
 ): Promise<{ slides: Slide[] }> {
   const block = moments
     .map((m, i) => {
@@ -141,9 +163,13 @@ export async function processRound1(
     `Eres un analista experto de un foro de educación superior (FIED). ` +
     `Tema: "${themeTitle}".\n\n` +
     `Estos son los "momentos" que varias mesas identificaron para rediseñar, con las ideas ` +
-    `que la gente escribió en dos dimensiones: EMPODERAMIENTO (cómo empoderar al actor de ese ` +
-    `momento: más autonomía, voz o poder de decisión) e IA (cómo aprovechar la inteligencia ` +
-    `artificial en ese momento).\n\n` +
+    `que la gente escribió en dos dimensiones: EMPODERAMIENTO e IA.\n` +
+    (questions
+      ? `Las preguntas exactas que se les hicieron fueron:\n` +
+        `- EMPODERAMIENTO: "${questions.agency}"\n` +
+        `- IA: "${questions.ai}"\n\n`
+      : `EMPODERAMIENTO = cómo darle al actor de ese momento más autonomía, voz o poder de ` +
+        `decisión; IA = cómo aprovechar la inteligencia artificial en ese momento.\n\n`) +
     `${block}\n\n` +
     `Tu tarea:\n` +
     `1. AGRUPA los momentos que son esencialmente el mismo aunque estén dichos con palabras ` +
@@ -178,7 +204,16 @@ export async function processRound1(
         : Array.isArray(parsed?.slides)
           ? parsed.slides
           : null;
-      if (slides) return { slides };
+      if (slides)
+        return {
+          // Normaliza los 6 criterios de cada diapositiva: la presentación hace
+          // .trim() sobre ellos y un arreglo/null rompería el deck en vivo.
+          slides: slides.map((s) => ({
+            ...s,
+            ai: asTriple(s?.ai),
+            agency: asTriple(s?.agency),
+          })),
+        };
       lastErr = "la respuesta no traía un arreglo 'slides'";
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "JSON inválido";
@@ -224,12 +259,12 @@ export async function processRound2(
   const prompt =
     `Eres un analista de un foro de educación superior (FIED). Tema: "${themeTitle}".\n\n` +
     `Los participantes que quieren accionar este tema indicaron: una IDEA con la que se ` +
-    `sienten motivados a empezar, los ROLES que necesitan involucrar, y una EXPERIENCIA ` +
-    `que diseñarían para inspirarlos.\n\n` +
+    `sienten motivados a empezar, las PERSONAS (roles) que necesitan involucrar, y un ` +
+    `SIGUIENTE PASO que darían para inspirar a esas personas a involucrarse.\n\n` +
     `IDEAS con las que quieren empezar (escritas por la gente; pueden repetirse con otras palabras):\n` +
     `${ideasBlock}\n\n` +
     `ROLES a involucrar (pueden repetirse con otras palabras):\n${rolesBlock}\n\n` +
-    `EXPERIENCIAS propuestas:\n${expBlock}\n\n` +
+    `SIGUIENTES PASOS propuestos:\n${expBlock}\n\n` +
     `Tu tarea:\n` +
     `1. Agrupa las IDEAS equivalentes (aunque estén dichas con otras palabras) y cuenta ` +
     `cuántas veces aparece cada una. Devuelve las más frecuentes primero (máx 6). No inventes.\n` +
@@ -240,11 +275,11 @@ export async function processRound2(
     `campos como "". Parafrasea breve; no inventes.\n` +
     `3. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
     `y cuenta cuántas veces aparece cada uno. Devuelve los más frecuentes primero (máx 6).\n` +
-    `4. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
-    `más fácil de implementar) y "mostDisruptive" (la más radical). Las tres deben ser DISTINTAS ` +
-    `entre sí; NUNCA repitas la misma experiencia (ni apenas reformulada) en más de un criterio. ` +
-    `Si hay menos de 3 experiencias distintas y con sustancia, deja los demás campos como "". ` +
-    `Parafrasea breve; no inventes.\n\n` +
+    `4. De los SIGUIENTES PASOS elige HASTA 3 (campo "experiences") según: "mostRepeated" (el ` +
+    `más común), "easiest" (el más fácil de implementar) y "mostDisruptive" (el más radical). ` +
+    `Los tres deben ser DISTINTOS entre sí; NUNCA repitas el mismo paso (ni apenas reformulado) ` +
+    `en más de un criterio. Si hay menos de 3 pasos distintos y con sustancia, deja los demás ` +
+    `campos como "". Parafrasea breve; no inventes.\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
     `{"topIdeas":[{"idea":"...","count":0}],"ideaCriteria":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
     `Sin texto fuera del JSON.`;
@@ -257,26 +292,26 @@ export async function processRound2(
     const text = await geminiGenerate(prompt, { json: true });
     try {
       const parsed = JSON.parse(text) as Partial<Round2Aggregation>;
-      if (Array.isArray(parsed?.topRoles)) {
-        const emptyTriple: IdeaTriple = {
-          mostRepeated: "",
-          easiest: "",
-          mostDisruptive: "",
-        };
+      // Se acepta si trae AL MENOS uno de los campos esperados (si falta uno,
+      // se rellena vacío en vez de tirar toda la respuesta a la basura).
+      const okRoles = Array.isArray(parsed?.topRoles);
+      const okIdeas = Array.isArray(parsed?.topIdeas);
+      const okCrit = !!parsed?.ideaCriteria && typeof parsed.ideaCriteria === "object";
+      const okExp = !!parsed?.experiences && typeof parsed.experiences === "object";
+      if (okRoles || okIdeas || okCrit || okExp) {
+        if (!okRoles || !okCrit)
+          console.warn(
+            "processRound2: respuesta incompleta de la IA",
+            JSON.stringify({ okRoles, okIdeas, okCrit, okExp })
+          );
         return {
-          topRoles: parsed.topRoles,
-          topIdeas: Array.isArray(parsed.topIdeas) ? parsed.topIdeas : [],
-          ideaCriteria:
-            parsed.ideaCriteria && typeof parsed.ideaCriteria === "object"
-              ? (parsed.ideaCriteria as IdeaTriple)
-              : emptyTriple,
-          experiences:
-            parsed.experiences && typeof parsed.experiences === "object"
-              ? (parsed.experiences as IdeaTriple)
-              : emptyTriple,
+          topRoles: okRoles ? parsed.topRoles! : [],
+          topIdeas: okIdeas ? parsed.topIdeas! : [],
+          ideaCriteria: asTriple(parsed?.ideaCriteria),
+          experiences: asTriple(parsed?.experiences),
         };
       }
-      lastErr = "la respuesta no traía un arreglo 'topRoles'";
+      lastErr = "la respuesta no traía ninguno de los campos esperados";
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "JSON inválido";
     }

@@ -38,6 +38,39 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Bloques previos por tema: si un reproceso deja un tema vacío por un fallo
+  // transitorio de la IA, se conservan los datos buenos (igual que en R1).
+  const { data: prev } = await supabaseAdmin
+    .from("synthesis")
+    .select("payload")
+    .eq("round", 2)
+    .maybeSingle();
+  const prevByTheme = new Map<string, Record<string, unknown>>();
+  for (const pt of ((prev?.payload as { themes?: Record<string, unknown>[] } | null)
+    ?.themes ?? [])) {
+    const id = pt?.themeId as string | undefined;
+    if (id) prevByTheme.set(id, pt);
+  }
+  const isEmptyBlock = (b: {
+    topRoles?: unknown[];
+    topIdeas?: unknown[];
+    ideaCriteria?: unknown;
+    experiences?: unknown;
+  }) => {
+    const hasText = (t: unknown) =>
+      !!t &&
+      typeof t === "object" &&
+      Object.values(t as Record<string, unknown>).some(
+        (v) => typeof v === "string" && v.trim()
+      );
+    return (
+      (b.topRoles?.length ?? 0) === 0 &&
+      (b.topIdeas?.length ?? 0) === 0 &&
+      !hasText(b.ideaCriteria) &&
+      !hasText(b.experiences)
+    );
+  };
+
   const themesOut: unknown[] = [];
   for (const theme of THEMES) {
     const inTheme = all.filter((r) => r.selected_theme === theme.id);
@@ -74,7 +107,7 @@ export async function POST(req: NextRequest) {
       console.error("R2 IA falló para", theme.id, e instanceof Error ? e.message : e);
     }
 
-    themesOut.push({
+    const block = {
       themeId: theme.id,
       themeTitle: theme.title,
       peopleCount: inTheme.length,
@@ -83,7 +116,23 @@ export async function POST(req: NextRequest) {
       topIdeas: ai.topIdeas,
       ideaCriteria: ai.ideaCriteria,
       experiences: ai.experiences,
-    });
+    };
+
+    // La IA no devolvió nada útil en esta corrida: si antes había análisis de
+    // este tema, se conserva (solo se actualizan los conteos, que no dependen
+    // de la IA). Así reprocesar nunca borra lo que ya estaba bien.
+    const prevBlock = prevByTheme.get(theme.id);
+    if (isEmptyBlock(block) && prevBlock && !isEmptyBlock(prevBlock)) {
+      themesOut.push({
+        ...prevBlock,
+        themeTitle: theme.title,
+        peopleCount: inTheme.length,
+        roleDistribution,
+      });
+      console.warn("R2: se conservó el análisis previo del tema", theme.id);
+    } else {
+      themesOut.push(block);
+    }
   }
 
   // Conteo global de quienes eligieron "no puedo comprometerme" (Cambio #1).
