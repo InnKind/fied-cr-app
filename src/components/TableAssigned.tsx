@@ -7,14 +7,17 @@ import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 import { recoverOrphanIdentity } from "@/lib/participant";
 import { themeForTableNumber } from "@/lib/theme-for-table";
+import ThemeSelection from "@/components/ThemeSelection";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
 // ("no estoy en esa mesa"). Lee current_table/selected_theme desde la base.
 export default function TableAssigned({
   participantId,
+  role,
   accent,
 }: {
   participantId: string;
+  role?: string;
   accent?: string;
 }) {
   const [table, setTable] = useState<number | null>(null);
@@ -24,6 +27,7 @@ export default function TableAssigned({
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [eligiendoTema, setEligiendoTema] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -91,6 +95,17 @@ export default function TableAssigned({
 
   const t = THEMES.find((x) => x.id === theme);
 
+  // Rezagado eligiendo su tema: al guardarlo entra en la próxima distribución.
+  if (eligiendoTema && table == null) {
+    return (
+      <ThemeSelection
+        participantId={participantId}
+        role={role}
+        accent={accent}
+      />
+    );
+  }
+
   // Corrección manual de mesa.
   if (editing) {
     return (
@@ -153,9 +168,9 @@ export default function TableAssigned({
             Aún no tienes mesa
           </h1>
           <p className="mt-3 text-white/80">
-            No apareces en ninguna mesa. Acércate a un organizador para que te
-            ubique en la mesa de tu tema. Cuando sepas tu número de mesa,
-            ingrésalo aquí.
+            {theme
+              ? "No apareces en ninguna mesa. Acércate a un organizador para que te ubique en la mesa de tu tema. Cuando sepas tu número de mesa, ingrésalo aquí."
+              : "Llegaste cuando ya habíamos repartido las mesas. Elige tu tema y te ubicamos en la próxima distribución, o ingresa el número de mesa donde te sentaste."}
           </p>
           <button
             onClick={() => setEditing(true)}
@@ -163,6 +178,16 @@ export default function TableAssigned({
           >
             Ingresar mi mesa
           </button>
+          {/* Quien se incorporó después de la elección de tema nunca pudo
+              elegirlo: sin esto quedaba sin tema y fuera de la distribución. */}
+          {!theme && (
+            <button
+              onClick={() => setEligiendoTema(true)}
+              className="mt-4 block w-full text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
+            >
+              Elegir mi tema
+            </button>
+          )}
         </div>
       </main>
     );

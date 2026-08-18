@@ -93,7 +93,13 @@ export default function Home() {
 
   // TABLE_ASSIGNED: la persona ve su mesa asignada (con opción de corregirla).
   if (phaseId === "TABLE_ASSIGNED") {
-    return <TableAssigned participantId={participant.id} accent={roleColor} />;
+    return (
+      <TableAssigned
+        participantId={participant.id}
+        role={participant.role}
+        accent={roleColor}
+      />
+    );
   }
 
   // PROTOTIPADO RONDA 1 (a ritmo por mesa/persona): mientras la fase global sea
