@@ -171,7 +171,7 @@ export default function TableAssigned({
         <p className="mt-6 text-white/80">Ve a la</p>
         <p className="text-6xl font-bold text-white">Mesa {table}</p>
         <p className="mt-6 text-sm text-white/60">
-          Ahí vas a trabajar con tu grupo. Sigue al facilitador.
+          Ahí vas a trabajar con tu grupo.
         </p>
         <p className="mt-2 text-sm text-white/60">
           Si necesitas cambiar de mesa, busca a un facilitador.

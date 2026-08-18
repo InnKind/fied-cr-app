@@ -18,6 +18,7 @@ import {
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 import { recoverOrphanIdentity } from "@/lib/participant";
+import { themeForTableNumber } from "@/lib/theme-for-table";
 
 type Moment = { id: string; ord: number; text: string };
 
@@ -103,6 +104,27 @@ export default function MomentSelection({
       stop();
     };
   }, [participantId, loadParticipant]);
+
+  // Quien se incorporó tarde no pasó por la elección de tema: su `selected_theme`
+  // está vacío y esta pantalla se veía SIN el tema, los ejemplos ni la pregunta
+  // clave. Se toma el tema de la mesa y se guarda, para que además cuente en los
+  // resultados como parte de ese tema.
+  useEffect(() => {
+    if (theme || tableNumber == null) return;
+    let active = true;
+    (async () => {
+      const t = await themeForTableNumber(tableNumber);
+      if (!active || !t) return;
+      setTheme(t);
+      await supabase
+        .from("participants")
+        .update({ selected_theme: t })
+        .eq("id", participantId);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [theme, tableNumber, participantId]);
 
   // Momentos de la mesa (aparecen en vivo cuando el facilitador los registra).
   const loadMoments = useCallback(async (ct: number) => {
@@ -388,34 +410,39 @@ export default function MomentSelection({
             <p className="mt-1 text-white/80">{t!.provocation}</p>
           )}
 
+          {/* La pregunta clave va ARRIBA de la caja y los ejemplos debajo
+              (pedido del equipo): lo primero que se lee es qué hay que responder. */}
           {(examples.length > 0 || showMomentsQ) && (
             <div className="mt-4 rounded-2xl bg-white p-5 text-left shadow-sm">
-              {examples.length > 0 && (
-                <>
-                  {showExamplesIntro && (
-                    <p className="text-sm text-slate-600">{t!.examplesIntro}</p>
-                  )}
-                  <ul className="mt-2 list-disc space-y-1.5 pl-5 text-slate-700">
-                    {examples.map((q, i) => (
-                      <li key={i}>{q}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
               {showMomentsQ && (
-                <div
-                  className={
-                    examples.length > 0
-                      ? "mt-4 border-t border-slate-100 pt-4"
-                      : ""
-                  }
-                >
+                <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#c8103e]">
                     La pregunta clave
                   </p>
                   <p className="mt-1 text-lg font-semibold text-slate-900">
                     {t!.momentsQuestion}
                   </p>
+                </div>
+              )}
+              {examples.length > 0 && (
+                <div
+                  className={
+                    showMomentsQ ? "mt-4 border-t border-slate-100 pt-4" : ""
+                  }
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
+                    Ejemplos de momentos
+                  </p>
+                  {showExamplesIntro && (
+                    <p className="mt-1 text-sm text-slate-600">
+                      {t!.examplesIntro}
+                    </p>
+                  )}
+                  <ul className="mt-2 list-disc space-y-1.5 pl-5 text-slate-700">
+                    {examples.map((q, i) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
