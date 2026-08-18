@@ -185,7 +185,13 @@ export async function processRound1(
     `(b) Si para ese momento hay menos de 3 ideas distintas y con sustancia, llena solo los ` +
     `criterios que puedas con ideas reales y deja los demás como cadena vacía "". Es mejor ` +
     `mostrar 1 idea buena que 3 repetidas o de relleno. ` +
-    `(c) NO inventes ideas que nadie escribió; puedes parafrasear para que sean breves y claras.\n` +
+    `(c) ESCRIBE CADA IDEA EN 1 O 2 ORACIONES COMPLETAS (unas 15 a 35 palabras), no en una ` +
+    `frase suelta: la primera dice QUÉ se hace y la segunda QUÉ CAMBIA para la persona de ese ` +
+    `momento. Quien la lea proyectada debe entenderla sin más contexto. ` +
+    `(d) NO inventes ideas que nadie escribió ni agregues propuestas nuevas: puedes completar ` +
+    `y ordenar la redacción para que se entienda, pero el contenido debe salir de lo que ` +
+    `escribieron las mesas. Si una idea vino en 2 palabras y no se entiende qué propone, ` +
+    `prefiere dejar el criterio vacío antes que rellenarlo con algo que nadie dijo.\n` +
     `4. Ordena los grupos por número de mesas (más repetidos primero) y luego por riqueza (los ` +
     `que tienen ideas en ambas dimensiones primero).\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +

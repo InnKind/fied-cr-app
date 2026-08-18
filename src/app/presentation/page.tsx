@@ -56,7 +56,9 @@ function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                 {c.label}
               </p>
-              <p className="mt-0.5 text-slate-800">
+              {/* 1-2 oraciones por idea (pedido de David): texto un poco más
+                  grande y con interlineado corto para leerse proyectado. */}
+              <p className="mt-0.5 text-[17px] leading-snug text-slate-800">
                 {val && val.trim() ? val : <span className="text-slate-300">—</span>}
               </p>
             </li>
