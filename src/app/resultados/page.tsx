@@ -293,7 +293,7 @@ export default function ResultadosPage() {
         ))}
 
         <p className="mt-10 text-center text-xs text-white/50">
-          La IA agrupó los roles equivalentes y eligió las experiencias más
+          La IA agrupó las respuestas equivalentes y eligió las más
           representativas de todo lo que se escribió.
         </p>
       </div>

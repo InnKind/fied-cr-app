@@ -167,10 +167,10 @@ export default function ArchivoPage() {
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Card>
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#0c7d75]">
-                  Qué tema exploró cada quién
+                  Cuántas personas exploraron cada tema
                 </h3>
                 <p className="mb-3 mt-1 text-sm text-slate-500">
-                  Personas que eligieron cada tema.
+                  Número de personas que eligieron cada tema
                 </p>
                 {themeData.length ? (
                   <HBars data={themeData} />
@@ -184,7 +184,7 @@ export default function ArchivoPage() {
                   Los momentos que más resonaron
                 </h3>
                 <p className="mb-3 mt-1 text-sm text-slate-500">
-                  En cuántas mesas apareció cada momento.
+                  Número de mesas en las que surgió cada momento
                 </p>
                 {pano.topMoments.length ? (
                   <HBars
@@ -209,7 +209,8 @@ export default function ArchivoPage() {
                     La reflexión de la Ronda 2
                   </span>
                   <span className="block text-sm text-white/70">
-                    Qué nos llevamos para accionar: roles y experiencias.
+                    Qué nos llevamos para accionar: personas a involucrar y
+                    siguientes pasos.
                   </span>
                 </span>
                 <span className="text-2xl">→</span>
