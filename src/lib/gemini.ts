@@ -174,8 +174,15 @@ export async function processRound1(
     `Tu tarea:\n` +
     `1. AGRUPA los momentos que son esencialmente el mismo aunque estén dichos con palabras ` +
     `distintas (p. ej. "elegir mis cursos" y "decidir qué materias estudiar" son el mismo). ` +
-    `Dale a cada grupo un título corto y claro.\n` +
-    `2. Para cada grupo, indica en cuántas MESAS distintas apareció ("tables").\n` +
+    `Dale a cada grupo un título corto y claro. LÍMITES DEL AGRUPAMIENTO: agrupa SOLO si ` +
+    `describen la MISMA situación concreta; NO crees categorías temáticas amplias que metan ` +
+    `situaciones distintas en un mismo saco (p. ej. "trámites lentos" no es un grupo válido si ` +
+    `junta autorizar una carrera con convalidar un título). Ante la duda, DÉJALOS SEPARADOS: es ` +
+    `preferible una diapositiva de más que perder el momento que trabajó una mesa. ` +
+    `COBERTURA OBLIGATORIA: cada momento de la lista debe quedar en EXACTAMENTE UN grupo y ` +
+    `NINGUNO puede quedar fuera; si un momento no se parece a otro, va solo en su propio grupo.\n` +
+    `2. Para cada grupo, lista en "tableNumbers" los números de MESA de los momentos que lo ` +
+    `componen (tal como aparecen entre paréntesis arriba; repite el número si hace falta).\n` +
     `3. Para cada grupo, elige HASTA 3 ideas de empoderamiento (campo "agency") y HASTA 3 de ` +
     `IA (campo "ai"), TOMADAS de las ideas ` +
     `escritas para ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de ` +
@@ -195,7 +202,7 @@ export async function processRound1(
     `4. Ordena los grupos por número de mesas (más repetidos primero) y luego por riqueza (los ` +
     `que tienen ideas en ambas dimensiones primero).\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
-    `{"slides":[{"moment":"...","tables":0,"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
+    `{"slides":[{"moment":"...","tableNumbers":[1,2],"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
     `Sin texto fuera del JSON.`;
 
   // La IA a veces devuelve JSON válido pero con OTRA forma (sin el arreglo
@@ -212,13 +219,30 @@ export async function processRound1(
           : null;
       if (slides)
         return {
-          // Normaliza los 6 criterios de cada diapositiva: la presentación hace
-          // .trim() sobre ellos y un arreglo/null rompería el deck en vivo.
-          slides: slides.map((s) => ({
-            ...s,
-            ai: asTriple(s?.ai),
-            agency: asTriple(s?.agency),
-          })),
+          slides: slides.map((s) => {
+            // El "en N mesas" se CALCULA aquí a partir de los números de mesa
+            // que devolvió la IA (contar no es su fuerte: en las pruebas
+            // reportaba menos mesas de las reales). Si no vinieron, se usa su
+            // conteo como respaldo.
+            const nums = Array.isArray(
+              (s as unknown as { tableNumbers?: unknown[] }).tableNumbers
+            )
+              ? (s as unknown as { tableNumbers: unknown[] }).tableNumbers
+                  .map((n) => Number(n))
+                  .filter((n) => Number.isFinite(n))
+              : [];
+            const tables = nums.length
+              ? new Set(nums).size
+              : Number(s?.tables) || 0;
+            return {
+              moment: s?.moment ?? "",
+              tables,
+              // Normaliza los 6 criterios: la presentación hace .trim() sobre
+              // ellos y un arreglo/null rompería el deck en vivo.
+              ai: asTriple(s?.ai),
+              agency: asTriple(s?.agency),
+            };
+          }),
         };
       lastErr = "la respuesta no traía un arreglo 'slides'";
     } catch (e) {
