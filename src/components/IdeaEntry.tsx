@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import { ideaPromptsFor, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
+import { recoverOrphanIdentity } from "@/lib/participant";
 import BrandLogo from "@/components/BrandLogo";
 import { BRAND_BG } from "@/lib/brand";
 
@@ -35,11 +36,13 @@ export default function IdeaEntry({
   const [changing, setChanging] = useState(false);
 
   const loadCtx = useCallback(async () => {
-    const { data: p } = await supabase
+    const { data: p, error: pErr } = await supabase
       .from("participants")
       .select("current_table, selected_theme")
       .eq("id", participantId)
-      .single();
+      .maybeSingle();
+    // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
+    if (!pErr && !p) return recoverOrphanIdentity();
     const { data: sel } = await supabase
       .from("moment_selections")
       .select("moment_id")

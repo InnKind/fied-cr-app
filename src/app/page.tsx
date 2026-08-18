@@ -8,6 +8,7 @@ import {
   type LocalParticipant,
 } from "@/lib/participant";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 import { useEventState } from "@/hooks/useEventState";
 import Register from "@/components/Register";
 import Waiting from "@/components/Waiting";
@@ -29,7 +30,7 @@ export default function Home() {
   // admin no la contara ni le asignara mesa).
   useEffect(() => {
     let active = true;
-    (async () => {
+    const verify = async () => {
       const local = getParticipant();
       if (!local) {
         if (active) {
@@ -53,9 +54,15 @@ export default function Home() {
         setParticipant(local);
       }
       setIdentityLoaded(true);
-    })();
+    };
+    verify();
+    // Y CADA VEZ que la app vuelve al primer plano: si la base se reseteó
+    // mientras el celular estaba en el bolsillo, el id guardado quedó huérfano
+    // y sin esto la persona seguiría "adentro" pero sin que se guarde nada.
+    const stop = onForeground(verify);
     return () => {
       active = false;
+      stop();
     };
   }, []);
 

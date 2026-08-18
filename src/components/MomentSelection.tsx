@@ -17,6 +17,7 @@ import {
 } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
+import { recoverOrphanIdentity } from "@/lib/participant";
 
 type Moment = { id: string; ord: number; text: string };
 
@@ -58,11 +59,14 @@ export default function MomentSelection({
   // En vivo: si el admin (re)distribuye mesas, current_table cambia y esta
   // pantalla se actualiza sola, sin que la persona tenga que recargar.
   const loadParticipant = useCallback(async () => {
-    const { data: p } = await supabase
+    const { data: p, error: pErr } = await supabase
       .from("participants")
       .select("current_table, selected_theme")
       .eq("id", participantId)
-      .single();
+      .maybeSingle();
+    // Mi fila ya no existe (reset con la pantalla abierta): re-registrarse, o
+    // todo lo que escriba de aquí en adelante se pierde en silencio.
+    if (!pErr && !p) return recoverOrphanIdentity();
     setTableNumber((p?.current_table as number | null) ?? null);
     setTheme((p?.selected_theme as string | null) ?? null);
     const { data: sel } = await supabase
@@ -162,15 +166,19 @@ export default function MomentSelection({
     }
     setSavingTable(true);
     setTableErr(null);
-    const { error: dbErr } = await supabase
+    // `.select()` para saber si realmente se actualizó una fila: si el id quedó
+    // huérfano, el update devuelve 0 filas y NINGÚN error.
+    const { data: rows, error: dbErr } = await supabase
       .from("participants")
       .update({ current_table: n })
-      .eq("id", participantId);
+      .eq("id", participantId)
+      .select("id");
     setSavingTable(false);
     if (dbErr) {
       setTableErr("No se pudo actualizar. Intenta de nuevo.");
       return;
     }
+    if (!rows || rows.length === 0) return recoverOrphanIdentity();
     setEditing(false);
     setManualInput("");
     setTableNumber(n); // el efecto de momentos recargará los de la mesa nueva

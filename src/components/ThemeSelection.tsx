@@ -5,6 +5,7 @@ import { THEMES, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
+import { recoverOrphanIdentity } from "@/lib/participant";
 
 // Fase THEME_SELECTION: la persona elige 1 de los 3 temas según su rol.
 // Guarda el tema en participants.selected_theme. NO asigna mesa: eso lo hace
@@ -30,9 +31,11 @@ export default function ThemeSelection({
       .from("participants")
       .select("selected_theme")
       .eq("id", participantId)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data, error: qErr }) => {
         if (!active) return;
+        // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
+        if (!qErr && !data) return recoverOrphanIdentity();
         setSelected((data?.selected_theme as string | null) ?? null);
         setLoaded(true);
       });
@@ -51,15 +54,19 @@ export default function ThemeSelection({
   async function pick(themeId: string) {
     setSaving(true);
     setError(null);
-    const { error: dbErr } = await supabase
+    const { data: rows, error: dbErr } = await supabase
       .from("participants")
       .update({ selected_theme: themeId })
-      .eq("id", participantId);
+      .eq("id", participantId)
+      .select("id");
     setSaving(false);
     if (dbErr) {
       setError("No se pudo guardar tu tema. Intenta de nuevo.");
       return;
     }
+    // 0 filas y sin error = id huérfano (la base se reseteó): re-registrarse en
+    // vez de "avanzar" con una elección que nadie guardó.
+    if (!rows || rows.length === 0) return recoverOrphanIdentity();
     setSelected(themeId);
   }
 

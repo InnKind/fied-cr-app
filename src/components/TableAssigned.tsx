@@ -5,6 +5,7 @@ import { THEMES, EVENT, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
+import { recoverOrphanIdentity } from "@/lib/participant";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
 // ("no estoy en esa mesa"). Lee current_table/selected_theme desde la base.
@@ -29,9 +30,11 @@ export default function TableAssigned({
       .from("participants")
       .select("current_table, selected_theme")
       .eq("id", participantId)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data, error: qErr }) => {
         if (!active) return;
+        // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
+        if (!qErr && !data) return recoverOrphanIdentity();
         setTable((data?.current_table as number | null) ?? null);
         setTheme((data?.selected_theme as string | null) ?? null);
         setLoaded(true);
@@ -49,15 +52,18 @@ export default function TableAssigned({
     }
     setSaving(true);
     setError(null);
-    const { error: dbErr } = await supabase
+    const { data: rows, error: dbErr } = await supabase
       .from("participants")
       .update({ current_table: n })
-      .eq("id", participantId);
+      .eq("id", participantId)
+      .select("id");
     setSaving(false);
     if (dbErr) {
       setError("No se pudo actualizar. Intenta de nuevo.");
       return;
     }
+    // 0 filas y sin error = id huérfano (la base se reseteó).
+    if (!rows || rows.length === 0) return recoverOrphanIdentity();
     setTable(n);
     setEditing(false);
     setInput("");

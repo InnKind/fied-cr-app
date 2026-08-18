@@ -26,3 +26,15 @@ export function clearParticipant(): void {
   localStorage.removeItem(ID_KEY);
   localStorage.removeItem(ROLE_KEY);
 }
+
+// El id guardado ya NO existe en la base (se reseteó con la pantalla abierta,
+// o el celular volvió del bolsillo después de un reset). Sin esto, la persona
+// sigue navegando con un id muerto: cada guardado afecta 0 filas SIN error, la
+// pantalla rebota a "Aún no tienes mesa" y el admin nunca la cuenta.
+// Se limpia la identidad y se recarga: vuelve al registro y queda operativa.
+// Llamar SOLO cuando la consulta funcionó y confirmó que la fila no está
+// (nunca ante un error de red, para no desloguear a alguien válido).
+export function recoverOrphanIdentity(): void {
+  clearParticipant();
+  if (typeof window !== "undefined") window.location.reload();
+}
