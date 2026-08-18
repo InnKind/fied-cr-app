@@ -46,19 +46,19 @@ function MesasDots({ n, color }: { n: number; color: string }) {
 
 function IdeaColumn({ title, ideas }: { title: string; ideas: IdeaTriple }) {
   return (
-    <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h3 className="text-lg font-bold text-[#0c7d75]">{title}</h3>
-      <ul className="mt-3 space-y-3">
+      {/* Cada idea viene en 1-2 oraciones (pedido de David): el criterio va
+          como etiqueta en la MISMA línea para no gastar alto al proyectar. */}
+      <ul className="mt-2 divide-y divide-slate-100">
         {CRITERIA.map((c) => {
           const val = ideas?.[c.key];
           return (
-            <li key={c.key}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                {c.label}
-              </p>
-              {/* 1-2 oraciones por idea (pedido de David): texto un poco más
-                  grande y con interlineado corto para leerse proyectado. */}
-              <p className="mt-0.5 text-[17px] leading-snug text-slate-800">
+            <li key={c.key} className="py-2.5">
+              <p className="leading-snug text-slate-800">
+                <span className="mr-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  {c.label} ·
+                </span>
                 {val && val.trim() ? val : <span className="text-slate-300">—</span>}
               </p>
             </li>
@@ -210,10 +210,10 @@ function MomentSlide({ s }: { s: FlatSlide }) {
   const color = themeColor(s.themeId);
   return (
     <>
-      <h1 className="text-3xl font-bold text-white sm:text-5xl">{s.moment}</h1>
+      <h1 className="text-3xl font-bold text-white sm:text-4xl">{s.moment}</h1>
 
       {s.tables > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-3 flex flex-wrap items-center gap-3">
           <MesasDots n={s.tables} color={color} />
           <span className="text-sm font-semibold text-white/80">
             {s.tables > 1 ? `en ${s.tables} mesas` : "en 1 mesa"}
@@ -222,7 +222,7 @@ function MomentSlide({ s }: { s: FlatSlide }) {
       )}
 
       {/* Primero empoderamiento, después IA (orden pedido por el equipo). */}
-      <div className="mt-8 flex flex-col gap-5 sm:flex-row">
+      <div className="mt-5 flex flex-col gap-4 sm:flex-row">
         <IdeaColumn title="Ideas de Empoderamiento" ideas={s.agency} />
         <IdeaColumn title="Ideas de IA" ideas={s.ai} />
       </div>
@@ -368,17 +368,21 @@ export default function PresentationPage() {
           </span>
         </div>
 
-        {view.kind === "summary" && (
-          <SummarySlide themeCounts={themeCounts} slides={slides} />
-        )}
-        {view.kind === "divider" && (
-          <ThemeDividerSlide
-            themeId={view.themeId}
-            moments={view.moments}
-            people={view.people}
-          />
-        )}
-        {view.kind === "moment" && <MomentSlide s={view.slide} />}
+        {/* El contenido del slide se desplaza SOLO si no cabe (p. ej. un
+            proyector de 720p con ideas largas): nunca se corta el texto. */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {view.kind === "summary" && (
+            <SummarySlide themeCounts={themeCounts} slides={slides} />
+          )}
+          {view.kind === "divider" && (
+            <ThemeDividerSlide
+              themeId={view.themeId}
+              moments={view.moments}
+              people={view.people}
+            />
+          )}
+          {view.kind === "moment" && <MomentSlide s={view.slide} />}
+        </div>
 
         {/* Barra de progreso del deck */}
         <div className="mt-auto pt-8">
