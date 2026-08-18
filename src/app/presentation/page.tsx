@@ -361,7 +361,7 @@ export default function PresentationPage() {
     // desplaza si el contenido no cabe, en vez de empujar la página entera
     // (en un proyector la barra de navegación quedaba abajo del corte).
     <main
-      className="flex min-h-0 flex-1 flex-col p-6 sm:p-10"
+      className="flex h-[100dvh] flex-col overflow-hidden p-6 sm:p-10"
       style={{ background: BRAND_BG }}
     >
       <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
