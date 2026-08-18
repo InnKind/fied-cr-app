@@ -99,6 +99,7 @@ export async function synthesizeResponses(
 // ---- Procesamiento de la Ronda 1 (diseño 2 rondas, coffee break) ----
 
 export type MomentInput = {
+  id?: string; // id del momento en la base (para no perder la curaduría)
   table: number | null;
   text: string;
   aiIdeas: string[];
@@ -135,6 +136,10 @@ export type Slide = {
   tables: number;
   ai: IdeaTriple;
   agency: IdeaTriple;
+  // Momentos que quedaron en este grupo. Son estables entre corridas (el título
+  // que escribe la IA no lo es), así que sirven para no perder la curaduría al
+  // reprocesar.
+  momentIds?: string[];
 };
 
 // Arma las diapositivas finales a partir de la respuesta cruda de la IA.
@@ -172,6 +177,9 @@ function buildSlides(
     out.push({
       moment: s?.moment ?? "",
       tables,
+      momentIds: propios
+        .map((i) => moments[i - 1].id)
+        .filter((x): x is string => !!x),
       // Normaliza los 6 criterios: la presentación hace .trim() sobre ellos y
       // un arreglo/null rompería el deck en vivo.
       ai: asTriple(s?.ai),
@@ -188,6 +196,7 @@ function buildSlides(
       out.push({
         moment: m.text,
         tables: m.table != null ? 1 : 0,
+        momentIds: m.id ? [m.id] : [],
         ai: {
           mostRepeated: m.aiIdeas[0] ?? "",
           easiest: m.aiIdeas[1] ?? "",

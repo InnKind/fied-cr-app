@@ -37,11 +37,15 @@ export async function POST(req: NextRequest) {
     .eq("round", 1)
     .maybeSingle();
   const liveKeys = new Set<string>();
+  // Momentos que estaban en una diapositiva marcada "en vivo". El título lo
+  // reescribe la IA en cada corrida, así que la curaduría se reconoce por los
+  // MOMENTOS que componen la diapositiva (esos no cambian).
+  const liveMomentIds = new Set<string>();
   const prevThemes =
     (prev?.payload as {
       themes?: {
         themeId?: string;
-        slides?: { moment?: string; live?: boolean }[];
+        slides?: { moment?: string; live?: boolean; momentIds?: string[] }[];
       }[];
     } | null)?.themes ?? [];
   // Diapositivas previas por tema (para no pisar datos buenos si un reproceso
@@ -50,7 +54,10 @@ export async function POST(req: NextRequest) {
   for (const pt of prevThemes) {
     if (pt.themeId) prevSlidesByTheme.set(pt.themeId, pt.slides ?? []);
     for (const ps of pt.slides ?? [])
-      if (ps.live) liveKeys.add(`${pt.themeId}::${(ps.moment || "").trim().toLowerCase()}`);
+      if (ps.live) {
+        liveKeys.add(`${pt.themeId}::${(ps.moment || "").trim().toLowerCase()}`);
+        for (const mid of ps.momentIds ?? []) liveMomentIds.add(mid);
+      }
   }
 
   const themesOut: unknown[] = [];
@@ -61,6 +68,7 @@ export async function POST(req: NextRequest) {
     const momentInputs: MomentInput[] = tMoments.map((m) => {
       const mi = allIdeas.filter((x) => x.moment_id === m.id);
       return {
+        id: m.id as string,
         table: (m.table_number as number | null) ?? null,
         text: m.text as string,
         aiIdeas: mi
@@ -79,11 +87,17 @@ export async function POST(req: NextRequest) {
         agency: p.agency.label,
         ai: p.ai.label,
       });
-      slidesForTheme = slides.map((s) =>
-        liveKeys.has(`${theme.id}::${(s.moment || "").trim().toLowerCase()}`)
-          ? { ...s, live: true }
-          : s
-      );
+      slidesForTheme = slides.map((s) => {
+        // Sigue "en vivo" si contiene alguno de los momentos que David marcó,
+        // o (payloads viejos, sin momentIds) si el título coincide igual.
+        const porMomento = (s.momentIds ?? []).some((id) =>
+          liveMomentIds.has(id)
+        );
+        const porTitulo = liveKeys.has(
+          `${theme.id}::${(s.moment || "").trim().toLowerCase()}`
+        );
+        return porMomento || porTitulo ? { ...s, live: true } : s;
+      });
     } catch (e) {
       console.error(
         "R1 IA falló para",
