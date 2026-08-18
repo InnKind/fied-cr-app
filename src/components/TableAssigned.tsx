@@ -75,6 +75,10 @@ export default function TableAssigned({
     setTable(n);
     setEditing(false);
     setInput("");
+    // Al sentarse en otra mesa (o al ingresarla a mano por llegar tarde), el
+    // tema que se muestra es el de ESA mesa.
+    const deMesa = await themeForTableNumber(n);
+    if (deMesa) setTheme(deMesa);
   }
 
   if (!loaded) {
