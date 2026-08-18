@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 import { recoverOrphanIdentity } from "@/lib/participant";
+import { themeForTableNumber } from "@/lib/theme-for-table";
 
 // Fase TABLE_ASSIGNED: muestra la mesa asignada + permite corregirla a mano
 // ("no estoy en esa mesa"). Lee current_table/selected_theme desde la base.
@@ -35,9 +36,16 @@ export default function TableAssigned({
         if (!active) return;
         // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
         if (!qErr && !data) return recoverOrphanIdentity();
-        setTable((data?.current_table as number | null) ?? null);
+        const t = (data?.current_table as number | null) ?? null;
+        setTable(t);
         setTheme((data?.selected_theme as string | null) ?? null);
         setLoaded(true);
+        // El tema que manda es el de la MESA a la que va (si se cambió de mesa,
+        // o si llegó tarde y nunca eligió tema, su elección puede no calzar).
+        if (t != null)
+          themeForTableNumber(t).then((deMesa) => {
+            if (active && deMesa) setTheme(deMesa);
+          });
       });
     return () => {
       active = false;
