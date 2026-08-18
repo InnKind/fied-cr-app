@@ -64,12 +64,13 @@ export async function POST(req: NextRequest) {
     let ai: {
       topRoles: { role: string; count: number }[];
       topIdeas: { idea: string; count: number }[];
+      ideaCriteria: unknown;
       experiences: unknown;
-    } = { topRoles: [], topIdeas: [], experiences: {} };
+    } = { topRoles: [], topIdeas: [], ideaCriteria: {}, experiences: {} };
     try {
       ai = await processRound2(theme.title, roles, experiences, ideas);
     } catch (e) {
-      ai = { topRoles: [], topIdeas: [], experiences: {} };
+      ai = { topRoles: [], topIdeas: [], ideaCriteria: {}, experiences: {} };
       console.error("R2 IA falló para", theme.id, e instanceof Error ? e.message : e);
     }
 
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
       roleDistribution,
       topRoles: ai.topRoles,
       topIdeas: ai.topIdeas,
+      ideaCriteria: ai.ideaCriteria,
       experiences: ai.experiences,
     });
   }

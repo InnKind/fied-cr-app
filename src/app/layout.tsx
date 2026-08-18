@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FIEd Costa Rica — Ejercicio de Prototipado",
+  title: "FIEd Costa Rica — Ejercicio de Ideación",
   description:
     "Ejercicio participativo del Foro Internacional de Educación Superior (Inn.Kind · FIEd Costa Rica).",
 };

@@ -21,11 +21,36 @@ function roleColor(id: string): string {
   return ROLES.find((r) => r.id === id)?.color ?? "#64748b";
 }
 
-const EXPERIENCE_CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
+// Los 3 criterios con que la IA agrega tanto las ideas como los siguientes pasos.
+const CRITERIA: { key: keyof IdeaTriple; label: string }[] = [
   { key: "mostRepeated", label: "La más mencionada" },
   { key: "easiest", label: "La más fácil de implementar" },
   { key: "mostDisruptive", label: "La más disruptiva" },
 ];
+
+// Las 3 tarjetas de criterio (se usan en "Ideas con las cuales empezar" y en
+// "Siguientes pasos").
+function CriteriaGrid({
+  items,
+}: {
+  items: { label: string; text?: string }[];
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {items.map((e, k) => (
+        <div
+          key={k}
+          className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            {e.label}
+          </p>
+          <p className="mt-1.5 text-slate-800">{e.text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
@@ -62,7 +87,12 @@ function ThemeSection({ block }: { block: Round2ThemeBlock }) {
       color: roleColor(id),
     }));
 
-  const experiences = EXPERIENCE_CRITERIA.map((c) => ({
+  const ideaCriteria = CRITERIA.map((c) => ({
+    label: c.label,
+    text: block.ideaCriteria?.[c.key],
+  })).filter((e) => e.text && e.text.trim());
+
+  const experiences = CRITERIA.map((c) => ({
     label: c.label,
     text: block.experiences?.[c.key],
   })).filter((e) => e.text && e.text.trim());
@@ -79,37 +109,44 @@ function ThemeSection({ block }: { block: Round2ThemeBlock }) {
         </span>
       </div>
 
-      {ideasData.length > 0 && (
+      {(ideasData.length > 0 || ideaCriteria.length > 0) && (
         <div className="mt-4">
           <Card>
-            <SectionTitle>Ideas para empezar</SectionTitle>
+            <SectionTitle>Ideas con las cuales empezar</SectionTitle>
             <p className="mb-3 mt-1 text-sm text-slate-500">
-              Con qué idea se sienten motivados a empezar.
+              Cuántas personas escogieron cada idea
             </p>
-            <HBars data={ideasData} color="#0c7d75" valueSuffix="×" />
+            {ideasData.length > 0 && (
+              <HBars data={ideasData} color="#0c7d75" valueSuffix="×" />
+            )}
+            {ideaCriteria.length > 0 && (
+              <div className={ideasData.length > 0 ? "mt-5" : ""}>
+                <CriteriaGrid items={ideaCriteria} />
+              </div>
+            )}
           </Card>
         </div>
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <Card>
-          <SectionTitle>Roles a involucrar</SectionTitle>
+          <SectionTitle>Personas a involucrar</SectionTitle>
           <p className="mb-3 mt-1 text-sm text-slate-500">
-            A quiénes hay que sumar para que el tema avance.
+            Quiénes necesitan involucrarse para llevar la idea adelante
           </p>
           {rolesData.length ? (
             <HBars data={rolesData} color="#c8103e" valueSuffix="×" />
           ) : (
             <p className="text-sm text-slate-400">
-              La IA no encontró roles recurrentes.
+              La IA no encontró personas recurrentes.
             </p>
           )}
         </Card>
 
         <Card>
-          <SectionTitle>Quiénes reflexionaron</SectionTitle>
+          <SectionTitle>Quiénes eligieron este tema</SectionTitle>
           <p className="mb-3 mt-1 text-sm text-slate-500">
-            Roles de los participantes que eligieron este tema.
+            Roles de los participantes.
           </p>
           {distData.length ? (
             <HBars data={distData} />
@@ -122,23 +159,11 @@ function ThemeSection({ block }: { block: Round2ThemeBlock }) {
       {experiences.length > 0 && (
         <div className="mt-4">
           <Card>
-            <SectionTitle>Experiencias que inspiran</SectionTitle>
+            <SectionTitle>Siguientes pasos</SectionTitle>
             <p className="mb-3 mt-1 text-sm text-slate-500">
               Cómo proponen movilizar a esas personas.
             </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {experiences.map((e, k) => (
-                <div
-                  key={k}
-                  className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    {e.label}
-                  </p>
-                  <p className="mt-1.5 text-slate-800">{e.text}</p>
-                </div>
-              ))}
-            </div>
+            <CriteriaGrid items={experiences} />
           </Card>
         </div>
       )}
@@ -231,14 +256,11 @@ export default function ResultadosPage() {
       <div className="mx-auto w-full max-w-5xl">
         <BrandLogo className="mb-6" />
 
-        <p className="text-sm font-semibold uppercase tracking-wider text-teal-200">
-          Ronda 2 · Reflexión colectiva
-        </p>
-        <h1 className="mt-1 text-3xl font-bold text-white sm:text-4xl">
+        <h1 className="text-3xl font-bold text-white sm:text-4xl">
           Qué nos llevamos para accionar
         </h1>
         <p className="mt-1 text-white/70">
-          {totalPeople} {totalPeople === 1 ? "reflexión" : "reflexiones"} ·{" "}
+          {totalPeople} {totalPeople === 1 ? "respuesta" : "respuestas"} ·{" "}
           {themes.length} {themes.length === 1 ? "tema" : "temas"}
         </p>
 
@@ -247,7 +269,7 @@ export default function ResultadosPage() {
           <Card>
             <SectionTitle>¿Qué tema llevar a la acción?</SectionTitle>
             <p className="mb-3 mt-1 text-sm text-slate-500">
-              Cuántas personas eligieron accionar cada tema en la Ronda 2.
+              El número de personas que eligieron accionar sobre cada tema
             </p>
             <HBars data={themePopularity} big valueSuffix="" />
           </Card>

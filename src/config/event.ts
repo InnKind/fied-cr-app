@@ -5,15 +5,13 @@ export type Role = { id: string; label: string; color: string };
 export type Theme = {
   id: string;
   title: string;
-  provocation: string; // la "provocación" del tema (POR DEFINIR)
-  // Pregunta de apertura que el facilitador lee en la mesa y que el participante
-  // también ve por escrito durante la actividad (opcional, POR DEFINIR).
-  openingQuestion?: string;
-  // Preguntas de apoyo (2-3) que estimulan el pensamiento del participante en la
-  // pantalla de actividad (Cambio #2). POR DEFINIR — las afina el equipo.
-  supportingQuestions?: string[];
+  provocation: string; // descripción del tema (la ve la persona al elegir tema)
+  // Ejemplos de "momentos" del tema: una línea introductoria + 2-3 ejemplos.
+  // Orientan el pensamiento del participante en la pantalla de actividad.
+  examplesIntro?: string;
+  examples?: string[];
   // Pregunta principal que guía a la persona a definir sus "momentos". Es la más
-  // importante de la pantalla (se resalta). POR DEFINIR.
+  // importante de la pantalla (se resalta).
   momentsQuestion?: string;
   roles: string[]; // roles a los que este tema "les calza" (guía la elección)
 };
@@ -25,14 +23,40 @@ export function isPlaceholder(text: string | null | undefined): boolean {
 }
 export type RoundQuestion = { id: string; prompt: string };
 
-// --- Roles / sectores (para el registro y para las preguntas por rol) ---
+// --- Roles / sectores (para el registro) ---
+// El orden es el del catálogo del equipo (18-ago): los 2 roles de cada tema y,
+// al final, los que pueden ir a cualquier tema (idealmente repartidos, por eso
+// NO aparecen en `Theme.roles` y no reciben la marca "sugerido para tu rol").
 export const ROLES: Role[] = [
-  { id: "docente", label: "Docente / Profesor", color: "#2563eb" },
   { id: "estudiante", label: "Estudiante", color: "#16a34a" },
-  { id: "sector-productivo", label: "Sector productivo / Empresa", color: "#ea580c" },
-  { id: "admin-universitario", label: "Administrador universitario (rector, vicerrector…)", color: "#7c3aed" },
-  { id: "regulador", label: "Regulador / Aseguramiento de calidad", color: "#dc2626" },
-  { id: "gobierno", label: "Gobierno", color: "#0d9488" },
+  { id: "docente", label: "Docente", color: "#2563eb" },
+  {
+    id: "decano",
+    label: "Decano / Director académico / Coordinador de carrera",
+    color: "#7c3aed",
+  },
+  {
+    id: "calidad-admin",
+    label: "Calidad/innovación académica y áreas administrativas",
+    color: "#db2777",
+  },
+  {
+    id: "rector",
+    label: "Rector / Vicerrector / Asociación de universidades",
+    color: "#dc2626",
+  },
+  {
+    id: "politica-regulacion",
+    label: "Política y regulación educativa / Organismos internacionales",
+    color: "#0d9488",
+  },
+  { id: "edtech", label: "EdTec / Tecnología", color: "#ea580c" },
+  {
+    id: "empresa",
+    label: "Sector empresarial / Política de apoyo a la empresa",
+    color: "#ca8a04",
+  },
+  { id: "otro", label: "Otro", color: "#64748b" },
 ];
 
 // --- Mesas ---
@@ -44,39 +68,57 @@ export const TOTAL_TABLES = 24;
 // helpers legacy en lib/tables.ts. El flujo real ya NO lo usa.
 export const TABLES_PER_THEME = 12;
 
-// --- 3 TEMAS (Agenda V2) — las provocaciones están POR DEFINIR ---
+// --- 3 TEMAS — contenido final del equipo (word del 18-ago) ---
+// OJO: los `id` se guardan en la base (participants.selected_theme,
+// idea_submissions.theme, table_themes.theme…). NO cambiarlos.
 export const THEMES: Theme[] = [
   {
     id: "aula",
-    title: "La experiencia en el aula",
-    provocation: "POR DEFINIR (provocación del tema 1 — perspectiva del estudiante).",
-    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 1).",
-    // Ejemplo del word de cambios (Tema 1). El equipo lo afina.
-    supportingQuestions: [
-      "¿Qué es pensamiento realmente crítico y dónde puedo apoyarme en la IA?",
-      "¿Cómo evaluar el aprendizaje: asistencia y exámenes, o portafolios?",
+    title: "Experiencia educativa del estudiante",
+    provocation:
+      "Una metodología didáctica que aprovecha la IA y empodera al estudiante y al docente para mejorar el aprendizaje.",
+    examplesIntro:
+      "Ejemplos de momentos de interacción entre docente y estudiante que son parte de una metodología didáctica:",
+    examples: [
+      "Docente da una charla magistral y los estudiantes toman apuntes.",
+      "Docente asigna tareas que el estudiante hace asincrónicamente.",
+      "Estudiante hace examen que el docente califica para ofrecer retroalimentación.",
     ],
     momentsQuestion:
-      "¿En qué momentos del proceso de aprendizaje del estudiante podría mejorar el resultado aprovechando la IA y empoderando al estudiante a dirigir su propio proceso?",
+      "¿Qué momentos en metodologías didácticas comúnmente utilizadas tienen las mayores oportunidades de mejora?",
     roles: ["estudiante", "docente"],
   },
   {
     id: "organizacional",
-    title: "El modelo organizacional de la universidad",
-    provocation: "POR DEFINIR (provocación del tema 2 — perspectiva docente/facultad).",
-    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 2).",
-    supportingQuestions: ["POR DEFINIR (pregunta de apoyo 1 del tema 2)."],
-    momentsQuestion: "POR DEFINIR (pregunta para definir momentos del tema 2).",
-    roles: ["docente", "admin-universitario"],
+    title: "Modelo organizacional de la universidad",
+    provocation:
+      "Un modelo organizacional que aprovecha la IA y empodera a decanos, directores / coordinadores académicos y administradores para mejorar la oferta educativa.",
+    examplesIntro:
+      "Ejemplos de momentos de interacción entre decano/director/coordinador y administradores que son parte de un modelo organizacional que afecta la oferta educativa:",
+    examples: [
+      "Administración aprueba / desaprueba modificación curricular sugerida por decanos.",
+      "Administración incentiva publicaciones y los directores le piden a sus docentes publicar.",
+      "Administración requiere feedback y participación de industria para aprobar nuevos cursos.",
+    ],
+    momentsQuestion:
+      "¿Qué momentos en el flujo del modelo organizacional de las universidades tienen las mayores oportunidades de mejora?",
+    roles: ["decano", "calidad-admin"],
   },
   {
     id: "regulatorio",
-    title: "Calidad y regulación del sistema",
-    provocation: "POR DEFINIR (provocación del tema 3 — perspectiva del regulador).",
-    openingQuestion: "POR DEFINIR (pregunta de apertura del tema 3).",
-    supportingQuestions: ["POR DEFINIR (pregunta de apoyo 1 del tema 3)."],
-    momentsQuestion: "POR DEFINIR (pregunta para definir momentos del tema 3).",
-    roles: ["regulador", "gobierno", "sector-productivo"],
+    title: "Sistema nacional para la calidad de la educación superior",
+    provocation:
+      "Un sistema nacional de educación superior que aprovecha la IA y empodera a líderes universitarios y reguladores para mejorar los modelos de gestión de la calidad e innovación de las universidades.",
+    examplesIntro:
+      "Ejemplos de momentos en los que rectores / vicerrectores y reguladores interactúan que influyen en el modelo de gestión de la calidad e innovación de la universidad:",
+    examples: [
+      "Reguladores aprueban o desaprueban modificaciones a planilla de personal académico.",
+      "Acreditadora requiere visita de universidad internacional para ofrecer retroalimentación.",
+      "Reguladores requieren que la oferta educativa calce con una nomenclatura de grado y títulos.",
+    ],
+    momentsQuestion:
+      "¿Qué momentos en el flujo de la regulación y promoción de la calidad tienen las mayores oportunidades de mejora?",
+    roles: ["rector", "politica-regulacion"],
   },
 ];
 
@@ -119,29 +161,60 @@ export const FACILITATOR_GUIDE: FacilitatorStep[] = [
   },
 ];
 
-// --- Instrucciones para el PARTICIPANTE (Cambio #2) ---
+// --- Instrucciones para el PARTICIPANTE ---
+// Cada paso tiene una etiqueta corta en negrita (Pensar, Votar…) y el detalle.
+export type ActivityStep = { label: string; text: string };
+
 // Pantalla A ("Actividad en tu mesa"): los pasos del proceso, al llegar a la
-// mesa. Luego un botón "Empezar" lleva a la pantalla del tema + preguntas.
-// El equipo edita estos textos.
-export const ACTIVITY_STEPS: string[] = [
-  "Piensa en los momentos y anota tus ideas en post-its.",
-  "Preséntate, lee tus post-its en voz alta y agrupen los parecidos.",
-  "Voten por sus 2 momentos favoritos con las calcomanías.",
-  "Ayuden al grupo a elegir los 3 mejores momentos.",
-  "Elige el momento en el que quieres trabajar y siéntate con ese subgrupo.",
+// mesa. Luego un botón "Empezar" lleva a la pantalla del tema + la pregunta.
+export const ACTIVITY_STEPS_TITLE = "Qué van a hacer en la mesa (25 mins)";
+export const ACTIVITY_STEPS: ActivityStep[] = [
+  {
+    label: "Pensar",
+    text: "Tómate un par de minutos para pensar en silencio y anota 2 o 3 “momentos” en post-its.",
+  },
+  {
+    label: "Preséntate",
+    text: "tu nombre y tu rol. Luego lee cada momento en voz alta mientras colocas tus post-its en la mesa.",
+  },
+  { label: "Agrupar", text: "Entre todos, agrupen los post-its parecidos." },
+  {
+    label: "Votar",
+    text: "Ahora cada persona vota en silencio por los 2 momentos que considera más prometedores con una calcomanía.",
+  },
+  {
+    label: "Entregar",
+    text: "Escriban los tres momentos en una hoja y pásenle la hoja a un facilitador.",
+  },
 ];
 
-// Instrucción fija bajo las preguntas del tema (pantalla B, tras "Empezar").
+// Instrucción fija bajo la pregunta del tema (pantalla B, tras "Empezar").
 export const ACTIVITY_THINK_HINT =
-  "Tómate un par de minutos para pensar en silencio y anota 2 o 3 “momentos” en post-its.";
+  "Tómate un par de minutos para pensar en silencio, y anota 2 o 3 “momentos” en post-its.";
+// Cómo llegan los momentos a la app (misma pantalla, debajo del hint).
+export const ACTIVITY_FACILITATOR_HINT =
+  "Cuando tu mesa tenga los momentos, un facilitador les ayudará a añadirlos a la app.";
 
 // Pantalla C: pasos de la SIGUIENTE etapa, cuando el facilitador ya guardó los
 // 3 momentos y la persona va a elegir el suyo y trabajar las ideas.
-export const MOMENT_STEPS: string[] = [
-  "Elige el momento en el que quieras trabajar y siéntate junto a quienes trabajen en el mismo.",
-  "Tómate un par de minutos para pensar en silencio y envía tus ideas por la app.",
-  "En tu subgrupo, conversen y mejoren las ideas que generaron para su momento.",
-  "Una persona de cada subgrupo presenta las mejores ideas a los demás subgrupos.",
+export const MOMENT_STEPS_TITLE = "Qué van a hacer en la mesa (20 mins)";
+export const MOMENT_STEPS: ActivityStep[] = [
+  {
+    label: "Elegir",
+    text: "Elige el momento en el que quieres trabajar y siéntate en un grupo con las otras personas que escogen ese momento.",
+  },
+  {
+    label: "Idear",
+    text: "Tómate un par de minutos para pensar en silencio y envía tus ideas a través de la app.",
+  },
+  {
+    label: "Conversar",
+    text: "En tu grupo, compartan / generen ideas conjuntas sobre el momento que escogieron.",
+  },
+  {
+    label: "Presentar",
+    text: "Una persona de cada grupo presenta las mejores ideas a los demás grupos de la mesa.",
+  },
 ];
 
 // --- Ronda 1 abierta (LEGACY: Agenda V2 la elimina; se deja por compatibilidad) ---
@@ -158,23 +231,70 @@ export const REFLECTION_QUESTIONS: RoundQuestion[] = [
   { id: "ref-3", prompt: "En las próximas 2 semanas, ¿cómo vas a inspirar a estas personas a involucrarse?" },
 ];
 
-// --- Preguntas al colectivo, una por rol (Agenda V2) — POR DEFINIR ---
-export const COLLECTIVE_QUESTIONS: Record<string, string> = {
-  estudiante: "POR DEFINIR (pregunta a estudiantes).",
-  docente: "POR DEFINIR (pregunta a docentes).",
-  "admin-universitario": "POR DEFINIR (pregunta a administradores de universidad).",
-  "sector-productivo": "POR DEFINIR (pregunta al sector productivo).",
-  regulador: "POR DEFINIR (pregunta a reguladores).",
+// --- Captura de ideas (prototipado) ---
+// Dos preguntas POR TEMA. El orden es: primero EMPODERAMIENTO (agency), después
+// IA — así lo pidió el equipo. `agency` y `ai` son los nombres de las columnas
+// en idea_submissions (agency_text / ai_text), no los cambies.
+export type IdeaPrompt = { label: string; placeholder: string };
+export type IdeaPromptPair = { agency: IdeaPrompt; ai: IdeaPrompt };
+
+// Respaldo genérico (si un tema no tiene preguntas propias).
+export const IDEA_PROMPTS_DEFAULT: IdeaPromptPair = {
+  agency: {
+    label:
+      "¿Cómo podría la persona involucrada tener más autonomía, voz o poder de decisión en ese momento?",
+    placeholder: "Tus ideas de empoderamiento",
+  },
+  ai: {
+    label: "¿Cómo podría integrarse mejor la IA en el momento que elegiste?",
+    placeholder: "Tus ideas sobre la IA",
+  },
 };
 
-// --- Captura de ideas (fase IDEA_ENTRY) ---
-// Preguntas genéricas (sirven para cualquier tema/momento). Redacción final del
-// equipo: ajustar aquí en un solo lugar.
-export const IDEA_PROMPTS = {
-  ai: "¿Cómo podría integrarse mejor la IA en el momento que elegiste?",
-  agency:
-    "¿Cómo podría la persona involucrada tener más autonomía, voz o poder de decisión en ese momento?",
+export const IDEA_PROMPTS_BY_THEME: Record<string, IdeaPromptPair> = {
+  aula: {
+    agency: {
+      label:
+        "En ese momento, ¿cómo podrían los docentes empoderar más al estudiante para mejorar el resultado de aprendizaje?",
+      placeholder: "Tus ideas de empoderamiento",
+    },
+    ai: {
+      label:
+        "En ese momento, ¿cómo podríamos aprovechar la IA para potenciar el aprendizaje del estudiante?",
+      placeholder: "Tus ideas sobre la IA",
+    },
+  },
+  organizacional: {
+    agency: {
+      label:
+        "En ese momento, ¿cómo podría la universidad empoderar más a decanos y directores/coordinadores académicos para facilitar la evolución de la oferta educativa?",
+      placeholder: "Tus ideas de empoderamiento",
+    },
+    ai: {
+      label:
+        "En ese momento, ¿cómo podríamos aprovechar la IA para potenciar la evolución de la oferta educativa?",
+      placeholder: "Tus ideas sobre la IA",
+    },
+  },
+  regulatorio: {
+    agency: {
+      label:
+        "En ese momento, ¿cómo podrían los reguladores/promotores de la calidad de la educación superior empoderar más al liderazgo de cada universidad para impulsar la innovación y calidad en su universidad?",
+      placeholder: "Tus ideas de empoderamiento",
+    },
+    ai: {
+      label:
+        "En ese momento, ¿cómo podríamos aprovechar la IA para impulsar la gestión universitaria hacia la innovación y calidad?",
+      placeholder: "Tus ideas sobre la IA",
+    },
+  },
 };
+
+export function ideaPromptsFor(
+  themeId: string | null | undefined
+): IdeaPromptPair {
+  return (themeId && IDEA_PROMPTS_BY_THEME[themeId]) || IDEA_PROMPTS_DEFAULT;
+}
 
 // Enlace a Atenea (GPT externo) para seguir explorando tras enviar ideas.
 export const ATHENEA_URL =
@@ -186,19 +306,20 @@ export const ROUND2_QUESTIONS = {
   // Nueva pregunta (Cambio #1), va después del tema.
   motivatingIdea: "¿Con qué idea te sientes motivado/a a empezar?",
   roles:
-    "¿Cuáles son los 3 roles que necesitas involucrar para llevar esta iniciativa adelante? (roles, no nombres)",
+    "¿Cuáles son las 3 personas que necesitas involucrar para llevar esta idea adelante? (roles, no nombres)",
   experience:
-    "¿Qué experiencia podrías diseñar para inspirar a esos roles a apoyarte?",
+    "¿Qué paso podrías tomar para inspirar a esas personas a involucrarse?",
   // 4ª opción del dropdown de tema y su pregunta de seguimiento (Cambio #1).
-  cantCommitOption: "No puedo comprometerme a tomar acción en este momento.",
-  cantCommitReason: "¿Por qué no puedes tomar acción en este momento?",
+  cantCommitOption: "Prefiero no tomar acción en este momento.",
+  cantCommitReason:
+    "Para entenderte mejor, ¿qué te frena de tomar un siguiente paso?",
 };
 // Valor centinela para la 4ª opción "no puedo comprometerme".
 export const R2_CANT_COMMIT = "__cant_commit__";
 
 export const EVENT = {
   name: "Inn.Kind · FIEd Costa Rica",
-  exerciseTitle: "Ejercicio de Prototipado",
+  exerciseTitle: "Ejercicio de Ideación",
   tableSize: SEATS_PER_TABLE,
   // Solo lo usa el registro viejo (flujo en vivo). En Agenda V2 la mesa la asigna la app.
   numberOfTables: TOTAL_TABLES,

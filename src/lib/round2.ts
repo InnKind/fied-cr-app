@@ -13,6 +13,9 @@ export type Round2ThemeBlock = {
   topRoles: { role: string; count: number }[];
   // ideas con las que quieren empezar (agrupadas por la IA) con su conteo
   topIdeas?: { idea: string; count: number }[];
+  // esas mismas ideas resumidas por los 3 criterios (opcional: los payloads
+  // procesados antes de este cambio no lo traen)
+  ideaCriteria?: IdeaTriple;
   // experiencias que inspiran, elegidas por los 3 criterios
   experiences: IdeaTriple;
 };

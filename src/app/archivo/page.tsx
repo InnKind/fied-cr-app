@@ -277,14 +277,15 @@ export default function ArchivoPage() {
                       <h3 className="font-semibold text-slate-900">
                         <span className="text-slate-400">{m.ord}.</span> {m.text}
                       </h3>
+                      {/* Primero empoderamiento, después IA. */}
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
-                            Ideas de IA
+                            Ideas de Empoderamiento
                           </p>
                           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                            {ai.length ? (
-                              ai.map((t, k) => <li key={k}>{t}</li>)
+                            {ag.length ? (
+                              ag.map((t, k) => <li key={k}>{t}</li>)
                             ) : (
                               <li className="list-none text-slate-300">—</li>
                             )}
@@ -292,11 +293,11 @@ export default function ArchivoPage() {
                         </div>
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
-                            Ideas de Agency
+                            Ideas de IA
                           </p>
                           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                            {ag.length ? (
-                              ag.map((t, k) => <li key={k}>{t}</li>)
+                            {ai.length ? (
+                              ai.map((t, k) => <li key={k}>{t}</li>)
                             ) : (
                               <li className="list-none text-slate-300">—</li>
                             )}

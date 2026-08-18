@@ -132,8 +132,8 @@ export async function processRound1(
         : "      (sin ideas de IA)";
       const ag = m.agencyIdeas.length
         ? m.agencyIdeas.map((x) => `      - ${x}`).join("\n")
-        : "      (sin ideas de Agency)";
-      return `Momento ${i + 1} (Mesa ${m.table ?? "?"}): ${m.text}\n    Ideas de IA:\n${ai}\n    Ideas de Agency:\n${ag}`;
+        : "      (sin ideas de empoderamiento)";
+      return `Momento ${i + 1} (Mesa ${m.table ?? "?"}): ${m.text}\n    Ideas de Empoderamiento:\n${ag}\n    Ideas de IA:\n${ai}`;
     })
     .join("\n\n");
 
@@ -141,15 +141,17 @@ export async function processRound1(
     `Eres un analista experto de un foro de educación superior (FIED). ` +
     `Tema: "${themeTitle}".\n\n` +
     `Estos son los "momentos" que varias mesas identificaron para rediseñar, con las ideas ` +
-    `que la gente escribió en dos dimensiones: IA (cómo integrar mejor la inteligencia ` +
-    `artificial) y Agency (cómo dar más autonomía, voz o decisión al actor).\n\n` +
+    `que la gente escribió en dos dimensiones: EMPODERAMIENTO (cómo empoderar al actor de ese ` +
+    `momento: más autonomía, voz o poder de decisión) e IA (cómo aprovechar la inteligencia ` +
+    `artificial en ese momento).\n\n` +
     `${block}\n\n` +
     `Tu tarea:\n` +
     `1. AGRUPA los momentos que son esencialmente el mismo aunque estén dichos con palabras ` +
     `distintas (p. ej. "elegir mis cursos" y "decidir qué materias estudiar" son el mismo). ` +
     `Dale a cada grupo un título corto y claro.\n` +
     `2. Para cada grupo, indica en cuántas MESAS distintas apareció ("tables").\n` +
-    `3. Para cada grupo, elige HASTA 3 ideas de IA y HASTA 3 de Agency, TOMADAS de las ideas ` +
+    `3. Para cada grupo, elige HASTA 3 ideas de empoderamiento (campo "agency") y HASTA 3 de ` +
+    `IA (campo "ai"), TOMADAS de las ideas ` +
     `escritas para ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de ` +
     `implementar) y "mostDisruptive" (la más radical/transformadora). REGLAS IMPORTANTES: ` +
     `(a) las tres ideas de cada dimensión deben ser DISTINTAS entre sí; NUNCA repitas la misma ` +
@@ -195,6 +197,9 @@ export type Round2Aggregation = {
   // Ideas motivadoras agrupadas (Cambio #1): "¿con qué idea te sientes
   // motivado/a a empezar?" — la IA junta las parecidas con su conteo.
   topIdeas: { idea: string; count: number }[];
+  // Las mismas ideas resumidas por los 3 criterios (más mencionada / más fácil
+  // de implementar / más disruptiva), igual que las experiencias.
+  ideaCriteria: IdeaTriple;
 };
 
 // Para un TEMA: agrupa los roles-a-involucrar equivalentes (con conteo), las
@@ -228,15 +233,20 @@ export async function processRound2(
     `Tu tarea:\n` +
     `1. Agrupa las IDEAS equivalentes (aunque estén dichas con otras palabras) y cuenta ` +
     `cuántas veces aparece cada una. Devuelve las más frecuentes primero (máx 6). No inventes.\n` +
-    `2. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
+    `2. De esas mismas IDEAS elige HASTA 3 en "ideaCriteria" según: "mostRepeated" (la más ` +
+    `mencionada), "easiest" (la más fácil de implementar) y "mostDisruptive" (la más radical). ` +
+    `Las tres deben ser DISTINTAS entre sí; NUNCA repitas la misma idea (ni apenas reformulada) ` +
+    `en más de un criterio. Si hay menos de 3 ideas distintas y con sustancia, deja los demás ` +
+    `campos como "". Parafrasea breve; no inventes.\n` +
+    `3. Agrupa los ROLES equivalentes (p. ej. "Decano", "Decano/a" y "Dean" son el mismo) ` +
     `y cuenta cuántas veces aparece cada uno. Devuelve los más frecuentes primero (máx 6).\n` +
-    `3. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
+    `4. De las EXPERIENCIAS elige HASTA 3 según: "mostRepeated" (la más común), "easiest" (la ` +
     `más fácil de implementar) y "mostDisruptive" (la más radical). Las tres deben ser DISTINTAS ` +
     `entre sí; NUNCA repitas la misma experiencia (ni apenas reformulada) en más de un criterio. ` +
     `Si hay menos de 3 experiencias distintas y con sustancia, deja los demás campos como "". ` +
     `Parafrasea breve; no inventes.\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
-    `{"topIdeas":[{"idea":"...","count":0}],"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
+    `{"topIdeas":[{"idea":"...","count":0}],"ideaCriteria":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"topRoles":[{"role":"...","count":0}],"experiences":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}\n` +
     `Sin texto fuera del JSON.`;
 
   // Igual que processRound1: la IA a veces devuelve JSON válido con otra forma.
@@ -248,13 +258,22 @@ export async function processRound2(
     try {
       const parsed = JSON.parse(text) as Partial<Round2Aggregation>;
       if (Array.isArray(parsed?.topRoles)) {
+        const emptyTriple: IdeaTriple = {
+          mostRepeated: "",
+          easiest: "",
+          mostDisruptive: "",
+        };
         return {
           topRoles: parsed.topRoles,
           topIdeas: Array.isArray(parsed.topIdeas) ? parsed.topIdeas : [],
+          ideaCriteria:
+            parsed.ideaCriteria && typeof parsed.ideaCriteria === "object"
+              ? (parsed.ideaCriteria as IdeaTriple)
+              : emptyTriple,
           experiences:
             parsed.experiences && typeof parsed.experiences === "object"
               ? (parsed.experiences as IdeaTriple)
-              : { mostRepeated: "", easiest: "", mostDisruptive: "" },
+              : emptyTriple,
         };
       }
       lastErr = "la respuesta no traía un arreglo 'topRoles'";

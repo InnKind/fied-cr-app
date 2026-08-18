@@ -95,7 +95,7 @@ function SummarySlide({
   return (
     <>
       <h1 className="text-3xl font-bold text-white sm:text-5xl">
-        El panorama de la Ronda 1
+        Resultados de la ideación
       </h1>
       <p className="mt-2 text-white/70">
         {totalPeople > 0
@@ -106,10 +106,10 @@ function SummarySlide({
       <div className="mt-8 flex flex-col gap-5 sm:flex-row">
         <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="text-lg font-bold text-[#0c7d75]">
-            ¿Qué tema exploró cada quién?
+            ¿Cuántas personas exploraron cada tema?
           </h3>
           <p className="mb-4 mt-1 text-sm text-slate-500">
-            Personas que eligieron cada tema.
+            Número de personas que eligieron cada tema
           </p>
           {themeData.length ? (
             <HBars data={themeData} big />
@@ -123,7 +123,7 @@ function SummarySlide({
             Los momentos que más se repitieron
           </h3>
           <p className="mb-4 mt-1 text-sm text-slate-500">
-            En cuántas mesas apareció cada momento.
+            Número de mesas en las que surgió este momento
           </p>
           {topMoments.length ? (
             <HBars
@@ -138,11 +138,6 @@ function SummarySlide({
           )}
         </div>
       </div>
-
-      <p className="mt-6 text-center text-xs text-white/50">
-        Cuando un mismo momento surge en varias mesas, es señal de que resuena en
-        el grupo. A continuación, tema por tema.
-      </p>
     </>
   );
 }
@@ -195,7 +190,7 @@ function ThemeDividerSlide({
           Los momentos de este tema
         </h3>
         <p className="mb-4 mt-1 text-sm text-slate-500">
-          En cuántas mesas apareció cada uno.
+          Número de mesas en las que surgió cada momento
         </p>
         <HBars
           data={data}
@@ -205,10 +200,6 @@ function ThemeDividerSlide({
           singularSuffix=" mesa"
         />
       </div>
-
-      <p className="mt-6 text-center text-xs text-white/50">
-        Veamos cada momento con las ideas de IA y de Agency.
-      </p>
     </>
   );
 }
@@ -228,15 +219,11 @@ function MomentSlide({ s }: { s: FlatSlide }) {
         </div>
       )}
 
+      {/* Primero empoderamiento, después IA (orden pedido por el equipo). */}
       <div className="mt-8 flex flex-col gap-5 sm:flex-row">
-        <IdeaColumn title="Integrar mejor la IA" ideas={s.ai} />
-        <IdeaColumn title="Más agency (voz y decisión)" ideas={s.agency} />
+        <IdeaColumn title="Ideas de Empoderamiento" ideas={s.agency} />
+        <IdeaColumn title="Ideas de IA" ideas={s.ai} />
       </div>
-
-      <p className="mt-6 text-center text-xs text-white/50">
-        La IA eligió, de todo lo que escribieron las mesas, la idea más repetida,
-        la más fácil de implementar y la más disruptiva de cada dimensión.
-      </p>
     </>
   );
 }
@@ -358,9 +345,11 @@ export default function PresentationPage() {
   // si el deck se encoge en caliente (p. ej. curaduría), i podría exceder total.
   const clampedI = Math.max(0, Math.min(i, total - 1));
   const view = views[clampedI];
+  // El slide-resumen no lleva etiqueta arriba (el <span> vacío mantiene el
+  // contador "n / total" alineado a la derecha).
   const topLabel =
     view.kind === "summary"
-      ? "Ronda 1 · Panorama"
+      ? ""
       : view.kind === "divider"
         ? numberedThemeTitle(view.themeId)
         : numberedThemeTitle(view.slide.themeId);

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
-import { IDEA_PROMPTS, ATHENEA_URL } from "@/config/event";
+import { ideaPromptsFor, ATHENEA_URL } from "@/config/event";
 import MomentSelection from "@/components/MomentSelection";
 import BrandLogo from "@/components/BrandLogo";
 import { BRAND_BG } from "@/lib/brand";
@@ -106,7 +106,7 @@ export default function IdeaEntry({
   async function submit() {
     if (saving) return; // evita doble envío
     if (!ai.trim() && !agency.trim()) {
-      setError("Escribe al menos una idea (IA o Agency) antes de enviar.");
+      setError("Escribe al menos una idea antes de enviar.");
       return;
     }
     setSaving(true);
@@ -176,7 +176,9 @@ export default function IdeaEntry({
           )}
           <h1 className="text-2xl font-bold text-white">¡Idea enviada!</h1>
           <p className="mt-2 text-white/80">
-            Llevas {sentCount} {sentCount === 1 ? "idea enviada" : "ideas enviadas"}.
+            Envía más ideas hasta que tu grupo esté listo para compartir /
+            generar ideas conjuntas. Luego una persona de tu grupo presenta las
+            mejores ideas a los demás grupos de la mesa.
           </p>
           <div className="mt-8 space-y-3">
             <button
@@ -194,21 +196,14 @@ export default function IdeaEntry({
               Explorar más con Atenea ↗
             </a>
           </div>
-          <button
-            onClick={() => setChanging(true)}
-            className="mt-6 text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
-          >
-            Cambiar de momento
-          </button>
-          <p className="mt-4 text-xs text-white/60">
-            Mientras tanto, comparte tus ideas con tu subgrupo.
-          </p>
         </div>
       </main>
     );
   }
 
-  // Formulario de captura.
+  // Formulario de captura. Las 2 preguntas dependen del tema de la persona.
+  const prompts = ideaPromptsFor(ctx.theme);
+
   return (
     <main
       className="flex-1 flex items-center justify-center p-6"
@@ -234,25 +229,11 @@ export default function IdeaEntry({
             </div>
           )}
 
+          {/* Primero EMPODERAMIENTO, después IA (orden pedido por el equipo).
+              Las preguntas cambian según el tema de la persona. */}
           <div className="mt-5">
             <label className="block text-sm font-medium text-slate-700">
-              {IDEA_PROMPTS.ai}
-            </label>
-            <textarea
-              value={ai}
-              onChange={(e) => {
-                setAi(e.target.value);
-                setError(null);
-              }}
-              rows={3}
-              placeholder="Tus ideas sobre la IA…"
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-slate-700">
-              {IDEA_PROMPTS.agency}
+              {prompts.agency.label}
             </label>
             <textarea
               value={agency}
@@ -261,7 +242,23 @@ export default function IdeaEntry({
                 setError(null);
               }}
               rows={3}
-              placeholder="Tus ideas sobre la autonomía / voz…"
+              placeholder={prompts.agency.placeholder}
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700">
+              {prompts.ai.label}
+            </label>
+            <textarea
+              value={ai}
+              onChange={(e) => {
+                setAi(e.target.value);
+                setError(null);
+              }}
+              rows={3}
+              placeholder={prompts.ai.placeholder}
               className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
           </div>

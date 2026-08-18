@@ -9,8 +9,11 @@ import {
   isPlaceholder,
   numberedThemeTitle,
   ACTIVITY_STEPS,
+  ACTIVITY_STEPS_TITLE,
   ACTIVITY_THINK_HINT,
+  ACTIVITY_FACILITATOR_HINT,
   MOMENT_STEPS,
+  MOMENT_STEPS_TITLE,
 } from "@/config/event";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
@@ -291,7 +294,7 @@ export default function MomentSelection({
       }}
       className="mt-8 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
     >
-      No es mi mesa
+      Cambiar de mesa.
     </button>
   );
 
@@ -314,8 +317,8 @@ export default function MomentSelection({
           <h1 className="text-xl font-semibold text-white">Actividad en tu mesa</h1>
           {ACTIVITY_STEPS.length > 0 && (
             <div className="mt-5 rounded-2xl bg-white p-5 text-left shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
-                Qué van a hacer en la mesa
+              <p className="text-sm font-semibold text-[#0c7d75]">
+                {ACTIVITY_STEPS_TITLE}
               </p>
               <ol className="mt-3 space-y-2.5">
                 {ACTIVITY_STEPS.map((step, i) => (
@@ -323,7 +326,12 @@ export default function MomentSelection({
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c7d75]/10 text-sm font-bold text-[#0c7d75]">
                       {i + 1}
                     </span>
-                    <span className="text-slate-700">{step}</span>
+                    <span className="text-slate-700">
+                      <b className="font-semibold text-slate-900">
+                        {step.label}:
+                      </b>{" "}
+                      {step.text}
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -347,9 +355,8 @@ export default function MomentSelection({
   if (moments.length === 0) {
     const t = THEMES.find((x) => x.id === theme);
     const showProvocation = t && !isPlaceholder(t.provocation);
-    const supportQs = (t?.supportingQuestions ?? []).filter(
-      (q) => !isPlaceholder(q)
-    );
+    const examples = (t?.examples ?? []).filter((q) => !isPlaceholder(q));
+    const showExamplesIntro = t && !isPlaceholder(t.examplesIntro);
     const showMomentsQ = t && !isPlaceholder(t.momentsQuestion);
     return (
       <main
@@ -373,15 +380,15 @@ export default function MomentSelection({
             <p className="mt-1 text-white/80">{t!.provocation}</p>
           )}
 
-          {(supportQs.length > 0 || showMomentsQ) && (
+          {(examples.length > 0 || showMomentsQ) && (
             <div className="mt-4 rounded-2xl bg-white p-5 text-left shadow-sm">
-              {supportQs.length > 0 && (
+              {examples.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#0c7d75]">
-                    Para pensar
-                  </p>
+                  {showExamplesIntro && (
+                    <p className="text-sm text-slate-600">{t!.examplesIntro}</p>
+                  )}
                   <ul className="mt-2 list-disc space-y-1.5 pl-5 text-slate-700">
-                    {supportQs.map((q, i) => (
+                    {examples.map((q, i) => (
                       <li key={i}>{q}</li>
                     ))}
                   </ul>
@@ -390,7 +397,7 @@ export default function MomentSelection({
               {showMomentsQ && (
                 <div
                   className={
-                    supportQs.length > 0
+                    examples.length > 0
                       ? "mt-4 border-t border-slate-100 pt-4"
                       : ""
                   }
@@ -414,7 +421,7 @@ export default function MomentSelection({
               <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce [animation-delay:-0.1s]" />
               <span className="h-2 w-2 rounded-full bg-teal-300 animate-bounce" />
             </span>
-            <span>Cuando tu mesa tenga los momentos, aquí eliges el tuyo.</span>
+            <span>{ACTIVITY_FACILITATOR_HINT}</span>
           </div>
           <div className="text-center">{rescueLink}</div>
         </div>
@@ -439,16 +446,23 @@ export default function MomentSelection({
             />
           )}
           <h1 className="text-xl font-semibold text-white">¡Ya están los momentos!</h1>
-          <p className="mt-2 text-white/80">Ahora sigue así:</p>
           {MOMENT_STEPS.length > 0 && (
-            <div className="mt-4 rounded-2xl bg-white p-5 text-left shadow-sm">
-              <ol className="space-y-2.5">
+            <div className="mt-5 rounded-2xl bg-white p-5 text-left shadow-sm">
+              <p className="text-sm font-semibold text-[#0c7d75]">
+                {MOMENT_STEPS_TITLE}
+              </p>
+              <ol className="mt-3 space-y-2.5">
                 {MOMENT_STEPS.map((step, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0c7d75]/10 text-sm font-bold text-[#0c7d75]">
                       {i + 1}
                     </span>
-                    <span className="text-slate-700">{step}</span>
+                    <span className="text-slate-700">
+                      <b className="font-semibold text-slate-900">
+                        {step.label}:
+                      </b>{" "}
+                      {step.text}
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -521,7 +535,7 @@ export default function MomentSelection({
           }}
           className="mt-5 text-sm font-medium text-white/60 underline underline-offset-2 hover:text-white"
         >
-          No es mi mesa
+          Cambiar de mesa.
         </button>
       </div>
     </main>

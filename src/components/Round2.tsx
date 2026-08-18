@@ -143,8 +143,8 @@ export default function Round2({
           <h1 className="text-2xl font-bold text-white">¡Gracias!</h1>
           <p className="mt-3 text-white/80">
             {cantCommit
-              ? "Guardamos tu respuesta. Gracias por tu honestidad."
-              : "Guardamos tu reflexión. Ahora compártela con la persona de al lado."}
+              ? "Gracias por compartirnos tu reflexión. Ahora comparte tu plan con 1 persona a tu lado."
+              : "Ahora comparte tu plan con 1 persona a tu lado."}
           </p>
           <button
             onClick={() => setDone(false)}
@@ -164,10 +164,7 @@ export default function Round2({
     <main className="flex-1 flex items-center justify-center p-6" style={{ background: BRAND_BG }}>
       <div className="w-full max-w-md">
         <BrandLogo className="mb-6" />
-        <p className="text-xs font-semibold uppercase tracking-wider text-teal-200">
-          Ronda 2 · Reflexión
-        </p>
-        <h2 className="mt-1 text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-white">
           Llévalo a tu contexto
         </h2>
 
@@ -275,7 +272,7 @@ export default function Round2({
             disabled={saving}
             className="mt-5 w-full rounded-lg bg-[#c8103e] px-4 py-3 font-semibold text-white shadow-sm hover:bg-[#a50d33] active:bg-[#8a0b2b] disabled:opacity-60"
           >
-            {saving ? "Enviando…" : "Enviar mi reflexión"}
+            {saving ? "Enviando…" : "Enviar"}
           </button>
         </div>
       </div>

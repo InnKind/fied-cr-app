@@ -167,6 +167,9 @@ export default function TableAssigned({
         <p className="mt-6 text-sm text-white/60">
           Ahí vas a trabajar con tu grupo. Sigue al facilitador.
         </p>
+        <p className="mt-2 text-sm text-white/60">
+          Si necesitas cambiar de mesa, busca a un facilitador.
+        </p>
         <button
           onClick={() => {
             setInput(String(table));
@@ -174,7 +177,7 @@ export default function TableAssigned({
           }}
           className="mt-8 text-sm font-medium text-teal-200 underline underline-offset-2 hover:text-teal-100"
         >
-          No estoy en esa mesa
+          Cambiar de mesa.
         </button>
       </div>
     </main>
