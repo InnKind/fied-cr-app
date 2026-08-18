@@ -137,6 +137,71 @@ export type Slide = {
   agency: IdeaTriple;
 };
 
+// Arma las diapositivas finales a partir de la respuesta cruda de la IA.
+// Dos cosas NO se le confían al modelo, porque en la prueba de 200 personas
+// falló en ambas: (1) contar en cuántas mesas apareció un momento (reportaba de
+// menos y, tras insistirle, de más) y (2) no dejar momentos fuera (con pocas
+// mesas fusionaba en categorías amplias y perdía el trabajo de mesas enteras).
+// La IA solo dice QUÉ momentos van juntos ("momentIndexes"); las mesas se
+// cuentan aquí y lo que no haya agrupado se agrega como diapositiva propia.
+function buildSlides(
+  raw: (Slide & { momentIndexes?: unknown[]; tableNumbers?: unknown[] })[],
+  moments: MomentInput[]
+): Slide[] {
+  const usados = new Set<number>();
+  const out: Slide[] = [];
+
+  for (const s of raw) {
+    const idx = Array.isArray(s?.momentIndexes)
+      ? s.momentIndexes
+          .map((n) => Number(n))
+          .filter((n) => Number.isInteger(n) && n >= 1 && n <= moments.length)
+      : [];
+    // Si dos grupos reclaman el mismo momento, se queda en el primero.
+    const propios = idx.filter((i) => !usados.has(i));
+    propios.forEach((i) => usados.add(i));
+    const mesas = new Set(
+      propios.map((i) => moments[i - 1].table).filter((t) => t != null)
+    );
+    // Respaldo si el modelo ignoró "momentIndexes" (respuesta vieja).
+    const tables = mesas.size || Number(s?.tables) || 0;
+    out.push({
+      moment: s?.moment ?? "",
+      tables,
+      // Normaliza los 6 criterios: la presentación hace .trim() sobre ellos y
+      // un arreglo/null rompería el deck en vivo.
+      ai: asTriple(s?.ai),
+      agency: asTriple(s?.agency),
+    });
+  }
+
+  // Momentos que la IA dejó fuera: van como diapositiva propia con las ideas
+  // que escribió esa mesa. Mejor una diapositiva cruda que perder su trabajo.
+  if (usados.size > 0) {
+    for (let i = 1; i <= moments.length; i++) {
+      if (usados.has(i)) continue;
+      const m = moments[i - 1];
+      out.push({
+        moment: m.text,
+        tables: m.table != null ? 1 : 0,
+        ai: {
+          mostRepeated: m.aiIdeas[0] ?? "",
+          easiest: m.aiIdeas[1] ?? "",
+          mostDisruptive: m.aiIdeas[2] ?? "",
+        },
+        agency: {
+          mostRepeated: m.agencyIdeas[0] ?? "",
+          easiest: m.agencyIdeas[1] ?? "",
+          mostDisruptive: m.agencyIdeas[2] ?? "",
+        },
+      });
+      console.warn("processRound1: momento sin agrupar, se agrega solo:", m.text);
+    }
+  }
+
+  return out;
+}
+
 // Toma los momentos de un TEMA (de varias mesas) con sus ideas de IA y Agency,
 // agrupa los equivalentes y arma una diapositiva por momento con 3 ideas de IA
 // y 3 de Agency según los criterios: más repetida / más fácil / más disruptiva.
@@ -182,8 +247,9 @@ export async function processRound1(
     `son el mismo momento). ` +
     `COBERTURA OBLIGATORIA: cada momento de la lista debe quedar en EXACTAMENTE UN grupo y ` +
     `NINGUNO puede quedar fuera; si un momento no se parece a ningún otro, va solo en su grupo.\n` +
-    `2. Para cada grupo, lista en "tableNumbers" los números de MESA de los momentos que lo ` +
-    `componen (tal como aparecen entre paréntesis arriba; repite el número si hace falta).\n` +
+    `2. Para cada grupo, lista en "momentIndexes" los NÚMEROS de los momentos que lo componen ` +
+    `(el "Momento N" de la lista de arriba, no el número de mesa). Cada número debe aparecer en ` +
+    `un solo grupo y no puede faltar ninguno.\n` +
     `3. Para cada grupo, elige HASTA 3 ideas de empoderamiento (campo "agency") y HASTA 3 de ` +
     `IA (campo "ai"), TOMADAS de las ideas ` +
     `escritas para ese momento, según: "mostRepeated" (la más común), "easiest" (la más fácil de ` +
@@ -203,7 +269,7 @@ export async function processRound1(
     `4. Ordena los grupos por número de mesas (más repetidos primero) y luego por riqueza (los ` +
     `que tienen ideas en ambas dimensiones primero).\n\n` +
     `Responde en español latinoamericano neutro. Devuelve SOLO JSON con esta forma exacta:\n` +
-    `{"slides":[{"moment":"...","tableNumbers":[1,2],"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
+    `{"slides":[{"moment":"...","momentIndexes":[1,4],"ai":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."},"agency":{"mostRepeated":"...","easiest":"...","mostDisruptive":"..."}}]}\n` +
     `Sin texto fuera del JSON.`;
 
   // La IA a veces devuelve JSON válido pero con OTRA forma (sin el arreglo
@@ -218,33 +284,7 @@ export async function processRound1(
         : Array.isArray(parsed?.slides)
           ? parsed.slides
           : null;
-      if (slides)
-        return {
-          slides: slides.map((s) => {
-            // El "en N mesas" se CALCULA aquí a partir de los números de mesa
-            // que devolvió la IA (contar no es su fuerte: en las pruebas
-            // reportaba menos mesas de las reales). Si no vinieron, se usa su
-            // conteo como respaldo.
-            const nums = Array.isArray(
-              (s as unknown as { tableNumbers?: unknown[] }).tableNumbers
-            )
-              ? (s as unknown as { tableNumbers: unknown[] }).tableNumbers
-                  .map((n) => Number(n))
-                  .filter((n) => Number.isFinite(n))
-              : [];
-            const tables = nums.length
-              ? new Set(nums).size
-              : Number(s?.tables) || 0;
-            return {
-              moment: s?.moment ?? "",
-              tables,
-              // Normaliza los 6 criterios: la presentación hace .trim() sobre
-              // ellos y un arreglo/null rompería el deck en vivo.
-              ai: asTriple(s?.ai),
-              agency: asTriple(s?.agency),
-            };
-          }),
-        };
+      if (slides) return { slides: buildSlides(slides, moments) };
       lastErr = "la respuesta no traía un arreglo 'slides'";
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "JSON inválido";
