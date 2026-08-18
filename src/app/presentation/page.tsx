@@ -357,8 +357,14 @@ export default function PresentationPage() {
         : numberedThemeTitle(view.slide.themeId);
 
   return (
-    <main className="flex-1 p-6 sm:p-10" style={{ background: BRAND_BG }}>
-      <div className="mx-auto flex h-full max-w-5xl flex-col">
+    // Alturas acotadas a la pantalla: así el área del slide es la que se
+    // desplaza si el contenido no cabe, en vez de empujar la página entera
+    // (en un proyector la barra de navegación quedaba abajo del corte).
+    <main
+      className="flex min-h-0 flex-1 flex-col p-6 sm:p-10"
+      style={{ background: BRAND_BG }}
+    >
+      <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
         <div className="flex items-center justify-between text-sm text-white/50">
           <span className="font-semibold uppercase tracking-wider text-teal-200">
             {topLabel}
