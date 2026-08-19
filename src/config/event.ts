@@ -169,7 +169,7 @@ export type ActivityStep = { label: string; text: string };
 
 // Pantalla A ("Actividad en tu mesa"): los pasos del proceso, al llegar a la
 // mesa. Luego un botón "Empezar" lleva a la pantalla del tema + la pregunta.
-export const ACTIVITY_STEPS_TITLE = "Qué van a hacer en la mesa (25 mins)";
+export const ACTIVITY_STEPS_TITLE = "Qué van a hacer en la mesa (20-25 mins)";
 export const ACTIVITY_STEPS: ActivityStep[] = [
   {
     label: "Pensar",
