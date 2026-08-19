@@ -61,9 +61,10 @@ export const ROLES: Role[] = [
 
 // --- Mesas ---
 export const SEATS_PER_TABLE = 8;
-// Nº REAL de mesas físicas del salón. La app las reparte entre los 3 temas
-// según la demanda al momento de distribuir (mesas dinámicas). AJUSTAR al salón.
-export const TOTAL_TABLES = 24;
+// Nº REAL de mesas físicas del salón (confirmado por el equipo el 19-ago: 20).
+// La app las reparte entre los 3 temas según la demanda al momento de
+// distribuir (mesas dinámicas).
+export const TOTAL_TABLES = 20;
 // LEGACY: bloque fijo por tema. Solo lo usan el demo viejo (/demo/tema) y
 // helpers legacy en lib/tables.ts. El flujo real ya NO lo usa.
 export const TABLES_PER_THEME = 12;
@@ -134,30 +135,31 @@ export function numberedThemeTitle(id: string | null | undefined): string {
 // Recordatorio de los pasos que sigue el facilitador durante el prototipado.
 // (Los "guiones" verbatim los aporta el equipo; aquí van las instrucciones.)
 export type FacilitatorStep = { title: string; detail: string; script?: string };
+// Los tiempos suman 20 minutos y son los que el facilitador va cantando.
 export const FACILITATOR_GUIDE: FacilitatorStep[] = [
   {
-    title: "1 · Presenta la provocación",
-    detail: "Lee en voz alta la provocación y la pregunta de tu grupo.",
-    script: "", // guion verbatim POR DEFINIR (opcional)
-  },
-  {
-    title: "2 · Generen momentos",
-    detail: "Invita a cada quien a pensar en 2 o 3 momentos y escribirlos en post-its.",
-  },
-  {
-    title: "3 · Compartan y agrupen",
+    title: "1 · Pensar (5 mins)",
     detail:
-      "Pide que lean sus momentos en voz alta y los coloquen en la mesa. Agrupa las ideas parecidas.",
+      "Tómate un par de minutos para pensar en silencio y anota 2 o 3 “momentos” en post-its.",
   },
   {
-    title: "4 · Voten los mejores",
+    title: "2 · Compartir (8 mins)",
     detail:
-      "Invita a votar por sus 2 momentos favoritos con los stickers. Ayuda al grupo a identificar los 3 mejores.",
+      "Comparte tu nombre y tu rol. Lee cada momento en voz alta mientras colocas tus post-its en la mesa.",
   },
   {
-    title: "5 · Registra en la app",
+    title: "3 · Agrupar (2 mins)",
+    detail: "Entre todos, agrupen los post-its parecidos.",
+  },
+  {
+    title: "4 · Votar (2 mins)",
     detail:
-      "Escribe aquí abajo los 3 momentos ganadores, guárdalos y marca tu mesa como lista.",
+      "Cada persona vota en silencio por los 2 momentos que considera más prometedores con una calcomanía.",
+  },
+  {
+    title: "5 · Entregar (3 mins)",
+    detail:
+      "Escriban los 3 momentos en 3 post-its y pásenle los momentos a un facilitador.",
   },
 ];
 

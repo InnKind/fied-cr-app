@@ -29,7 +29,7 @@ export default function FacilitatorGuide({
         <span className="font-semibold text-slate-900">
           📋 Guía de la actividad
           <span className="ml-2 font-normal text-slate-400">
-            qué hacer en cada paso
+            Lo que hacen los participantes en cada paso
           </span>
         </span>
         <span className="shrink-0 text-slate-400">{open ? "▲" : "▼"}</span>
