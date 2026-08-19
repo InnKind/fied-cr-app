@@ -206,6 +206,7 @@ export default function Round2({
                 onChange={(e) => setCantReason(e.target.value)}
                 rows={3}
                 placeholder="Qué te frena…"
+                maxLength={500}
                 className={`mt-2 ${inputCls}`}
               />
             </div>
@@ -220,6 +221,7 @@ export default function Round2({
                   onChange={(e) => setMotivatingIdea(e.target.value)}
                   rows={2}
                   placeholder="La idea con la que quieres empezar…"
+                  maxLength={400}
                   className={`mt-2 ${inputCls}`}
                 />
               </div>
@@ -233,18 +235,21 @@ export default function Round2({
                     value={role1}
                     onChange={(e) => setRole1(e.target.value)}
                     placeholder="Rol 1 (ej: Decano/a)"
+                    maxLength={90}
                     className={inputCls}
                   />
                   <input
                     value={role2}
                     onChange={(e) => setRole2(e.target.value)}
                     placeholder="Rol 2 (ej: Jefatura de TI)"
+                    maxLength={90}
                     className={inputCls}
                   />
                   <input
                     value={role3}
                     onChange={(e) => setRole3(e.target.value)}
                     placeholder="Rol 3 (ej: Representante estudiantil)"
+                    maxLength={90}
                     className={inputCls}
                   />
                 </div>
@@ -259,6 +264,7 @@ export default function Round2({
                   onChange={(e) => setExp(e.target.value)}
                   rows={3}
                   placeholder="El paso que vas a dar…"
+                  maxLength={500}
                   className={`mt-2 ${inputCls}`}
                 />
               </div>

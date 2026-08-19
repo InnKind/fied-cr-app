@@ -220,6 +220,10 @@ export default function FacilitatorMoments({
               setError(null);
             }}
             placeholder={`Momento ${i + 1}`}
+            // Un momento es una frase de post-it. Sin tope, un texto pegado de
+            // 3.000 caracteres deja un botón gigante en el celular de su mesa y
+            // le suma minutos al procesamiento de la IA en el coffee break.
+            maxLength={180}
             className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
         ))}

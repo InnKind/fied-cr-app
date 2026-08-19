@@ -250,6 +250,7 @@ export default function IdeaEntry({
                 setError(null);
               }}
               rows={3}
+              maxLength={700}
               placeholder={prompts.agency.placeholder}
               className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
@@ -266,6 +267,7 @@ export default function IdeaEntry({
                 setError(null);
               }}
               rows={3}
+              maxLength={700}
               placeholder={prompts.ai.placeholder}
               className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-[#0c7d75] focus:outline-none focus:ring-2 focus:ring-[#0c7d75]/30"
             />
