@@ -91,7 +91,18 @@ export default function FacilitatorMoments({
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "moment_selections" },
-        () => loadCounts(ids)
+        (payload) => {
+          // No se puede filtrar por mesa en el servidor (la tabla no guarda el
+          // número de mesa), así que se descarta aquí lo ajeno: sin esto, CADA
+          // una de las ~200 elecciones del salón dispara una consulta en las 24
+          // pantallas de facilitador (≈4.800 consultas en esa ventana).
+          const nuevo = payload.new as { moment_id?: string } | null;
+          const viejo = payload.old as { moment_id?: string } | null;
+          const mid = nuevo?.moment_id ?? viejo?.moment_id;
+          // Si el evento no trae el id (p. ej. un DELETE sin replica identity),
+          // se recarga por si acaso.
+          if (!mid || ids.includes(mid)) loadCounts(ids);
+        }
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") loadCounts(ids);

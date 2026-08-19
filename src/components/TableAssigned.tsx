@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { THEMES, EVENT, numberedThemeTitle } from "@/config/event";
 import { supabase } from "@/lib/supabase";
+import { onForeground } from "@/lib/realtime";
 import { BRAND_BG } from "@/lib/brand";
 import BrandLogo from "@/components/BrandLogo";
 import { recoverOrphanIdentity } from "@/lib/participant";
@@ -29,32 +30,58 @@ export default function TableAssigned({
   const [error, setError] = useState<string | null>(null);
   const [eligiendoTema, setEligiendoTema] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    supabase
+  // Esta pantalla se mira mientras la gente camina a su mesa, así que tiene que
+  // enterarse SOLA: si el organizador vuelve a distribuir para ubicar a un
+  // rezagado, su mesa aparece sin recargar (antes se leía una sola vez y quien
+  // quedaba fuera del primer reparto se quedaba en "Aún no tienes mesa").
+  const cargar = useCallback(async () => {
+    const { data, error: qErr } = await supabase
       .from("participants")
       .select("current_table, selected_theme")
       .eq("id", participantId)
-      .maybeSingle()
-      .then(({ data, error: qErr }) => {
-        if (!active) return;
-        // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
-        if (!qErr && !data) return recoverOrphanIdentity();
-        const t = (data?.current_table as number | null) ?? null;
-        setTable(t);
-        setTheme((data?.selected_theme as string | null) ?? null);
-        setLoaded(true);
-        // El tema que manda es el de la MESA a la que va (si se cambió de mesa,
-        // o si llegó tarde y nunca eligió tema, su elección puede no calzar).
-        if (t != null)
-          themeForTableNumber(t).then((deMesa) => {
-            if (active && deMesa) setTheme(deMesa);
-          });
-      });
-    return () => {
-      active = false;
-    };
+      .maybeSingle();
+    // Mi fila ya no existe (reset con la pantalla abierta) → re-registrarse.
+    if (!qErr && !data) return recoverOrphanIdentity();
+    // Ante un error de red se conserva lo que ya se mostraba.
+    if (qErr) {
+      setLoaded(true);
+      return;
+    }
+    const t = (data?.current_table as number | null) ?? null;
+    setTable(t);
+    setTheme((data?.selected_theme as string | null) ?? null);
+    setLoaded(true);
+    // El tema que manda es el de la MESA a la que va (si se cambió de mesa,
+    // o si llegó tarde y nunca eligió tema, su elección puede no calzar).
+    if (t != null) {
+      const deMesa = await themeForTableNumber(t);
+      if (deMesa) setTheme(deMesa);
+    }
   }, [participantId]);
+
+  useEffect(() => {
+    cargar();
+    const canal = supabase
+      .channel(`rt-mesa-${participantId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `id=eq.${participantId}`,
+        },
+        () => cargar()
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") cargar();
+      });
+    const stop = onForeground(cargar);
+    return () => {
+      supabase.removeChannel(canal);
+      stop();
+    };
+  }, [participantId, cargar]);
 
   async function saveTable() {
     const n = parseInt(input, 10);

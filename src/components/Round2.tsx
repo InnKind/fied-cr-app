@@ -45,8 +45,15 @@ export default function Round2({
       )
       .eq("participant_id", participantId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error: qErr }) => {
         if (!active) return;
+        // Si la lectura falló (wifi saturado), NO mostrar el formulario vacío:
+        // la persona creería que no envió nada y su respuesta se pisaría.
+        if (qErr) {
+          setError("No pudimos cargar tus respuestas. Revisa tu conexión y recarga.");
+          setLoaded(true);
+          return;
+        }
         if (data) {
           if (data.cant_commit) {
             setTheme(R2_CANT_COMMIT);

@@ -6,6 +6,9 @@ import { THEMES, ideaPromptsFor } from "@/config/event";
 // Procesamiento de la Ronda 1 (coffee break, SOLO admin): reúne los momentos y
 // las ideas por tema, corre la IA (agrupa momentos + arma diapositivas con 3
 // ideas de IA y 3 de Agency por criterio) y guarda el resultado en `synthesis`.
+// La IA de estas rondas tarda entre 30 s y 2 min con el salón lleno.
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { code } = body as { code?: string };
@@ -70,12 +73,13 @@ export async function POST(req: NextRequest) {
       return {
         id: m.id as string,
         table: (m.table_number as number | null) ?? null,
-        text: m.text as string,
+        // Recorte defensivo: un texto enorme no puede inflar el prompt.
+        text: (m.text as string).slice(0, 200),
         aiIdeas: mi
-          .map((x) => x.ai_text as string | null)
+          .map((x) => (x.ai_text as string | null)?.slice(0, 700) ?? null)
           .filter((t): t is string => !!t),
         agencyIdeas: mi
-          .map((x) => x.agency_text as string | null)
+          .map((x) => (x.agency_text as string | null)?.slice(0, 700) ?? null)
           .filter((t): t is string => !!t),
       };
     });

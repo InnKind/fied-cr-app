@@ -6,6 +6,9 @@ import { THEMES } from "@/config/event";
 // Agregación de la Ronda 2 (SOLO admin). No se proyecta en vivo; es para
 // análisis: nº por tema, distribución de roles de participantes, roles
 // recurrentes a involucrar (IA) y experiencias por criterio (IA).
+// La IA de estas rondas tarda entre 30 s y 2 min con el salón lleno.
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { code } = body as { code?: string };

@@ -169,8 +169,22 @@ export default function AdminPage() {
         setMsg("Error: " + (body.error || res.status));
         return;
       }
-      const ok = await setPhase(1, "TABLE_ASSIGNED");
-      if (ok) setMsg(`Mesas asignadas: ${body.assigned}/${body.total} ✓`);
+      // Distribuir SOLO cambia de pantalla si el ejercicio aún no arrancó. Si ya
+      // se está prototipando (o más adelante), volver a repartir para ubicar a un
+      // rezagado sacaría a las 200 personas de su formulario de ideas y borraría
+      // todos los "mesa lista" de los facilitadores.
+      const faseActual = state?.phase ? normalizePhaseId(state.phase) : "WELCOME";
+      const antesDeArrancar = ["WELCOME", "THEME_SELECTION", "WAITING_ASSIGNMENT"].includes(
+        faseActual
+      );
+      if (antesDeArrancar) {
+        const ok = await setPhase(1, "TABLE_ASSIGNED");
+        if (ok) setMsg(`Mesas asignadas: ${body.assigned}/${body.total} ✓`);
+      } else {
+        setMsg(
+          `Mesas asignadas: ${body.assigned}/${body.total} ✓ · ${body.newlyPlaced ?? 0} nuevas personas ubicadas (no se movió la pantalla de nadie).`
+        );
+      }
     } catch {
       setMsg("Error de red al distribuir mesas.");
     } finally {
