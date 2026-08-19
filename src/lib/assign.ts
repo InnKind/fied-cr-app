@@ -22,6 +22,51 @@ export type AssignResult = { id: string; current_table: number };
 export type MapEntry = { table_number: number; theme: string };
 export type AssignOutput = { results: AssignResult[]; mapEntries: MapEntry[] };
 
+// Cuántas mesas le toca a cada tema. Si el salón alcanza para darle a todos
+// ~8 personas por mesa, se hace así. Si NO alcanza (p. ej. 200 personas en 20
+// mesas), se reparten TODAS las mesas en proporción a la demanda, con mínimo 1
+// por tema. Sin esto, el último tema del orden se quedaba con las sobras: con
+// 200 personas y 20 mesas recibía 1 sola mesa para 50 personas, y con un tema
+// dominante los otros se quedaban en CERO mesas y su gente sin asignar.
+function cuotasPorTema(
+  demanda: { id: string; n: number }[],
+  totalTables: number
+): Map<string, number> {
+  const idealPorTema = demanda.map((d) => ({
+    id: d.id,
+    mesas: Math.max(1, Math.ceil(d.n / SEATS_PER_TABLE)),
+  }));
+  const sumaIdeal = idealPorTema.reduce((a, x) => a + x.mesas, 0);
+  if (sumaIdeal <= totalTables)
+    return new Map(idealPorTema.map((x) => [x.id, x.mesas]));
+
+  // No alcanza: proporcional a la demanda por el método del resto mayor.
+  const personas = demanda.reduce((a, d) => a + d.n, 0) || 1;
+  const partes = demanda.map((d) => {
+    const exacto = (d.n / personas) * totalTables;
+    const entero = Math.max(1, Math.floor(exacto));
+    return { id: d.id, mesas: entero, resto: exacto - Math.floor(exacto) };
+  });
+  let usadas = partes.reduce((a, x) => a + x.mesas, 0);
+  // Reparte las que sobran empezando por el resto más alto; si el mínimo de 1
+  // se pasó del total (más temas que mesas), quita a los de resto más bajo.
+  const porResto = [...partes].sort((a, b) => b.resto - a.resto);
+  let i = 0;
+  while (usadas < totalTables && porResto.length) {
+    porResto[i % porResto.length].mesas++;
+    usadas++;
+    i++;
+  }
+  for (let k = porResto.length - 1; usadas > totalTables && k >= 0; k--) {
+    if (porResto[k].mesas > 1) {
+      porResto[k].mesas--;
+      usadas--;
+      k = porResto.length; // vuelve a recorrer de atrás hacia adelante
+    }
+  }
+  return new Map(partes.map((x) => [x.id, x.mesas]));
+}
+
 export function assignTables(
   participants: AssignInput[],
   existingMap: Record<number, string>,
@@ -29,6 +74,14 @@ export function assignTables(
 ): AssignOutput {
   const results: AssignResult[] = [];
   const mapEntries: MapEntry[] = [];
+
+  const cuotas = cuotasPorTema(
+    THEMES.map((t) => ({
+      id: t.id,
+      n: participants.filter((p) => p.selected_theme === t.id).length,
+    })).filter((d) => d.n > 0),
+    totalTables
+  );
 
   // Pool de mesas libres: 1..totalTables que aún no pertenecen a ningún tema.
   const used = new Set<number>(Object.keys(existingMap).map(Number));
@@ -46,7 +99,7 @@ export function assignTables(
       .map(([t]) => Number(t))
       .sort((a, b) => a - b);
 
-    const needed = Math.max(1, Math.ceil(inTheme.length / SEATS_PER_TABLE));
+    const needed = Math.max(1, cuotas.get(theme.id) ?? 1);
     while (themeTables.length < needed && freePool.length > 0) {
       const t = freePool.shift()!;
       themeTables.push(t);
