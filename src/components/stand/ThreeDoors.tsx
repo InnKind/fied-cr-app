@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 import { supabase } from "@/lib/supabase";
-import { classifyError } from "@/lib/stand";
+import { classifyError, safeSession, timeoutSignal } from "@/lib/stand";
 import {
   ATENEA_GPT_URL,
   CONSENTS,
@@ -21,7 +21,7 @@ import { Chip } from "@/components/stand/StandUI";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-type Form = {
+export type DoorsForm = {
   door: DoorId | null;
   options: string[];
   timing: string | null;
@@ -38,7 +38,9 @@ type Form = {
   consent_news: boolean;
 };
 
-const EMPTY: Form = {
+type Form = DoorsForm;
+
+export const EMPTY_DOORS: Form = {
   door: null,
   options: [],
   timing: null,
@@ -54,6 +56,62 @@ const EMPTY: Form = {
   consent_results: false,
   consent_news: false,
 };
+const EMPTY = EMPTY_DOORS;
+
+// ---------------------------------------------------------------------------
+// Borrador del formulario. Vive en la página (no en este componente) y en
+// sessionStorage: así NO se borra cuando la pantalla del celular cambia
+// (s21 → s22 → Fin, volver a la sesión, recargar). Se borra solo al enviar.
+// ---------------------------------------------------------------------------
+const DRAFT_KEY = `stand_doors_draft_${SESSION}`;
+const DOOR_IDS: DoorId[] = ["0", "1", "2", "3"];
+
+function readDraft(): Form {
+  try {
+    const raw = safeSession.get(DRAFT_KEY);
+    const v = raw ? (JSON.parse(raw) as Partial<Record<keyof Form, unknown>>) : null;
+    if (!v || typeof v !== "object") return EMPTY;
+    const str = (x: unknown, max: number) => (typeof x === "string" ? x.slice(0, max) : "");
+    return {
+      door: DOOR_IDS.includes(v.door as DoorId) ? (v.door as DoorId) : null,
+      options: Array.isArray(v.options)
+        ? (v.options as unknown[]).filter((o): o is string => typeof o === "string").slice(0, 10)
+        : [],
+      timing: typeof v.timing === "string" ? v.timing.slice(0, 40) : null,
+      evidence: str(v.evidence, LIMITS.evidence),
+      referral_org: str(v.referral_org, LIMITS.referral_org),
+      referral_role: str(v.referral_role, LIMITS.referral_role),
+      name: str(v.name, LIMITS.name),
+      role: str(v.role, LIMITS.role),
+      org: str(v.org, LIMITS.org),
+      country: str(v.country, LIMITS.country),
+      email: str(v.email, LIMITS.email),
+      consent_contact: v.consent_contact === true,
+      consent_results: v.consent_results === true,
+      consent_news: v.consent_news === true,
+    };
+  } catch {
+    return EMPTY;
+  }
+}
+
+// En vista previa (?paso=N) el borrador no se guarda en el navegador.
+export function useDoorsDraft(persist: boolean): [Form, Dispatch<SetStateAction<Form>>] {
+  const [form, setFormState] = useState<Form>(() => (persist ? readDraft() : EMPTY));
+  const setForm = useCallback<Dispatch<SetStateAction<Form>>>(
+    (u) =>
+      setFormState((prev) => {
+        const next = typeof u === "function" ? (u as (p: Form) => Form)(prev) : u;
+        if (persist) {
+          if (next === EMPTY) safeSession.remove(DRAFT_KEY);
+          else safeSession.set(DRAFT_KEY, JSON.stringify(next));
+        }
+        return next;
+      }),
+    [persist]
+  );
+  return [form, setForm];
+}
 
 const inputCls =
   "w-full rounded-xl border-0 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 outline-none ring-2 ring-transparent focus:ring-[#c9283f]";
@@ -114,6 +172,10 @@ function missingFields(f: Form): string[] {
   }
   if (!f.email.trim()) out.push("Correo");
   else if (!EMAIL_RE.test(f.email.trim())) out.push("Un correo válido");
+  // Sin la casilla de su uso no hay para qué guardar los datos: la puerta 0
+  // necesita "resultados"; las puertas 1, 2 y 3, "contacto".
+  if (f.door === "0" && !f.consent_results) out.push("la casilla de los resultados");
+  if (f.door !== "0" && !f.consent_contact) out.push("la casilla de contacto");
   return out;
 }
 
@@ -122,21 +184,26 @@ const nz = (s: string) => (s.trim() ? s.trim() : null);
 // Formulario de las Tres puertas (cierre). Los contactos van a stand_contacts,
 // que el navegador puede insertar pero NO leer. No se une al id anónimo.
 export default function ThreeDoors({
+  form: f,
+  setForm: setF,
   done,
   onDone,
   onAnother,
   onBack,
+  top,
   intro,
   preview = false,
 }: {
+  form: Form; // borrador (vive en la página: ver useDoorsDraft)
+  setForm: Dispatch<SetStateAction<Form>>;
   preview?: boolean; // vista previa: no inserta nada
   done: boolean;
   onDone: () => void;
   onAnother: () => void;
   onBack?: () => void; // "Volver a la sesión"
+  top?: React.ReactNode; // antes del título (p. ej. "La sesión ya terminó")
   intro?: React.ReactNode;
 }) {
-  const [f, setF] = useState<Form>(EMPTY);
   const [tried, setTried] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -183,11 +250,12 @@ export default function ThreeDoors({
       consent_results: f.consent_results,
       consent_news: f.consent_news,
     };
+    const t = timeoutSignal(10000);
     try {
       // Sin .select(): el público no puede leer esta tabla.
       const { error } = preview
         ? { error: null }
-        : await supabase.from("stand_contacts").insert(payload);
+        : await supabase.from("stand_contacts").insert(payload).abortSignal(t.signal);
       if (error) {
         const c = classifyError(error);
         setSendError(
@@ -208,6 +276,7 @@ export default function ThreeDoors({
       );
       setSendDetail(c.detail ?? null);
     } finally {
+      t.clear();
       setSending(false);
     }
   }
@@ -267,6 +336,7 @@ export default function ThreeDoors({
       }}
       noValidate
     >
+      {top}
       {onBack && (
         <button
           type="button"
@@ -454,12 +524,14 @@ export default function ThreeDoors({
           </Check>
           {door.id !== "0" && !f.consent_contact && (
             <p className="px-1 text-xs text-white/70">
-              Sin la primera casilla no podremos contactarte sobre la opción que elegiste.
+              Para esta puerta, marca la primera casilla: sin ella no podremos contactarte sobre la
+              opción que elegiste.
             </p>
           )}
           {door.id === "0" && !f.consent_results && (
             <p className="px-1 text-xs text-white/70">
-              Sin la segunda casilla no podremos mandarte los resultados.
+              Para esta puerta, marca la segunda casilla: sin ella no podremos mandarte los
+              resultados.
             </p>
           )}
         </div>

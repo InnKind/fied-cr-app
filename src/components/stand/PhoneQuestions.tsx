@@ -9,12 +9,13 @@ import {
   P3_NONE,
   P5,
   QUESTIONS,
+  SESSION,
   displayOption,
   optionLabel,
   type Question,
   type QuestionId,
 } from "@/config/stand";
-import type { StandAnswer } from "@/lib/stand";
+import { safeSession, safeStorage, type StandAnswer } from "@/lib/stand";
 import { Rich } from "@/components/stand/StandUI";
 
 export type SaveFn = (qid: QuestionId, answer: StandAnswer) => Promise<boolean>;
@@ -177,7 +178,8 @@ function BudgetStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: bool
 
   if (saved.length > 0 && !changing) {
     const lines = saved.map((id) => optionLabel(P3, id));
-    if (savedWho) lines.push(`${P3B.prompt} ${optionLabel(P3B, savedWho)}`);
+    const savedNone = saved.length === 1 && saved[0] === P3_NONE;
+    if (savedWho && !savedNone) lines.push(`${P3B.prompt} ${optionLabel(P3B, savedWho)}`);
     return (
       <DoneCard
         lines={lines}
@@ -212,9 +214,13 @@ function BudgetStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: bool
 
   // Primero P3b y luego P3: la tarjeta de "Listo" solo aparece cuando P3 quedó
   // guardada, así que si algo falla no queda P3 sin su P3b.
+  // Con "Ninguna", P3b se guarda vacía ({}): borra un "Yo/Influyo/Otra área"
+  // anterior de esa persona (los conteos ignoran las respuestas vacías).
   const send = async () => {
     if (!ready) return;
-    if (!onlyNone && who) {
+    if (onlyNone) {
+      if (!(await save("P3b", {}))) return;
+    } else if (who) {
       if (!(await save("P3b", { choice: who }))) return;
     }
     if (!(await save("P3", { choices: sel }))) return;
@@ -278,12 +284,46 @@ function BudgetStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: bool
 }
 
 // --- P5 + pregunta abierta opcional ---
-function FrenoStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: boolean }) {
+// "Saltar" se recuerda (localStorage) y lo escrito sin enviar también
+// (sessionStorage): si el celular recarga o se vuelve a montar esta pantalla,
+// no reaparece la pregunta ni se pierde el texto. En vista previa no se guarda.
+const OPEN_SKIP_KEY = `stand_abierta_skip_${SESSION}`;
+const OPEN_DRAFT_KEY = `stand_abierta_draft_${SESSION}`;
+
+function FrenoStep({
+  mine,
+  save,
+  busy,
+  persist,
+}: {
+  mine: Mine;
+  save: SaveFn;
+  busy: boolean;
+  persist: boolean;
+}) {
   const p5 = mine.P5?.choice;
   const savedText = mine.ABIERTA?.text ?? "";
   const [changing, setChanging] = useState(false);
-  const [openDone, setOpenDone] = useState(!!savedText);
-  const [text, setText] = useState(savedText);
+  const [openDone, setOpenDoneState] = useState(
+    () => !!savedText || (persist && safeStorage.get(OPEN_SKIP_KEY) === "1")
+  );
+  const [text, setTextState] = useState(
+    () => savedText || (persist ? (safeSession.get(OPEN_DRAFT_KEY) ?? "").slice(0, ABIERTA_MAX) : "")
+  );
+  const setText = (v: string) => {
+    setTextState(v);
+    if (persist) {
+      if (v) safeSession.set(OPEN_DRAFT_KEY, v);
+      else safeSession.remove(OPEN_DRAFT_KEY);
+    }
+  };
+  // skipped: la persona tocó "Saltar" (se recuerda); false: vuelve a abrirla.
+  const setOpenDone = (v: boolean, skipped = false) => {
+    setOpenDoneState(v);
+    if (!persist) return;
+    if (v && skipped) safeStorage.set(OPEN_SKIP_KEY, "1");
+    if (!v) safeStorage.remove(OPEN_SKIP_KEY);
+  };
 
   if (!p5 || changing) {
     return (
@@ -322,7 +362,7 @@ function FrenoStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: boole
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => setOpenDone(true)}
+            onClick={() => setOpenDone(true, true)}
             disabled={busy}
             className="rounded-xl px-4 py-3.5 font-semibold text-white ring-1 ring-white/40"
           >
@@ -332,7 +372,10 @@ function FrenoStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: boole
             type="button"
             disabled={busy || !text.trim()}
             onClick={async () => {
-              if (await save("ABIERTA", { text: text.trim().slice(0, ABIERTA_MAX) })) setOpenDone(true);
+              if (await save("ABIERTA", { text: text.trim().slice(0, ABIERTA_MAX) })) {
+                if (persist) safeSession.remove(OPEN_DRAFT_KEY);
+                setOpenDone(true);
+              }
             }}
             className="rounded-xl bg-[#c9283f] px-4 py-3.5 font-bold text-white shadow disabled:opacity-50"
           >
@@ -353,7 +396,7 @@ function FrenoStep({ mine, save, busy }: { mine: Mine; save: SaveFn; busy: boole
         <button
           type="button"
           onClick={() => {
-            setText(savedText);
+            setText(savedText || text);
             setOpenDone(false);
           }}
           className="mt-2 w-full px-4 py-2 text-sm font-semibold text-[#223c5d] underline"
@@ -370,13 +413,16 @@ export function QuestionStep({
   mine,
   save,
   busy,
+  preview = false,
 }: {
   ids: QuestionId[];
   mine: Mine;
   save: SaveFn;
   busy: boolean;
+  preview?: boolean; // vista previa: no guarda nada en el navegador
 }) {
   if (ids[0] === "P3") return <BudgetStep mine={mine} save={save} busy={busy} />;
-  if (ids[0] === "P5") return <FrenoStep mine={mine} save={save} busy={busy} />;
+  if (ids[0] === "P5")
+    return <FrenoStep mine={mine} save={save} busy={busy} persist={!preview} />;
   return <SimpleStep q={QUESTIONS[ids[0]]} mine={mine} save={save} busy={busy} />;
 }

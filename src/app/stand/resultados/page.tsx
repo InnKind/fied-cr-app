@@ -13,8 +13,7 @@ import {
 } from "@/config/stand";
 import { onForeground } from "@/lib/realtime";
 import {
-  distinctPeople,
-  fetchResponses,
+  fetchResults,
   pct,
   tally,
   type ResponseRow,
@@ -76,6 +75,7 @@ function QuestionCard({ q, rows }: { q: Question; rows: ResponseRow[] }) {
 
 export default function StandResultados() {
   const [rows, setRows] = useState<ResponseRow[]>([]);
+  const [people, setPeople] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<StandError | null>(null);
 
@@ -84,12 +84,14 @@ export default function StandResultados() {
   useEffect(() => {
     let alive = true;
     const load = async () => {
-      const { rows, error } = await fetchResponses({ exclude: ["ABIERTA"] });
+      // stand_results nunca trae los textos de la pregunta abierta.
+      const { data, error } = await fetchResults();
       if (!alive) return;
-      if (error) {
+      if (error || !data) {
         setError(error);
       } else {
-        setRows(rows);
+        setRows(data.rows);
+        setPeople(data.people);
         setError(null);
       }
       setLoaded(true);
@@ -104,7 +106,6 @@ export default function StandResultados() {
     };
   }, [tick]);
 
-  const people = distinctPeople(rows);
   const enough = people >= MIN_PEOPLE;
   const sections: { title: string; ids: QuestionId[] }[] = [
     { title: "Quiénes estaban en la sala", ids: [R1.id, R2.id] },

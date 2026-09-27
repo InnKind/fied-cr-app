@@ -41,8 +41,8 @@ import {
   type Question,
   type Step,
 } from "@/config/stand";
-import { useStandResults, useStandStep, type StandResultsState } from "@/hooks/useStand";
-import { distinctPeople, pct, safeStorage, tally, type Tally } from "@/lib/stand";
+import { ts, useStandResults, useStandStep, type StandResultsState } from "@/hooks/useStand";
+import { pct, safeStorage, tally, type Tally } from "@/lib/stand";
 import { BrandMark, Chip, Rich } from "@/components/stand/StandUI";
 
 // Pantalla del stand (TV 16:9). Se diseña sobre un lienzo fijo de 1920x1080 y
@@ -50,7 +50,8 @@ import { BrandMark, Chip, Rich } from "@/components/stand/StandUI";
 //
 // Modos:
 //   ?k=CLAVE   → controla la sesión (se guarda en localStorage "stand_key").
-//                Cada cambio de paso hace POST /api/stand/step. ?k=off la borra.
+//                Cada cambio de paso hace POST /api/stand/step (uno a la vez, con
+//                la versión que vio: no pisa un paso más nuevo). ?k=off la borra.
 //   sin clave  → solo sigue el paso de la sesión (la TV puede seguir a Jerónimo).
 //   ?paso=N    → vista previa local del paso N (no toca la sesión).
 // Teclado (clicker): → PageDown Espacio Enter = siguiente · ← PageUp Retroceso =
@@ -62,6 +63,15 @@ const KEY_STORAGE = "stand_key";
 const LIVE_KINDS = new Set(["question", "registro", "resumen", "atenea"]);
 type Letter = "a" | "b" | "c" | "d" | "e";
 const LETTERS: Letter[] = ["a", "b", "c", "d", "e"];
+
+const PUSH_TIMEOUT_MS = 7000; // tiempo máximo de cada envío del paso
+const RETRY_MS = 2000;
+const clampStep = (n: number) => Math.max(PRE_STEP, Math.min(END_STEP, n));
+type PushReply = {
+  code?: "bad-key" | "no-secret" | "no-service-role" | "conflict" | "bad-base" | string;
+  step?: number;
+  updated_at?: string | null;
+};
 
 type Mode = { kind: "preview" | "control" | "follow"; key: string | null };
 type Sync =
@@ -376,7 +386,8 @@ function SlideScreen({ s }: { s: Step }) {
   );
 }
 
-function QuestionScreen({ s, rows }: { s: Step; rows: StandResultsState["rows"] }) {
+function QuestionScreen({ s, res }: { s: Step; res: StandResultsState }) {
+  const rows = res.rows;
   const ids = s.questionIds ?? [];
   const q = QUESTIONS[ids[0]];
   const t = tally(rows, q);
@@ -387,8 +398,9 @@ function QuestionScreen({ s, rows }: { s: Step; rows: StandResultsState["rows"] 
   const withBudget = ids.includes("P3b");
   const withOpen = ids.includes("ABIERTA");
   const tb = withBudget ? tally(rows, P3B) : null;
-  const open = withOpen ? tally(rows, ABIERTA) : null;
-  const registered = distinctPeople(rows, ["R1"]);
+  // De la abierta solo llega cuántas propuestas hay (nunca los textos).
+  const open = withOpen ? { respondents: res.abierta } : null;
+  const registered = tally(rows, R1).respondents;
 
   return (
     <div className="flex h-full gap-[64px]">
@@ -619,8 +631,9 @@ function AteneaScreen({
   );
 }
 
-function ResumenScreen({ s, rows }: { s: Step; rows: StandResultsState["rows"] }) {
-  const people = distinctPeople(rows);
+function ResumenScreen({ s, res }: { s: Step; res: StandResultsState }) {
+  const rows = res.rows;
+  const people = res.people;
   const t5 = tally(rows, P5);
   const freno = t5.top;
   return (
@@ -816,16 +829,24 @@ function TopBar({ step }: { step: number }) {
   );
 }
 
-function statusOf(mode: Mode | null, sync: Sync, remoteError: string | null) {
+function statusOf(
+  mode: Mode | null,
+  sync: Sync,
+  remoteError: string | null,
+  remoteLoaded: boolean
+) {
   if (!mode) return null;
   if (mode.kind === "preview")
     return { color: "#fde047", text: "Vista previa: no mueve la sesión" };
   if (mode.kind === "control") {
+    // Sin haber leído la sesión nunca, la pantalla no empuja el paso.
+    if (!remoteLoaded && remoteError)
+      return { color: "#fde047", text: "Sin leer la sesión: solo se mueve esta pantalla" };
     switch (sync) {
       case "bad-key":
         return { color: "#f87171", text: "Clave incorrecta: los celulares no siguen esta pantalla" };
       case "no-secret":
-        return { color: "#f87171", text: "El servidor no tiene ADMIN_SECRET: los celulares no siguen" };
+        return { color: "#f87171", text: "El servidor no tiene STAND_SECRET: los celulares no siguen" };
       case "no-service-role":
         return { color: "#f87171", text: "Falta SUPABASE_SERVICE_ROLE en el servidor" };
       case "retrying":
@@ -897,17 +918,36 @@ function Deck() {
   const stepRef = useRef(step);
   const modeRef = useRef<Mode>(mode);
   const typingDoneRef = useRef(true);
-  const pendingRef = useRef<number | null>(null);
+  const remoteRef = useRef<{ step: number | null; updatedAt: string | null; loaded: boolean }>({
+    step: null,
+    updatedAt: null,
+    loaded: false,
+  });
+  // Envío del paso (modo control): UN solo POST a la vez y siempre el último
+  // paso pedido. Cada envío lleva la versión (updated_at) que vio la pantalla;
+  // si otro controlador movió la sesión después, el servidor responde 409.
+  const pendingRef = useRef<number | null>(null); // paso que falta confirmar
+  const requestRef = useRef(false); // hay un POST en vuelo
+  const drainingRef = useRef(false); // el ciclo de envío está activo
+  const wakeRef = useRef<(() => void) | null>(null); // corta la espera del reintento
+  const baseRef = useRef<string | null>(null); // último updated_at conocido (tal cual)
   const brokenRef = useRef(false);
   const lastPushAtRef = useRef(0);
-  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const readyRef = useRef(false);
+  const aliveRef = useRef(true);
 
   useEffect(() => {
     stepRef.current = step;
     modeRef.current = mode;
-    readyRef.current = remote.loaded || !!remote.error;
+    remoteRef.current = { step: remote.step, updatedAt: remote.updatedAt, loaded: remote.loaded };
   });
+
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      wakeRef.current?.();
+    };
+  }, []);
 
   // Guarda (o borra) la clave de ?k= y la quita de la barra de direcciones;
   // en modo control, verifica la clave con el servidor.
@@ -923,10 +963,13 @@ function Deck() {
     }
     const key = mode.kind === "control" ? mode.key : null;
     if (key) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), PUSH_TIMEOUT_MS);
       fetch("/api/stand/step", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ k: key, validate: true }),
+        signal: ctrl.signal,
       })
         .then(async (r) => {
           const j = (await r.json().catch(() => ({}))) as { code?: string; serviceRole?: boolean };
@@ -935,49 +978,94 @@ function Deck() {
           else if (j.code === "no-secret") setSync("no-secret");
           else setSync("ok");
         })
-        .catch(() => setSync("ok"));
+        .catch(() => setSync("ok"))
+        .finally(() => clearTimeout(timer));
     }
   }, [mode]);
 
-  // Seguir el paso de la sesión (salvo vista previa o un envío pendiente).
+  // Seguir el paso de la sesión (salvo vista previa).
   useEffect(() => {
-    if (!mode || mode.kind === "preview") return;
+    if (mode.kind === "preview") return;
     if (remote.step === null) return;
+    const target = clampStep(remote.step);
     if (mode.kind === "control") {
-      if (pendingRef.current !== null || brokenRef.current) return;
-      const at = remote.updatedAt ? Date.parse(remote.updatedAt) : 0;
+      if (brokenRef.current) return;
+      const at = ts(remote.updatedAt);
+      if (pendingRef.current !== null) {
+        // Otro controlador movió la sesión después del último estado que vio
+        // esta pantalla: gana lo guardado y se descarta lo pendiente. (Si hay
+        // un envío en vuelo, lo resuelve su respuesta: 409.)
+        if (!requestRef.current && at > ts(baseRef.current)) {
+          pendingRef.current = null;
+          wakeRef.current?.();
+          baseRef.current = remote.updatedAt;
+          lastPushAtRef.current = at;
+          setSync("ok");
+          setStep(target);
+        }
+        return;
+      }
       if (lastPushAtRef.current && at && at < lastPushAtRef.current) return;
+      if (at >= ts(baseRef.current)) baseRef.current = remote.updatedAt;
     }
-    setStep(Math.max(PRE_STEP, Math.min(END_STEP, remote.step)));
+    setStep(target);
   }, [remote.step, remote.updatedAt, mode]);
 
-  useEffect(
-    () => () => {
-      if (retryRef.current) clearTimeout(retryRef.current);
-    },
-    []
-  );
+  // Manda el paso pendiente: uno a la vez, con tiempo máximo, y al terminar
+  // manda el último si hubo más clics. Reintenta cada 2 s si no hay red.
+  const drain = useCallback(async (key: string) => {
+    if (drainingRef.current) return;
+    drainingRef.current = true;
+    try {
+      while (aliveRef.current && pendingRef.current !== null) {
+        const target = pendingRef.current;
+        setSync("sending");
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), PUSH_TIMEOUT_MS);
+        let status = 0;
+        let j: PushReply = {};
+        requestRef.current = true;
+        try {
+          const r = await fetch("/api/stand/step", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session: SESSION,
+              step: target,
+              k: key,
+              base_updated_at: baseRef.current,
+            }),
+            signal: ctrl.signal,
+          });
+          status = r.status;
+          j = (await r.json().catch(() => ({}))) as PushReply;
+        } catch {
+          status = 0; // sin red o tiempo agotado
+        } finally {
+          clearTimeout(timer);
+          requestRef.current = false;
+        }
+        if (!aliveRef.current) return;
 
-  const push = useCallback((target: number, key: string) => {
-    pendingRef.current = target;
-    if (retryRef.current) clearTimeout(retryRef.current);
-    setSync("sending");
-    const attempt = async () => {
-      if (pendingRef.current !== target) return; // hubo otro cambio después
-      try {
-        const r = await fetch("/api/stand/step", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session: SESSION, step: target, k: key }),
-        });
-        const j = (await r.json().catch(() => ({}))) as { code?: string; updated_at?: string };
-        if (pendingRef.current !== target) return;
-        if (r.ok) {
-          pendingRef.current = null;
+        if (status >= 200 && status < 300) {
+          if (typeof j.updated_at === "string") baseRef.current = j.updated_at;
+          lastPushAtRef.current = ts(j.updated_at) || Date.now();
           brokenRef.current = false;
-          lastPushAtRef.current = j.updated_at ? Date.parse(j.updated_at) : Date.now();
-          setSync("ok");
-          return;
+          if (pendingRef.current === target) pendingRef.current = null;
+          continue; // si hubo otro clic mientras tanto, se manda el último
+        }
+        if (status === 409 && typeof j.step === "number") {
+          if (typeof j.updated_at === "string") baseRef.current = j.updated_at;
+          lastPushAtRef.current = ts(j.updated_at);
+          if (j.step === target) {
+            // Este paso ya estaba guardado (se había perdido la respuesta).
+            if (pendingRef.current === target) pendingRef.current = null;
+            continue;
+          }
+          // Otro controlador movió la sesión: gana lo guardado.
+          pendingRef.current = null;
+          setStep(clampStep(j.step));
+          break;
         }
         if (j.code === "bad-key" || j.code === "no-secret" || j.code === "no-service-role") {
           // No se arregla reintentando: la pantalla sigue funcionando sola.
@@ -986,25 +1074,66 @@ function Deck() {
           setSync(j.code as Sync);
           return;
         }
-      } catch {
-        // sin red: reintenta
+        if (status === 400) {
+          if (j.code === "bad-base") {
+            baseRef.current = null; // versión ilegible: se manda sin ella
+            continue;
+          }
+          pendingRef.current = null; // no se arregla reintentando
+          break;
+        }
+        // Sin red, tiempo agotado o error del servidor: espera 2 s (o menos si
+        // llega otro clic) y reintenta con el último paso pedido.
+        if (pendingRef.current === null) break;
+        setSync("retrying");
+        await new Promise<void>((resolve) => {
+          const t = setTimeout(done, RETRY_MS);
+          function done() {
+            clearTimeout(t);
+            wakeRef.current = null;
+            resolve();
+          }
+          wakeRef.current = done;
+        });
       }
-      if (pendingRef.current !== target) return;
-      setSync("retrying");
-      retryRef.current = setTimeout(attempt, 2000);
-    };
-    void attempt();
+      if (aliveRef.current && !brokenRef.current) {
+        setSync("ok");
+        // Si mientras se enviaba llegó un paso más nuevo de otro controlador, se sigue.
+        const r = remoteRef.current;
+        if (r.step !== null && ts(r.updatedAt) > ts(baseRef.current)) {
+          baseRef.current = r.updatedAt;
+          lastPushAtRef.current = ts(r.updatedAt);
+          setStep(clampStep(r.step));
+        }
+      }
+    } finally {
+      drainingRef.current = false;
+    }
   }, []);
+
+  const push = useCallback(
+    (target: number, key: string) => {
+      pendingRef.current = target;
+      if (drainingRef.current) wakeRef.current?.(); // si esperaba para reintentar, manda ya
+      else void drain(key);
+    },
+    [drain]
+  );
 
   const go = useCallback(
     (delta: number) => {
       const m = modeRef.current;
-      if (!m || m.kind === "follow") return;
-      if (m.kind === "control" && !readyRef.current) return;
-      const next = Math.max(PRE_STEP, Math.min(END_STEP, stepRef.current + delta));
+      if (m.kind === "follow") return;
+      const next = clampStep(stepRef.current + delta);
       if (next === stepRef.current) return;
+      stepRef.current = next; // dos clics seguidos antes de volver a pintar
       setStep(next);
-      if (m.kind === "control" && m.key) push(next, m.key);
+      if (m.kind !== "control" || !m.key) return;
+      // Si la pantalla todavía no ha leído la sesión (se recargó sin red, o falta
+      // el SQL), solo se mueve ella: empujar desde el paso 0 haría saltar a toda
+      // la sala. Cuando lea la sesión, vuelve al paso guardado.
+      if (!remoteRef.current.loaded) return;
+      push(next, m.key);
     },
     [push]
   );
@@ -1015,6 +1144,11 @@ function Deck() {
       const el = e.target as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
       if (e.altKey || e.ctrlKey || e.metaKey) return;
+      // Tecla mantenida (autorrepetición): no avanza varios pasos de golpe.
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
       const k = e.key;
       const s = stepAt(stepRef.current);
 
@@ -1052,7 +1186,7 @@ function Deck() {
   const results = useStandResults(live, 2000);
 
   const remoteError = remote.error ? remote.error : null;
-  const status = statusOf(mode, sync, remoteError?.message ?? null);
+  const status = statusOf(mode, sync, remoteError?.message ?? null, remote.loaded);
   const canNav = mode?.kind === "control" || mode?.kind === "preview";
 
   // Aviso visible si falta la base o no hay conexión (la pantalla no se cae).
@@ -1069,7 +1203,7 @@ function Deck() {
   } else {
     switch (current.kind) {
       case "question":
-        screen = <QuestionScreen s={current} rows={results.rows} />;
+        screen = <QuestionScreen s={current} res={results} />;
         break;
       case "registro":
         screen = <RegistroScreen s={current} rows={results.rows} />;
@@ -1086,7 +1220,7 @@ function Deck() {
         );
         break;
       case "resumen":
-        screen = <ResumenScreen s={current} rows={results.rows} />;
+        screen = <ResumenScreen s={current} res={results} />;
         break;
       case "puertas":
         screen = <PuertasScreen s={current} />;

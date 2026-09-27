@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onForeground } from "@/lib/realtime";
 import { SESSION } from "@/config/stand";
 import {
-  fetchResponses,
+  fetchResults,
   fetchStep,
   type ResponseRow,
   type StandError,
@@ -19,7 +19,8 @@ export type StandStepState = {
   error: StandError | null; // último error (se limpia al leer bien)
 };
 
-function ts(s: string | null | undefined): number {
+// Milisegundos de un updated_at (0 si no hay o no se entiende).
+export function ts(s: string | null | undefined): number {
   const n = s ? Date.parse(s) : NaN;
   return Number.isFinite(n) ? n : 0;
 }
@@ -87,6 +88,8 @@ export function useStandStep(pollMs = 5000): StandStepState {
 
 export type StandResultsState = {
   rows: ResponseRow[];
+  people: number; // personas distintas con al menos una respuesta
+  abierta: number; // propuestas de la pregunta abierta (solo el número)
   loaded: boolean;
   error: StandError | null;
   fetchedAt: number; // última vez que terminó una lectura (bien o mal)
@@ -94,29 +97,33 @@ export type StandResultsState = {
 
 // Resultados en vivo. Solo sondea mientras `active` (en la pantalla: pasos de
 // pregunta, registro, Atenea y resumen). Ante un error conserva lo último leído.
+// Cada lectura tiene tiempo máximo (fetchResults): una consulta colgada no
+// congela las barras de las preguntas siguientes.
 export function useStandResults(active: boolean, intervalMs = 2000): StandResultsState {
   const [state, setState] = useState<StandResultsState>({
     rows: [],
+    people: 0,
+    abierta: 0,
     loaded: false,
     error: null,
     fetchedAt: 0,
   });
-  const inflight = useRef(false);
 
   useEffect(() => {
     if (!active) return;
     let alive = true;
+    let inflight = false; // de este efecto: no sobrevive al cambio de paso
 
     const load = async () => {
-      if (inflight.current) return;
-      inflight.current = true;
-      const { rows, error } = await fetchResponses();
-      inflight.current = false;
+      if (inflight) return;
+      inflight = true;
+      const { data, error } = await fetchResults();
+      inflight = false;
       if (!alive) return;
       setState((prev) =>
-        error
+        error || !data
           ? { ...prev, error, fetchedAt: Date.now() }
-          : { rows, loaded: true, error: null, fetchedAt: Date.now() }
+          : { ...data, loaded: true, error: null, fetchedAt: Date.now() }
       );
     };
 

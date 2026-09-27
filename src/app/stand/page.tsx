@@ -6,6 +6,7 @@ import {
   ATENEA_GPT_URL,
   END_STEP,
   NUMBERED_QUESTIONS,
+  P3_NONE,
   R1,
   R2,
   SESSION,
@@ -22,7 +23,7 @@ import {
   type StandError,
 } from "@/lib/stand";
 import { BrandMark } from "@/components/stand/StandUI";
-import ThreeDoors from "@/components/stand/ThreeDoors";
+import ThreeDoors, { useDoorsDraft } from "@/components/stand/ThreeDoors";
 import {
   DoneCard,
   QuestionStep,
@@ -157,6 +158,9 @@ function PhoneApp() {
   );
   const [busy, setBusy] = useState(false);
   const [saveErr, setSaveErr] = useState<StandError | null>(null);
+  // Borrador de las Tres puertas: vive aquí para que no se borre cuando cambia
+  // la pantalla (s21 → s22 → Fin, "Quiero hablar con ustedes", volver).
+  const [doorsForm, setDoorsForm] = useDoorsDraft(preview === null);
   const isPreview = preview !== null;
   const state = isPreview
     ? { step: preview, updatedAt: null, loaded: true, error: null }
@@ -310,11 +314,63 @@ function PhoneApp() {
     </div>
   ) : null;
 
+  const doorsProps = {
+    form: doorsForm,
+    setForm: setDoorsForm,
+    preview: isPreview,
+    done: doorsDone,
+    onDone: markDoorsDone,
+    onAnother: anotherDoor,
+  };
+
+  // Cierre (s21, s22) y sesión terminada: la MISMA estructura, así el formulario
+  // no se desmonta al pasar de s22 a Fin (solo cambia el texto de arriba).
+  const closingDoors = (kind: "puertas" | "gracias" | "ended") => (
+    <Shell banner={banner}>
+      <ThreeDoors
+        key="doors-inline"
+        {...doorsProps}
+        top={
+          kind === "ended" ? (
+            <div className="space-y-6 border-b border-white/15 pb-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
+                  Stand de SenecaLab e InnKind
+                </p>
+                <h1 className="mt-1 text-2xl font-bold">La sesión ya terminó</h1>
+                <p className="mt-2 text-white/80">
+                  Mira lo que dijo la sala, pregúntale a Atenea o elige cómo seguir con nosotros.
+                </p>
+              </div>
+              <LinkButtons />
+            </div>
+          ) : null
+        }
+        intro={
+          kind === "ended" ? undefined : (
+            <p className="mt-1 text-[15px] text-white/80">
+              Por primera vez te pedimos tu nombre. Elige cómo quieres seguir con nosotros.
+            </p>
+          )
+        }
+      />
+      {kind === "gracias" && (
+        <div className="mt-8 border-t border-white/15 pt-6">
+          <LinkButtons />
+        </div>
+      )}
+    </Shell>
+  );
+
   // --- Tres puertas (botón permanente) ---
   if (view === "doors") {
+    // P3b no queda pendiente si en P3 eligió "Ninguna"; la abierta es opcional.
+    const answered = (q: QuestionId) =>
+      q === "ABIERTA" ||
+      !!mine[q] ||
+      (q === "P3b" && !!mine.P3?.choices?.includes(P3_NONE));
     const pendingQuestion =
-      current?.kind === "question" &&
-      !!current.questionIds?.some((q) => !mine[q] && q !== "ABIERTA");
+      current?.kind === "question" && !!current.questionIds?.some((q) => !answered(q));
     return (
       <Shell banner={banner}>
         {pendingQuestion && (
@@ -327,10 +383,7 @@ function PhoneApp() {
           </button>
         )}
         <ThreeDoors
-          preview={isPreview}
-          done={doorsDone}
-          onDone={markDoorsDone}
-          onAnother={anotherDoor}
+          {...doorsProps}
           onBack={() => {
             setView("session");
             window.scrollTo({ top: 0 });
@@ -340,33 +393,8 @@ function PhoneApp() {
     );
   }
 
-  // --- La sesión terminó: Tres puertas + resultados + Atenea ---
-  if (ended) {
-    return (
-      <Shell banner={banner}>
-        <div className="space-y-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-              Stand de SenecaLab e InnKind
-            </p>
-            <h1 className="mt-1 text-2xl font-bold">La sesión ya terminó</h1>
-            <p className="mt-2 text-white/80">
-              Mira lo que dijo la sala, pregúntale a Atenea o elige cómo seguir con nosotros.
-            </p>
-          </div>
-          <LinkButtons />
-          <div className="border-t border-white/15 pt-6">
-            <ThreeDoors
-              preview={isPreview}
-              done={doorsDone}
-              onDone={markDoorsDone}
-              onAnother={anotherDoor}
-            />
-          </div>
-        </div>
-      </Shell>
-    );
-  }
+  // --- La sesión terminó: resultados + Atenea + Tres puertas ---
+  if (ended) return closingDoors("ended");
 
   const talk = <TalkBar onClick={openDoors} />;
 
@@ -445,6 +473,7 @@ function PhoneApp() {
           mine={mine}
           save={save}
           busy={busy}
+          preview={isPreview}
         />
       </Shell>
     );
@@ -452,27 +481,7 @@ function PhoneApp() {
 
   // --- Cierre: Tres puertas en el celular ---
   if (current.kind === "puertas" || current.kind === "gracias") {
-    return (
-      <Shell banner={banner}>
-        <ThreeDoors
-          preview={isPreview}
-          key="doors-inline"
-          done={doorsDone}
-          onDone={markDoorsDone}
-          onAnother={anotherDoor}
-          intro={
-            <p className="mt-1 text-[15px] text-white/80">
-              Por primera vez te pedimos tu nombre. Elige cómo quieres seguir con nosotros.
-            </p>
-          }
-        />
-        {current.kind === "gracias" && (
-          <div className="mt-8 border-t border-white/15 pt-6">
-            <LinkButtons />
-          </div>
-        )}
-      </Shell>
-    );
+    return closingDoors(current.kind);
   }
 
   // --- Resto: mira la pantalla ---

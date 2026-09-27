@@ -7,7 +7,9 @@
 //   /stand             → celular (anónimo, sigue el paso de la sesión)
 //   /stand/pantalla    → TV del stand (Adriana avanza con el clicker; ?k=CLAVE)
 //   /stand/resultados  → resultados públicos
-// Base: supabase/12-stand.sql (tablas stand_state, stand_responses, stand_contacts).
+//   /stand/exportar    → CSV para la base maestra (pide la clave del stand)
+// Base: supabase/12-stand.sql (tablas stand_state, stand_responses, stand_contacts
+// y las funciones stand_answer, stand_my_answers, stand_results).
 
 import ateneaJson from "./stand-atenea.json";
 
@@ -80,6 +82,7 @@ export const R1: Question = {
   options: [
     { id: "inversion", label: "Inversión (fondo, ángel, family office, corporate venturing)" },
     { id: "emprendimiento", label: "Emprendimiento (fundador/a o startup)" },
+    { id: "estudiante", label: "Estudiante" },
     { id: "universidad", label: "Universidad o institución educativa" },
     { id: "aceleradora", label: "Aceleradora, incubadora o hub" },
     { id: "empresa", label: "Empresa" },
@@ -148,7 +151,7 @@ export const P1: Question = {
   type: "feedback",
   mode: "single",
   prompt:
-    "¿Cuál de estos hallazgos cambiaría una decisión tuya este año (invertir, contratar, diseñar un programa o una política)?",
+    "¿Cuál de estos hallazgos cambiaría una decisión tuya este año (invertir, emprender, contratar, diseñar un programa o una política)?",
   short: "El hallazgo que cambiaría una decisión",
   options: [
     ...FINDINGS.map((f) => ({ id: f.id, label: f.id, detail: f.text })),
@@ -322,9 +325,7 @@ export const DOORS: Door[] = [
     id: "2",
     title: "Puerta 2 · Conozco a alguien",
     short: "Conozco a alguien",
-    text: "Organización y cargo de la persona (sin su nombre ni su correo). Te mandamos un correo listo para reenviar.",
-    tvText:
-      "Organización y cargo de la persona (sin su nombre ni su correo). Le mandamos a quien refiere un correo listo para reenviar.",
+    text: "Organización y cargo de la persona (sin su nombre ni su correo). Le mandamos a quien refiere un correo listo para reenviar.",
   },
   {
     id: "3",
@@ -441,7 +442,6 @@ export const STEPS: Step[] = [
     title: "Si casi todas las empresas ya usan IA, ¿por qué tan pocas ven resultados?",
     footer: BRAND_TEXT,
     qr: ["entrar"],
-    markers: ["[PEDIR: qué es ACELERARME y cómo lo nombramos]"],
   },
   {
     id: "s02",

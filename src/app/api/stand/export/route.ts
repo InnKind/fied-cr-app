@@ -13,8 +13,11 @@ import {
 } from "@/config/stand";
 
 // Exporta el modo stand a CSV (UTF-8 con BOM, para Excel y la base maestra).
-//   GET /api/stand/export?k=CLAVE&type=contacts   → contactos de las Tres puertas
-//   GET /api/stand/export?k=CLAVE&type=responses  → respuestas anónimas
+//   GET /api/stand/export?type=contacts   → contactos de las Tres puertas
+//   GET /api/stand/export?type=responses  → respuestas anónimas
+// La clave va en el encabezado x-stand-key (NUNCA en la URL: quedaría en los
+// registros de Vercel y en el historial del navegador). La página
+// /stand/exportar la pide y descarga el archivo.
 // Opcional: &sep=semicolon (Excel en configuración regional con coma decimal).
 // Lee con service role: el público no puede leer stand_contacts.
 
@@ -66,7 +69,10 @@ const doorOptionLabel = (door: string, id: string) =>
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const auth = checkStandKey(sp.get("k") ?? req.headers.get("x-stand-key"));
+  if (sp.has("k")) {
+    return text(400, "La clave no va en la URL. Usa la página /stand/exportar.");
+  }
+  const auth = checkStandKey(req.headers.get("x-stand-key"));
   if (!auth.ok) return text(auth.status, auth.error);
 
   const type = sp.get("type");
@@ -108,11 +114,18 @@ export async function GET(req: NextRequest) {
       "consent_contact",
       "consent_results",
       "consent_news",
+      "uso_autorizado",
     ];
     const body = rows.map((r) => {
       const door = String(r.door ?? "");
       const opts = Array.isArray(r.options) ? (r.options as unknown[]).map(String) : [];
       const timing = r.timing ? String(r.timing) : "";
+      // Para qué se puede usar cada contacto al cargarlo a la base maestra.
+      const uses = [
+        r.consent_contact === true ? "contacto" : "",
+        r.consent_results === true ? "resultados" : "",
+        r.consent_news === true ? "novedades" : "",
+      ].filter(Boolean);
       return [
         r.id,
         r.created_at,
@@ -135,6 +148,7 @@ export async function GET(req: NextRequest) {
         r.consent_contact,
         r.consent_results,
         r.consent_news,
+        uses.length ? uses.join(" | ") : "NINGUNO: no usar",
       ];
     });
     csv = toCsv(header, body, sep);
