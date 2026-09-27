@@ -564,7 +564,7 @@ export default function ThreeDoors({
         {PRIVACY_FOOTER} Aviso de privacidad:{" "}
         {PRIVACY_URL ? (
           <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer" className="underline">
-            {PRIVACY_URL}
+            ver el aviso
           </a>
         ) : (
           <Chip kind="PEDIR" text="enlace del aviso de privacidad de las inscripciones del FIEd" />

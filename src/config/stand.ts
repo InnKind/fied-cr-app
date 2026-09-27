@@ -31,9 +31,11 @@ export const QR = {
 } as const;
 export type QrKey = keyof typeof QR;
 
-// Aviso de privacidad de las inscripciones del FIEd. Mientras sea null, el pie
-// del formulario muestra el marcador [PEDIR] en amarillo.
-export const PRIVACY_URL: string | null = null;
+// Aviso de privacidad. Por defecto, el aviso propio del stand (/stand/privacidad,
+// que muestra [APROBAR] hasta que Adriana lo apruebe). Si llega el enlace del
+// aviso de las inscripciones del FIEd, se puede poner aquí. Con null, el pie
+// muestra el marcador [PEDIR] en amarillo.
+export const PRIVACY_URL: string | null = "/stand/privacidad";
 
 export const BRAND_TEXT = "SenecaLab · InnKind";
 export const NAVY = "#223c5d";

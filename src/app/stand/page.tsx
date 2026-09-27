@@ -489,7 +489,7 @@ function PhoneApp() {
     current.kind === "registro"
       ? "Tu registro quedó listo."
       : current.kind === "atenea"
-        ? "Atenea está respondiendo el reto que eligió la sala."
+        ? "En pantalla: lo que respondió Atenea al reto que eligió la sala."
         : current.kind === "resumen"
           ? "En pantalla: lo que dijo la sala."
           : null;
