@@ -34,7 +34,9 @@ export default function StandPrivacidad() {
         <Section title="Quién trata tus datos">
           <p>
             SenecaLab S.A., que organiza InnKind. Contacto:{" "}
-            {PRIVACY_APPROVED ? null : <Chip kind="PEDIR" text="correo de contacto" />}
+            <a href="mailto:info@senecalabonline.com" className="underline">
+              info@senecalabonline.com
+            </a>
           </p>
         </Section>
 
