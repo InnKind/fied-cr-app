@@ -770,7 +770,7 @@ function PreScreen() {
         <BrandMark className="block text-[96px] leading-none" />
         <p className="mt-10 max-w-[1100px] text-[34px] leading-snug text-white/90">{TWO_BRANDS}</p>
         <p className="mt-10 text-[40px] font-bold">
-          La sesión empieza pronto <Chip kind="PEDIR" text="día y hora de la sesión" />
+          La sesión empieza hoy a las <Chip kind="PEDIR" text="hora de la sesión" />
         </p>
         <p className="mt-3 text-[28px] text-white/80">
           Escaneen el código y regístrense: son 2 toques y no les pedimos su nombre.
