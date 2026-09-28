@@ -435,7 +435,7 @@ function PhoneApp() {
       <Shell banner={banner} bottom={talk}>
         <div className="space-y-6">
           <DoneCard
-            title="Ya estás dentro"
+            title="Te registraste"
             lines={[]}
             extra={
               <p className="mt-2 text-[15px] text-slate-600">
@@ -487,7 +487,7 @@ function PhoneApp() {
   // --- Resto: mira la pantalla ---
   const watchText =
     current.kind === "registro"
-      ? "Tu registro quedó listo."
+      ? "Todavía no hay preguntas: la primera aparece aquí sola en un momento."
       : current.kind === "atenea"
         ? "En pantalla: lo que respondió Atenea al reto que eligió la sala."
         : current.kind === "resumen"
@@ -507,7 +507,7 @@ function PhoneApp() {
           </svg>
         </div>
         <h1 className="mt-4 text-2xl font-bold">
-          {current.kind === "registro" ? "Listo, mira la pantalla" : "Mira la pantalla"}
+          {current.kind === "registro" ? "Te registraste" : "Mira la pantalla"}
         </h1>
         <p className="mt-2 text-white/80">
           {watchText ?? "Cuando haya una pregunta, aparecerá aquí sola."}
