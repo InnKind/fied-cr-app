@@ -43,7 +43,7 @@ import {
 } from "@/config/stand";
 import { ts, useStandResults, useStandStep, type StandResultsState } from "@/hooks/useStand";
 import { pct, safeStorage, tally, type Tally } from "@/lib/stand";
-import { BrandMark, Chip, Rich } from "@/components/stand/StandUI";
+import { BrandMark, Rich } from "@/components/stand/StandUI";
 
 // Pantalla del stand (TV 16:9). Se diseña sobre un lienzo fijo de 1920x1080 y
 // se escala para que quepa SIN scroll en cualquier pantalla (1280x720 incluida).
@@ -241,16 +241,25 @@ function Markers({ items }: { items: string[] }) {
 // ---------------------------------------------------------------------------
 // Pantallas
 // ---------------------------------------------------------------------------
+// Texto que es solo un marcador ([PEDIR: …]): va sin comillas.
+const MARKER_ONLY = /^\[(?:PEDIR|APROBAR):[^\]]*\]$/;
+
 function SlideScreen({ s }: { s: Step }) {
   const hasQr = !!s.qr?.length;
-  const blocks = [s.lead, s.stats, s.cards, s.lines, s.quote, s.callout].filter(Boolean).length;
+  const quotes = s.quotes ?? (s.quote ? [s.quote] : []);
+  const blocks = [s.lead, s.stats, s.cards, s.lines, quotes.length ? quotes : null, s.callout].filter(
+    Boolean
+  ).length;
   const hero = blocks === 0;
   const dense = blocks >= 3 || (s.cards?.length ?? 0) >= 6;
   const titleSize = hero ? 88 : dense ? 54 : 64;
   const cardCount = s.cards?.length ?? 0;
   const cols = cardCount <= 3 ? cardCount : cardCount === 4 ? 2 : 3;
   const cardFs = dense ? 23 : 28;
-  const quoteOnly = !!s.quote && blocks === 1;
+  // Tarjetas por partes («Nos dijeron» / «Lo cambiamos»): pocas y con aire, letra más grande.
+  const rowFs = dense ? 23 : 32;
+  const quoteOnly = quotes.length === 1 && blocks === 1;
+  const quotePair = quotes.length > 1;
 
   return (
     <div className="flex h-full gap-[72px]">
@@ -314,18 +323,37 @@ function SlideScreen({ s }: { s: Step }) {
                       {c.tag}
                     </span>
                   )}
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     {c.title && (
                       <p className="font-bold leading-tight" style={{ fontSize: cardFs + 6 }}>
                         {c.title}
                       </p>
                     )}
-                    <p
-                      className={`leading-snug text-white/90 ${c.title ? "mt-2" : ""}`}
-                      style={{ fontSize: cardFs }}
-                    >
-                      <Rich text={c.text} />
-                    </p>
+                    {c.text && (
+                      <p
+                        className={`leading-snug text-white/90 ${c.title ? "mt-2" : ""}`}
+                        style={{ fontSize: cardFs }}
+                      >
+                        <Rich text={c.text} />
+                      </p>
+                    )}
+                    {c.rows && (
+                      <div className={`space-y-6 ${c.title || c.text ? "mt-4" : ""}`}>
+                        {c.rows.map((r, j) => (
+                          <div key={j}>
+                            <p
+                              className="font-semibold uppercase tracking-[0.12em] text-white/60"
+                              style={{ fontSize: Math.round(rowFs * 0.7) }}
+                            >
+                              {r.label}
+                            </p>
+                            <p className="mt-1 leading-snug text-white/90" style={{ fontSize: rowFs }}>
+                              <Rich text={r.text} />
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {c.source && (
@@ -336,31 +364,61 @@ function SlideScreen({ s }: { s: Step }) {
           </div>
         )}
 
-        {s.callout && (
-          <div className="mt-7 flex items-start gap-5 rounded-[22px] border-l-[8px] border-[#c9283f] bg-white/[0.07] px-7 py-5">
-            <p className="shrink-0 pt-[2px] text-[22px] font-semibold uppercase tracking-[0.12em] text-white/65">
-              {s.callout.label}
-            </p>
-            <p className="text-[25px] leading-snug text-white/90">
-              <Rich text={s.callout.text} />
-            </p>
-          </div>
-        )}
-
-        {s.quote && (
-          <blockquote className={quoteOnly ? "mt-12 max-w-[1560px]" : "mt-8 max-w-[1560px]"}>
-            <p
-              className="font-semibold leading-snug text-white"
-              style={{ fontSize: quoteOnly ? 46 : dense ? 26 : 36 }}
-            >
-              «{s.quote.text}»
-            </p>
-            {s.quote.author && (
-              <p className="mt-3 text-white/65" style={{ fontSize: dense ? 20 : 24 }}>
-                {s.quote.author}
+        {s.callout &&
+          (s.callout.title ? (
+            // Tarjeta con nombre (el caso): el nombre hace de título, sin cifra.
+            <div className="mt-8 flex items-center gap-[40px] rounded-[26px] bg-white px-[40px] py-[30px] text-[#1b2d44] shadow-2xl">
+              <div className="shrink-0">
+                <p className="text-[20px] font-bold uppercase tracking-[0.14em] text-[#c9283f]">
+                  {s.callout.label}
+                </p>
+                <p className="mt-1 text-[64px] font-bold leading-none tracking-tight text-[#223c5d]">
+                  {s.callout.title}
+                </p>
+              </div>
+              <span className="h-[92px] w-[3px] shrink-0 rounded-full bg-slate-200" />
+              <p className="min-w-0 text-[30px] leading-snug">
+                <Rich text={s.callout.text} />
               </p>
-            )}
-          </blockquote>
+            </div>
+          ) : (
+            <div className="mt-7 flex items-start gap-5 rounded-[22px] border-l-[8px] border-[#c9283f] bg-white/[0.07] px-7 py-5">
+              <p className="shrink-0 pt-[2px] text-[22px] font-semibold uppercase tracking-[0.12em] text-white/65">
+                {s.callout.label}
+              </p>
+              <p className="text-[25px] leading-snug text-white/90">
+                <Rich text={s.callout.text} />
+              </p>
+            </div>
+          ))}
+
+        {quotes.length > 0 && (
+          <div className={quotePair ? "mt-8 grid grid-cols-2 gap-[48px]" : ""}>
+            {quotes.map((q, i) => (
+              <blockquote
+                key={i}
+                className={
+                  quotePair
+                    ? "border-l-[6px] border-[#c9283f] pl-7"
+                    : quoteOnly
+                      ? "mt-12 max-w-[1560px]"
+                      : "mt-8 max-w-[1560px]"
+                }
+              >
+                <p
+                  className="font-semibold leading-snug text-white"
+                  style={{ fontSize: quoteOnly ? 46 : dense ? 26 : 36 }}
+                >
+                  {MARKER_ONLY.test(q.text) ? <Rich text={q.text} /> : <>«<Rich text={q.text} />»</>}
+                </p>
+                {q.author && (
+                  <p className="mt-3 text-white/65" style={{ fontSize: dense ? 20 : 24 }}>
+                    <Rich text={q.author} />
+                  </p>
+                )}
+              </blockquote>
+            ))}
+          </div>
         )}
 
         {s.footer &&
@@ -645,6 +703,7 @@ function ResumenScreen({ s, res }: { s: Step; res: StandResultsState }) {
           {people} {people === 1 ? "persona" : "personas"}
         </p>
       </div>
+      {s.lead && <p className="mt-3 text-[28px] leading-snug text-white/75">{s.lead}</p>}
       <div className="mt-7 flex min-h-0 flex-1 gap-[52px]">
         <ul className="flex min-w-0 flex-1 flex-col justify-between">
           {SESSION_QUESTIONS.map((qid) => {
@@ -770,7 +829,7 @@ function PreScreen() {
         <BrandMark className="block text-[96px] leading-none" />
         <p className="mt-10 max-w-[1100px] text-[34px] leading-snug text-white/90">{TWO_BRANDS}</p>
         <p className="mt-10 text-[40px] font-bold">
-          La sesión empieza hoy a las <Chip kind="PEDIR" text="hora de la sesión" />
+          La sesión empieza hoy a las 4:30 p. m.
         </p>
         <p className="mt-3 text-[28px] text-white/80">
           Escaneen el código y regístrense: son 2 toques y no les pedimos su nombre.

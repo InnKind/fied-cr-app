@@ -114,17 +114,17 @@ export const FINDINGS: Finding[] = [
   {
     id: "A",
     text: "Las instituciones de educación superior aportan apenas **~5% de la formación que necesitan las empresas**.",
-    source: "Karlo Mondragón, Grupo Salinas, en el FIEd",
+    source: "Karlo Mondragón, Grupo Salinas, en el FIEd 2025",
   },
   {
     id: "B",
     text: "**Más del 75% de los estudiantes** siente que no podría terminar un trabajo sin IA.",
-    source: "Turnitin, presentado en el FIEd",
+    source: "Turnitin, presentado en el FIEd 2026",
   },
   {
     id: "C",
     text: "Solo el **0,04% de las patentes de IA** son de América Latina: nuestra ventaja no es inventar, es **adoptar**.",
-    source: "Víctor Morales, CENIA, en el FIEd",
+    source: "Víctor Morales, CENIA, en el FIEd 2025",
   },
   {
     id: "D",
@@ -273,7 +273,7 @@ export const P5_ANSWERS: Record<string, string> = {
   precio:
     "Empezamos pequeño: un piloto con metas medibles antes de cualquier compromiso grande.",
   resultados:
-    "Justo por eso publicamos lo que sale de cada encuentro. Les mandamos el caso [PEDIR: cliente del caso] y los resultados de esta sala.",
+    "Justo por eso publicamos lo que sale de cada encuentro. Les mandamos el caso de UNIVO y los resultados de esta sala.",
   escala:
     "Cada encuentro alimenta a Atenea e Intelligence: el conocimiento se acumula y se reutiliza en cada país sin empezar de cero.",
   proveedor:
@@ -407,7 +407,15 @@ export const ACT_LABEL: Record<Act, string> = {
 };
 
 export type Stat = { value: string; label: string };
-export type Card = { tag?: string; title?: string; text: string; source?: string };
+// Una tarjeta lleva `text` o, si tiene partes con su rótulo (p. ej. «Nos dijeron» /
+// «Lo cambiamos»), `rows`.
+export type Card = {
+  tag?: string;
+  title?: string;
+  text?: string;
+  rows?: { label: string; text: string }[];
+  source?: string;
+};
 export type Quote = { text: string; author?: string };
 
 // En cualquier texto: **negrita**, [PEDIR: …] y [APROBAR: …] (chips amarillos).
@@ -424,8 +432,10 @@ export type Step = {
   stats?: Stat[];
   cards?: Card[];
   lines?: string[];
-  callout?: { label: string; text: string };
+  // Recuadro destacado; con `title`, es una tarjeta con nombre (p. ej. el caso UNIVO).
+  callout?: { label: string; title?: string; text: string };
   quote?: Quote;
+  quotes?: Quote[]; // varias citas lado a lado (en vez de `quote`)
   footer?: string;
   sources?: string[];
   markers?: string[]; // p. ej. "[PEDIR: …]"
@@ -530,9 +540,6 @@ export const STEPS: Step[] = [
       "**2025** · «Educación Hack: más datos, menos dogmas»",
       "**2026** · «La educación + allá: hacia una nueva arquitectura de la educación superior»",
     ],
-    markers: [
-      "[PEDIR: confirmar las 9 ediciones y el dato de 1.200+; número total de asistentes y de universidades]",
-    ],
   },
   {
     id: "s07",
@@ -543,7 +550,6 @@ export const STEPS: Step[] = [
     kicker: "Lo que hemos observado",
     title: "Cuatro hallazgos",
     cards: FINDINGS.map((f) => ({ tag: f.id, text: f.text, source: f.source })),
-    markers: ["[PEDIR: la edición del FIEd de cada cita A-C, para ponerla en la fuente]"],
   },
   {
     id: "s08",
@@ -566,7 +572,6 @@ export const STEPS: Step[] = [
     quote: {
       text: "Creemos que la educación superior existe para formar personas capaces de pensar, decidir y crear valor con la IA, sin dejar a nadie atrás. Nuestro trabajo es ayudar a las instituciones a lograrlo con evidencia, no con dogmas.",
     },
-    markers: ["[APROBAR: Adriana confirma la redacción]"],
   },
   {
     id: "s10",
@@ -663,9 +668,12 @@ export const STEPS: Step[] = [
         text: "Modelos predictivos de retención y empleabilidad.",
       },
     ],
+    // El caso va sin cifra (no hay un caso con número y no se inventa ninguno):
+    // el nombre de la institución hace de título. Respaldo: T1 (la vicerrectora).
     callout: {
       label: "Un caso",
-      text: "[PEDIR: un caso de un cliente de SenecaLab con una cifra de resultado y permiso para nombrarlo]",
+      title: "UNIVO",
+      text: "Implementamos rúbricas a nivel institucional que permiten la trazabilidad de la adquisición de competencias en el equipo directivo.",
     },
   },
   {
@@ -695,17 +703,24 @@ export const STEPS: Step[] = [
       { title: "Hicimos", text: "[PEDIR: historia 1 e historia 2]" },
       { title: "Seguimos", text: "[PEDIR: historia 1 e historia 2]" },
     ],
-    quote: {
-      text: "Inn.kind es un espacio único de reflexión, colaboración y exploración de ideas novedosas para el mejoramiento de la educación.",
-      author:
-        "Francisco Marmolejo, Consejo Asesor de InnKind (presidente de Educación Superior, Fundación Qatar)",
-    },
+    // Testimonios (los textos llegan el 28-sep): en pantalla, T1 (UNIVO) junto a
+    // Marmolejo. T2 (QLU) y T3 (OTEIMA) van al tríptico (uno de los dos) y a las
+    // notas del guion; T4 (InnKind), si llega, al guion.
+    quotes: [
+      {
+        text: "Inn.kind es un espacio único de reflexión, colaboración y exploración de ideas novedosas para el mejoramiento de la educación.",
+        author:
+          "Francisco Marmolejo, Consejo Asesor de InnKind (presidente de Educación Superior, Fundación Qatar)",
+      },
+      {
+        text: "[PEDIR: T1 · UNIVO (vicerrectora): texto, máx. 25 palabras]",
+        author: "[PEDIR: nombre], vicerrectora de UNIVO",
+      },
+    ],
     markers: [
       "[PEDIR: cuáles logos se pueden mostrar con permiso escrito]",
-      "[PEDIR: T1, cliente de SenecaLab: texto, nombre, cargo, institución y permiso]",
-      "[PEDIR: T2, speaker del FIEd: texto, nombre, cargo, institución y permiso]",
-      "[PEDIR: T3, patrocinador de InnKind: texto, nombre, cargo, empresa y permiso]",
-      "[PEDIR: T4, asistente del FIEd: texto, nombre, cargo, institución y permiso]",
+      "[PEDIR: T2 · QLU: texto (máx. 25 palabras), nombre y cargo]",
+      "[PEDIR: T3 · OTEIMA: texto (máx. 25 palabras), nombre y cargo]",
     ],
   },
   {
@@ -716,20 +731,36 @@ export const STEPS: Step[] = [
     label: "Lo cambiamos",
     kicker: "Trabajamos, aprendemos, validamos y evolucionamos",
     title: "Esto lo cambiamos porque nos lo dijeron",
+    // Dos ejemplos (el segundo, aprobado por Adriana el 27-sep; en pantalla va
+    // su versión corta: la larga está en el contenido maestro, sección 5).
     cards: [
       {
-        title: "Nos dijeron",
-        text: "En el ensayo del FIEd Costa Rica 2026, los facilitadores nos dijeron que las mesas se quedaban esperando a las demás.",
+        tag: "1",
+        rows: [
+          {
+            label: "Nos dijeron",
+            text: "En el ensayo del FIEd Costa Rica 2026, los facilitadores nos dijeron que las mesas se quedaban esperando a las demás.",
+          },
+          {
+            label: "Lo cambiamos",
+            text: "En una semana cambiamos la app para que cada mesa avanzara a su propio ritmo, y así se usó en el evento.",
+          },
+        ],
       },
       {
-        title: "Lo cambiamos",
-        text: "En una semana cambiamos la app para que cada mesa avanzara a su propio ritmo, y así se usó en el evento.",
+        tag: "2",
+        rows: [
+          {
+            label: "Nos dijeron",
+            text: "Los patrocinadores nos dijeron qué les servía y qué no de patrocinar un FIEd.",
+          },
+          {
+            label: "Lo cambiamos",
+            text: "Patrocinios 2027: stand opcional, sin videos obligatorios, presencia todo el año, datos por intereses e InnKind Intelligence.",
+          },
+        ],
       },
     ],
-    callout: {
-      label: "Otro ejemplo",
-      text: "Los patrocinios 2027 se rediseñaron con lo que nos dijeron los patrocinadores (por ejemplo, el stand ya no es obligatorio para todos). [APROBAR: si Adriana lo aprueba]",
-    },
   },
   {
     id: "s19",
@@ -746,9 +777,12 @@ export const STEPS: Step[] = [
     kind: "resumen",
     act: "cierre",
     minutes: "24:00-25:00",
-    label: "Cerrar el círculo",
-    kicker: "Cerrar el círculo",
+    // Adriana muestra lo más votado de cada pregunta y responde el freno n.° 1
+    // de P5 con su respuesta de 20 s (P5_ANSWERS). Se llena sola con los votos.
+    label: "Lo que dijo la sala",
+    kicker: "Resultados en vivo",
     title: "Lo que dijo la sala",
+    lead: "La respuesta más votada de cada pregunta",
     questionIds: SESSION_QUESTIONS,
   },
   {
