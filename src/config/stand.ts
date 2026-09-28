@@ -40,7 +40,7 @@ export const PRIVACY_URL: string | null = "/stand/privacidad";
 // Espacio que no se corta al final de la línea (p. ej. «7.000 usuarios» en una sola línea).
 export const NBSP = String.fromCharCode(160);
 
-export const BRAND_TEXT = "SenecaLab · InnKind";
+export const BRAND_TEXT = "SénecaLab · InnKind";
 export const NAVY = "#223c5d";
 export const RED = "#c9283f";
 
@@ -49,7 +49,7 @@ export const RED = "#c9283f";
 export const LOGOS = {
   senecalab: {
     src: "/stand/logos/senecalab-horizontal-blanco.png",
-    alt: "SenecaLab: Expertos en know how",
+    alt: "SénecaLab: Expertos en know how",
     width: 1561,
     height: 666,
   },
@@ -65,7 +65,7 @@ export const LOGOS = {
 // Frase de las dos marcas (sección 1)
 // ---------------------------------------------------------------------------
 export const TWO_BRANDS =
-  "SenecaLab es la empresa que lleva IA y plataformas a las universidades. InnKind es la plataforma con la que estudiamos el fenómeno junto con la región. Atenea es la memoria de todo lo que hemos aprendido.";
+  "SénecaLab es la empresa que lleva IA y plataformas a las universidades. InnKind es la plataforma con la que estudiamos el fenómeno junto con la región. Atenea es la memoria de todo lo que hemos aprendido.";
 
 // ---------------------------------------------------------------------------
 // Preguntas (sección 6, texto exacto)
@@ -122,7 +122,7 @@ export const R2: Question = {
   short: "Su relación con nosotros",
   options: [
     { id: "fied", label: "Participé en un FIEd" },
-    { id: "senecalab", label: "Trabajo o trabajé con SenecaLab" },
+    { id: "senecalab", label: "Trabajo o trabajé con SénecaLab" },
     { id: "ecosistema", label: "Nos conocemos del ecosistema" },
     { id: "primera-vez", label: "Es la primera vez que nos veo" },
   ],
@@ -380,7 +380,7 @@ export const DOOR_EVIDENCE_PROMPT =
   "¿Qué evidencia necesitaría quien decide (tú u otra persona)?";
 
 export const CONSENTS = {
-  contact: "Acepto que SenecaLab e InnKind me contacten sobre la opción que elegí.",
+  contact: "Acepto que SénecaLab e InnKind me contacten sobre la opción que elegí.",
   results: "Quiero recibir los resultados de esta sesión.",
   news: "Quiero recibir novedades de InnKind (FIEd, webinars, comunidad).",
 } as const;
@@ -441,7 +441,7 @@ export type Card = {
 // `tag`: rótulo corto sobre la cita (p. ej. la marca a la que habla el testimonio).
 export type Quote = { text: string; author?: string; tag?: string };
 
-// Un caso de SenecaLab (sección 5). `value` es la cifra grande (solo el caso principal).
+// Un caso de SénecaLab (sección 5). `value` es la cifra grande (solo el caso principal).
 export type Case = {
   id: "C1" | "C2" | "C3" | "C4" | "C5";
   tag: string; // rótulo pequeño: «Caso · país»
@@ -463,13 +463,13 @@ export const TESTIMONIALS = {
   T1: {
     text: "Una nueva plataforma de aprendizaje permite la innovación, la modernización del sistema de enseñanza aprendizaje",
     author: "María Luisa Sevillano, vicerrectora académica, Universidad de Oriente (UNIVO)",
-    tag: "SenecaLab",
+    tag: "SénecaLab",
   },
   // Cita escrita (versión corta). Va en s17.
   T2: {
-    text: "Sin duda, nuestro proyecto no hubiera sido posible sin el apoyo de SenecaLab",
+    text: "Sin duda, nuestro proyecto no hubiera sido posible sin el apoyo de SénecaLab",
     author: "Lupita Humbert, cofundadora, Universidad Central de Panamá",
-    tag: "SenecaLab",
+    tag: "SénecaLab",
   },
   // Video SPEAKER, [00:00]. Va en s17.
   T3: {
@@ -481,7 +481,7 @@ export const TESTIMONIALS = {
 // T4 (Mauricio Bernal) y T5 (Juan Camilo Páez) van solo en las notas del guion.
 
 // ---------------------------------------------------------------------------
-// Casos de SenecaLab (sección 5; Excel de Marcela del 28-sep). Solo las cifras
+// Casos de SénecaLab (sección 5; Excel de Marcela del 28-sep). Solo las cifras
 // del maestro: no se inventa ninguna.
 // ---------------------------------------------------------------------------
 export const CASES: Case[] = [
@@ -508,15 +508,14 @@ export const CASES: Case[] = [
   },
 ];
 
-// C3 (RedTec LATAM), C4 (QLU) y C5 (OTEIMA): el Excel no da permiso explícito para
-// nombrarlas. La pantalla es pública, así que van ANÓNIMAS, con la forma que fija
-// el maestro. Si Marcela o Adriana confirman el permiso, aquí se ponen los nombres.
+// C3 (RedTec LATAM), C4 (QLU) y C5 (OTEIMA): casos de éxito públicos en nuestra web
+// (confirmado por Marcela el 28-sep). Son casos, no testimonios: sin autor ni citas.
 export const CASES_ANON = {
   title: "También acompañamos a",
   items: [
-    "**Una red regional de educación técnica en 7 países:** impulsamos su expansión, con 4 instituciones vinculadas y un alcance de ~115.000 estudiantes.",
-    "**Una universidad privada en Panamá:** diseñamos con expertos y el sector productivo un programa internacional de Derecho.",
-    "**Otra universidad privada en Panamá:** convertimos su estrategia institucional en un plan operativo con indicadores y metas cuantificables.",
+    "**RedTec LATAM:** impulsamos su expansión en 7 países, con 4 instituciones vinculadas y un alcance de ~115.000 estudiantes.",
+    "**QLU (Panamá):** diseñamos con expertos y el sector productivo un programa internacional de Derecho.",
+    "**Universidad OTEIMA (Panamá):** convertimos su estrategia institucional en un plan operativo con indicadores y metas cuantificables.",
   ],
 };
 
@@ -578,7 +577,7 @@ export const STEPS: Step[] = [
       {
         tag: "3",
         title: "Acompañamos",
-        text: "a las instituciones: trabajamos, aprendemos, validamos y evolucionamos (SenecaLab en el aula y los aliados).",
+        text: "a las instituciones: trabajamos, aprendemos, validamos y evolucionamos (SénecaLab en el aula y los aliados).",
       },
     ],
     footer: "«Queremos crítica, no aplausos» · «Sus respuestas son anónimas»",
@@ -757,9 +756,9 @@ export const STEPS: Step[] = [
     kind: "slide",
     act: "acompanamos",
     minutes: "18:00-20:00",
-    label: "SenecaLab en el aula",
-    kicker: "SenecaLab",
-    title: "SenecaLab en el aula",
+    label: "SénecaLab en el aula",
+    kicker: "SénecaLab",
+    title: "SénecaLab en el aula",
     cards: [
       { title: "Canvas (Instructure)", text: "Implementación." },
       {
@@ -799,7 +798,7 @@ export const STEPS: Step[] = [
       "**Institucionales:** Fundación Qatar, EdLatam Alliance, CAF, UNESCO, BID, ONU.",
       `**EdTech** (patrocinadores de ediciones): Instructure/Canvas, Coursera, Turnitin, AWS, D2L, Wooclap, Symplicity, POK, McKinsey, Open${NBSP}LMS.`,
     ],
-    // Testimonios en pantalla (sección 5): T2 (cliente de SenecaLab) y T3 (speaker
+    // Testimonios en pantalla (sección 5): T2 (cliente de SénecaLab) y T3 (speaker
     // del FIEd, InnKind). T4 (Bernal) y T5 (Páez) van en las notas del guion.
     quotes: [TESTIMONIALS.T2, TESTIMONIALS.T3],
     // Lo único pendiente de esta pantalla.

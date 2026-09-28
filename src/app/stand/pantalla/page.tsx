@@ -245,7 +245,7 @@ function Markers({ items }: { items: string[] }) {
 // Texto que es solo un marcador ([PEDIR: …]): va sin comillas.
 const MARKER_ONLY = /^\[(?:PEDIR|APROBAR):[^\]]*\]$/;
 
-// Casos de SenecaLab (s15): el principal en blanco, con la cifra grande y la cita
+// Casos de SénecaLab (s15): el principal en blanco, con la cifra grande y la cita
 // de la vicerrectora; a la derecha, el segundo caso y los casos sin nombre.
 function CasesBlock({ cases, more }: { cases: Case[]; more?: Step["casesMore"] }) {
   const [main, ...rest] = cases;
@@ -941,7 +941,7 @@ function PreScreen() {
 function EndScreen() {
   return (
     <div className="flex h-full flex-col justify-center">
-      <Kicker>Stand de SenecaLab e InnKind · GET Forum 2026</Kicker>
+      <Kicker>Stand de SénecaLab e InnKind · GET Forum 2026</Kicker>
       <h1 className="text-[76px] font-bold leading-[1.05] tracking-tight">¿Quieren seguir con nosotros?</h1>
       <p className="mt-5 max-w-[1500px] text-[30px] leading-snug text-white/85">{TWO_BRANDS}</p>
       <div className="mt-14 flex justify-between gap-[48px]">

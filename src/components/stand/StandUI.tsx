@@ -39,7 +39,7 @@ export function plain(text: string): string {
 }
 
 // Logos de las dos marcas, lado a lado. Son blancos: SOLO sobre fondo oscuro.
-// `height` es el alto de la imagen de SenecaLab en px. Su PNG trae un margen
+// `height` es el alto de la imagen de SénecaLab en px. Su PNG trae un margen
 // transparente (17% a cada lado): se compensa con márgenes negativos para que el
 // logo quede alineado con el texto, y el de InnKind se achica para que las dos
 // marcas se vean del mismo alto.
@@ -75,7 +75,7 @@ export function BrandLogos({ height, className = "" }: { height: number; classNa
   );
 }
 
-// Marca en texto: «SenecaLab · InnKind».
+// Marca en texto: «SénecaLab · InnKind».
 export function BrandMark({ className = "" }: { className?: string }) {
   const [a, b] = BRAND_TEXT.split(" · ");
   return (

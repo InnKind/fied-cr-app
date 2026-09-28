@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 
 // Modo stand (GET Forum 2026). Título y color propios; no usa la marca del FIEd CR.
 export const metadata: Metadata = {
-  title: "SenecaLab · InnKind — GET Forum 2026",
+  title: "SénecaLab · InnKind — GET Forum 2026",
   description:
-    "Sesión participativa de SenecaLab e InnKind en el GET Forum 2026. Tus respuestas son anónimas.",
+    "Sesión participativa de SénecaLab e InnKind en el GET Forum 2026. Tus respuestas son anónimas.",
 };
 
 export const viewport: Viewport = {

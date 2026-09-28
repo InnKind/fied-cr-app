@@ -124,7 +124,7 @@ export default function StandResultados() {
           Lo que dijo la sala · GET Forum 2026
         </h1>
         <p className="mt-2 text-white/75">
-          Respuestas anónimas de la sesión de SenecaLab e InnKind.
+          Respuestas anónimas de la sesión de SénecaLab e InnKind.
           {enough && ` ${people} personas participaron.`}
         </p>
 

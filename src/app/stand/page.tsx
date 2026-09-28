@@ -335,7 +335,7 @@ function PhoneApp() {
             <div className="space-y-6 border-b border-white/15 pb-6">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-                  Stand de SenecaLab e InnKind
+                  Stand de SénecaLab e InnKind
                 </p>
                 <h1 className="mt-1 text-2xl font-bold">La sesión ya terminó</h1>
                 <p className="mt-2 text-white/80">
