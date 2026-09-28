@@ -517,8 +517,8 @@ export const STEPS: Step[] = [
       "Ignez Tristao, Grupo BID, en la presentación del GET Forum 2026 (Primicias, septiembre de 2026)",
     ],
     quote: {
-      text: "El principal cuello de botella no es el financiamiento, sino las personas.",
-      author: "Fernando Vargas, BID, en el FIEd",
+      text: "El principal cuello de botella para incorporar inteligencia artificial en las empresas son las personas, en sus distintos niveles de formación.",
+      author: "Fernando Vargas, BID, en el FIEd LATAM 2026",
     },
     footer: "Y las personas se forman en la educación superior. Ahí trabajamos nosotros.",
   },

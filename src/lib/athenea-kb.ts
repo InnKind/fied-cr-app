@@ -36,7 +36,7 @@ export const ATHENEA_KB = `# Base de conocimiento: Inn.Kind / FIED — Educació
 
 **La educación no es lo mismo que el aprendizaje.** Javier Argüello (COGx): "la educación no tiene nada que ver con el aprendizaje"; el "Dios" es el tiempo fijo cuando debería serlo el aprendizaje. Defensa de la metacognición, la memoria y las "dificultades deseables". Miki Fábrega (2026): enseñar metacognición y neuroplasticidad.
 
-**Vinculación academia–empresa–Estado (el "triángulo" o "el café").** Brecha persistente: las IES aportan apenas ~5% de la formación que necesitan las empresas (Karlo Mondragón, Grupo Salinas). Se pide co-diseño curricular, "socios formadores" (Tec de Monterrey), talento "a la medida" y centros de carrera con empleabilidad medida con datos ("Datos, no anécdotas"). Fernando Vargas (BID): "el principal cuello de botella no es el financiamiento, sino las personas".
+**Vinculación academia–empresa–Estado (el "triángulo" o "el café").** Brecha persistente: las IES aportan apenas ~5% de la formación que necesitan las empresas (Karlo Mondragón, Grupo Salinas). Se pide co-diseño curricular, "socios formadores" (Tec de Monterrey), talento "a la medida" y centros de carrera con empleabilidad medida con datos ("Datos, no anécdotas"). Fernando Vargas (BID, FIEd LATAM 2026): "el principal cuello de botella para incorporar inteligencia artificial en las empresas son las personas, en sus distintos niveles de formación".
 
 **Adopción sobre desarrollo (para LATAM).** Víctor Morales: solo el 0,04% de las patentes de IA son regionales; la clave es la **adopción**. Eric Molino y el "modelo de las ideas" (Romer): "el futuro de Latinoamérica no se construye con más cemento, sino con más ideas".
 
