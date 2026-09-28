@@ -793,8 +793,8 @@ export const STEPS: Step[] = [
     act: "acompanamos",
     minutes: "21:00-22:15",
     label: "Aliados y testimonios",
-    kicker: "Aliados que confiaron en nosotros",
-    title: "Nos confiaron · Hicimos · Seguimos",
+    kicker: "Nos confiaron",
+    title: "Aliados que confiaron en nosotros",
     lines: [
       "**Institucionales:** Fundación Qatar, EdLatam Alliance, CAF, UNESCO, BID, ONU.",
       `**EdTech** (patrocinadores de ediciones): Instructure/Canvas, Coursera, Turnitin, AWS, D2L, Wooclap, Symplicity, POK, McKinsey, Open${NBSP}LMS.`,
