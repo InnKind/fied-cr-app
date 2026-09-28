@@ -2,9 +2,10 @@ import { BrandMark, Chip } from "@/components/stand/StandUI";
 import { CONSENTS } from "@/config/stand";
 
 // Aviso de privacidad del stand (respaldo si no llega el enlace del aviso de las
-// inscripciones del FIEd). Mientras PRIVACY_APPROVED sea false, la página muestra
-// los marcadores amarillos: no se imprime esta dirección sin la aprobación de Adriana.
-const PRIVACY_APPROVED = false;
+// inscripciones del FIEd). Adriana aprobó el aviso y la línea de los datos fuera
+// de Ecuador el 28-sep-2026: ya no se muestran marcadores amarillos. Si el texto
+// cambia y vuelve a necesitar su OK, se pone en false.
+const PRIVACY_APPROVED = true;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { BRAND_TEXT } from "@/config/stand";
+import { BRAND_TEXT, LOGOS } from "@/config/stand";
 
 // Marcador de contenido pendiente: [PEDIR: …] o [APROBAR: …] en amarillo.
 export function Chip({ kind, text }: { kind: string; text: string }) {
@@ -36,6 +36,43 @@ export function Rich({ text }: { text: string }) {
 
 export function plain(text: string): string {
   return text.replace(/\*\*/g, "");
+}
+
+// Logos de las dos marcas, lado a lado. Son blancos: SOLO sobre fondo oscuro.
+// `height` es el alto de la imagen de SenecaLab en px. Su PNG trae un margen
+// transparente (17% a cada lado): se compensa con márgenes negativos para que el
+// logo quede alineado con el texto, y el de InnKind se achica para que las dos
+// marcas se vean del mismo alto.
+export function BrandLogos({ height, className = "" }: { height: number; className?: string }) {
+  const s = LOGOS.senecalab;
+  const k = LOGOS.innkind;
+  const hk = Math.round(height * 0.75);
+  const pad = Math.round(height * 0.174);
+  return (
+    <div className={`flex items-center ${className}`} style={{ gap: Math.round(height * 0.36) }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={s.src}
+        alt={s.alt}
+        width={Math.round((height * s.width) / s.height)}
+        height={height}
+        style={{ height, width: "auto", marginLeft: -pad, marginRight: -pad }}
+      />
+      <span
+        aria-hidden
+        className="shrink-0 rounded-full bg-white/30"
+        style={{ width: 3, height: Math.round(height * 0.8) }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={k.src}
+        alt={k.alt}
+        width={Math.round((hk * k.width) / k.height)}
+        height={hk}
+        style={{ height: hk, width: "auto" }}
+      />
+    </div>
+  );
 }
 
 // Marca en texto: «SenecaLab · InnKind».

@@ -37,13 +37,14 @@ import {
   displayOption,
   optionLabel,
   stepAt,
+  type Case,
   type QrKey,
   type Question,
   type Step,
 } from "@/config/stand";
 import { ts, useStandResults, useStandStep, type StandResultsState } from "@/hooks/useStand";
 import { pct, safeStorage, tally, type Tally } from "@/lib/stand";
-import { BrandMark, Rich } from "@/components/stand/StandUI";
+import { BrandLogos, BrandMark, Rich } from "@/components/stand/StandUI";
 
 // Pantalla del stand (TV 16:9). Se diseña sobre un lienzo fijo de 1920x1080 y
 // se escala para que quepa SIN scroll en cualquier pantalla (1280x720 incluida).
@@ -244,6 +245,107 @@ function Markers({ items }: { items: string[] }) {
 // Texto que es solo un marcador ([PEDIR: …]): va sin comillas.
 const MARKER_ONLY = /^\[(?:PEDIR|APROBAR):[^\]]*\]$/;
 
+// Casos de SenecaLab (s15): el principal en blanco, con la cifra grande y la cita
+// de la vicerrectora; a la derecha, el segundo caso y los casos sin nombre.
+function CasesBlock({ cases, more }: { cases: Case[]; more?: Step["casesMore"] }) {
+  const [main, ...rest] = cases;
+  return (
+    <div className="grid min-h-0 min-w-0 flex-1 grid-cols-[1.12fr_1fr] gap-[28px]">
+      <div className="flex min-h-0 flex-col rounded-[28px] bg-white px-[40px] py-[30px] text-[#1b2d44] shadow-2xl">
+        <p className="text-[19px] font-bold uppercase tracking-[0.14em] text-[#c9283f]">{main.tag}</p>
+        <p className="mt-1 text-[34px] font-bold leading-tight text-[#223c5d]">{main.name}</p>
+        {main.value && (
+          <div className="mt-5 flex items-end gap-5">
+            <p className="text-[136px] font-bold leading-[0.8] tracking-tight text-[#223c5d]">
+              {main.value}
+            </p>
+            <p className="text-[32px] font-semibold leading-tight">{main.valueLabel}</p>
+          </div>
+        )}
+        <p className="mt-6 text-[27px] leading-snug">
+          <Rich text={main.text} />
+        </p>
+        {main.quote && (
+          <blockquote className="mt-auto border-l-[6px] border-[#c9283f] pl-6">
+            <p className="text-[25px] font-semibold italic leading-snug">«{main.quote.text}»</p>
+            {main.quote.author && (
+              <p className="mt-2 text-[19px] text-slate-500">{main.quote.author}</p>
+            )}
+          </blockquote>
+        )}
+      </div>
+
+      <div className="flex min-h-0 flex-col gap-[20px]">
+        {rest.map((c) => (
+          <div key={c.id} className="rounded-[28px] bg-white/[0.09] px-[32px] py-[26px] ring-1 ring-white/15">
+            <p className="text-[18px] font-bold uppercase tracking-[0.14em] text-white/60">{c.tag}</p>
+            <p className="mt-1 text-[30px] font-bold leading-tight">{c.name}</p>
+            <p className="mt-2 text-[22px] leading-snug text-white/90">
+              <Rich text={c.text} />
+            </p>
+            {c.points && (
+              <ul className="mt-3 space-y-[6px]">
+                {c.points.map((p, i) => (
+                  <li key={i} className="flex gap-3 text-[21px] leading-snug text-white/90">
+                    <span className="mt-[11px] inline-block h-[7px] w-[7px] shrink-0 rounded-full bg-[#c9283f]" />
+                    <span>
+                      <Rich text={p} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+        {more && (
+          <div className="min-h-0 flex-1 rounded-[28px] bg-white/[0.04] px-[32px] py-[22px] ring-1 ring-white/10">
+            <p className="text-[18px] font-bold uppercase tracking-[0.14em] text-white/60">{more.title}</p>
+            <ul className="mt-3 space-y-[8px]">
+              {more.items.map((it, i) => (
+                <li key={i} className="text-[19px] leading-snug text-white/85">
+                  <Rich text={it} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Pantalla con casos (s15): a la izquierda, lo que hacemos (las tarjetas, en lista);
+// a la derecha, los casos.
+function CasesScreen({ s }: { s: Step }) {
+  return (
+    <div className="flex h-full flex-col">
+      {s.kicker && <Kicker>{s.kicker}</Kicker>}
+      <h1 className="text-[54px] font-bold leading-[1.08] tracking-tight">{s.title}</h1>
+      <div className="mt-8 flex min-h-0 flex-1 gap-[44px]">
+        {s.cards && (
+          <div className="flex w-[400px] shrink-0 flex-col">
+            <p className="text-[18px] font-bold uppercase tracking-[0.14em] text-white/60">Lo que hacemos</p>
+            <ul className="mt-5 flex flex-col gap-[30px]">
+              {s.cards.map((c, i) => (
+                <li key={i} className="border-l-[5px] border-[#c9283f] pl-5">
+                  {c.title && <p className="text-[26px] font-bold leading-tight">{c.title}</p>}
+                  {c.text && (
+                    <p className="mt-1 text-[21px] leading-snug text-white/85">
+                      <Rich text={c.text} />
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <CasesBlock cases={s.cases!} more={s.casesMore} />
+      </div>
+      {s.markers && <Markers items={s.markers} />}
+    </div>
+  );
+}
+
 function SlideScreen({ s }: { s: Step }) {
   const hasQr = !!s.qr?.length;
   const quotes = s.quotes ?? (s.quote ? [s.quote] : []);
@@ -364,33 +466,16 @@ function SlideScreen({ s }: { s: Step }) {
           </div>
         )}
 
-        {s.callout &&
-          (s.callout.title ? (
-            // Tarjeta con nombre (el caso): el nombre hace de título, sin cifra.
-            <div className="mt-8 flex items-center gap-[40px] rounded-[26px] bg-white px-[40px] py-[30px] text-[#1b2d44] shadow-2xl">
-              <div className="shrink-0">
-                <p className="text-[20px] font-bold uppercase tracking-[0.14em] text-[#c9283f]">
-                  {s.callout.label}
-                </p>
-                <p className="mt-1 text-[64px] font-bold leading-none tracking-tight text-[#223c5d]">
-                  {s.callout.title}
-                </p>
-              </div>
-              <span className="h-[92px] w-[3px] shrink-0 rounded-full bg-slate-200" />
-              <p className="min-w-0 text-[30px] leading-snug">
-                <Rich text={s.callout.text} />
-              </p>
-            </div>
-          ) : (
-            <div className="mt-7 flex items-start gap-5 rounded-[22px] border-l-[8px] border-[#c9283f] bg-white/[0.07] px-7 py-5">
-              <p className="shrink-0 pt-[2px] text-[22px] font-semibold uppercase tracking-[0.12em] text-white/65">
-                {s.callout.label}
-              </p>
-              <p className="text-[25px] leading-snug text-white/90">
-                <Rich text={s.callout.text} />
-              </p>
-            </div>
-          ))}
+        {s.callout && (
+          <div className="mt-7 flex items-start gap-5 rounded-[22px] border-l-[8px] border-[#c9283f] bg-white/[0.07] px-7 py-5">
+            <p className="shrink-0 pt-[2px] text-[22px] font-semibold uppercase tracking-[0.12em] text-white/65">
+              {s.callout.label}
+            </p>
+            <p className="text-[25px] leading-snug text-white/90">
+              <Rich text={s.callout.text} />
+            </p>
+          </div>
+        )}
 
         {quotes.length > 0 && (
           <div className={quotePair ? "mt-8 grid grid-cols-2 gap-[48px]" : ""}>
@@ -405,6 +490,11 @@ function SlideScreen({ s }: { s: Step }) {
                       : "mt-8 max-w-[1560px]"
                 }
               >
+                {q.tag && (
+                  <p className="mb-3 text-[20px] font-bold uppercase tracking-[0.14em] text-white/55">
+                    {q.tag}
+                  </p>
+                )}
                 <p
                   className="font-semibold leading-snug text-white"
                   style={{ fontSize: quoteOnly ? 46 : dense ? 26 : 36 }}
@@ -430,6 +520,8 @@ function SlideScreen({ s }: { s: Step }) {
               <Rich text={s.footer} />
             </p>
           ))}
+
+        {s.logos && <BrandLogos height={120} className="mt-16" />}
 
         </div>
         {s.markers && <Markers items={s.markers} />}
@@ -810,8 +902,12 @@ function GraciasScreen({ s }: { s: Step }) {
     <div className="flex h-full items-center gap-[80px]">
       <div className="min-w-0 flex-1">
         <h1 className="text-[150px] font-bold leading-none tracking-tight">{s.title}</h1>
-        <BrandMark className="mt-8 block text-[54px]" />
-        <p className="mt-10 max-w-[900px] text-[30px] leading-snug text-white/85">{TWO_BRANDS}</p>
+        {s.logos ? (
+          <BrandLogos height={104} className="mt-12" />
+        ) : (
+          <BrandMark className="mt-8 block text-[54px]" />
+        )}
+        <p className="mt-12 max-w-[900px] text-[30px] leading-snug text-white/85">{TWO_BRANDS}</p>
       </div>
       <div className="flex shrink-0 gap-[48px]">
         <QrCard which="atenea" size={300} title="Atenea (GPT)" sub="Atenea está abierta: escanéenla" />
@@ -826,8 +922,8 @@ function PreScreen() {
     <div className="flex h-full items-center gap-[80px]">
       <div className="min-w-0 flex-1">
         <Kicker>GET Forum 2026 · Quito</Kicker>
-        <BrandMark className="block text-[96px] leading-none" />
-        <p className="mt-10 max-w-[1100px] text-[34px] leading-snug text-white/90">{TWO_BRANDS}</p>
+        <BrandLogos height={150} className="mt-4" />
+        <p className="mt-12 max-w-[1100px] text-[34px] leading-snug text-white/90">{TWO_BRANDS}</p>
         <p className="mt-10 text-[40px] font-bold">
           La sesión empieza hoy a las 4:30 p. m.
         </p>
@@ -1288,7 +1384,7 @@ function Deck() {
         screen = <GraciasScreen s={current} />;
         break;
       default:
-        screen = <SlideScreen s={current} />;
+        screen = current.cases?.length ? <CasesScreen s={current} /> : <SlideScreen s={current} />;
     }
   }
 

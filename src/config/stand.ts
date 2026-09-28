@@ -32,14 +32,34 @@ export const QR = {
 export type QrKey = keyof typeof QR;
 
 // Aviso de privacidad. Por defecto, el aviso propio del stand (/stand/privacidad,
-// que muestra [APROBAR] hasta que Adriana lo apruebe). Si llega el enlace del
-// aviso de las inscripciones del FIEd, se puede poner aquí. Con null, el pie
-// muestra el marcador [PEDIR] en amarillo.
+// aprobado por Adriana el 28-sep). Si llega el enlace del aviso de las
+// inscripciones del FIEd, se puede poner aquí. Con null, el pie muestra el
+// marcador [PEDIR] en amarillo.
 export const PRIVACY_URL: string | null = "/stand/privacidad";
+
+// Espacio que no se corta al final de la línea (p. ej. «7.000 usuarios» en una sola línea).
+export const NBSP = String.fromCharCode(160);
 
 export const BRAND_TEXT = "SenecaLab · InnKind";
 export const NAVY = "#223c5d";
 export const RED = "#c9283f";
+
+// Logos de las marcas (carpeta logos/ de los entregables, copiados a public/stand/logos).
+// Son BLANCOS con fondo transparente: solo sobre fondos oscuros (la TV).
+export const LOGOS = {
+  senecalab: {
+    src: "/stand/logos/senecalab-horizontal-blanco.png",
+    alt: "SenecaLab: Expertos en know how",
+    width: 1561,
+    height: 666,
+  },
+  innkind: {
+    src: "/stand/logos/innkind-blanco-puntos-color.png",
+    alt: "InnKind: Innovation, Human, Education",
+    width: 2422,
+    height: 766,
+  },
+} as const;
 
 // ---------------------------------------------------------------------------
 // Frase de las dos marcas (sección 1)
@@ -273,7 +293,7 @@ export const P5_ANSWERS: Record<string, string> = {
   precio:
     "Empezamos pequeño: un piloto con metas medibles antes de cualquier compromiso grande.",
   resultados:
-    "Justo por eso publicamos lo que sale de cada encuentro. Les mandamos el caso de UNIVO y los resultados de esta sala.",
+    `Justo por eso publicamos lo que sale de cada encuentro. En UNIVO habilitamos a 7.000${NBSP}usuarios; a la Universidad Central de Panamá la acompañamos desde su creación. Les mandamos esos casos y los resultados de esta sala.`,
   escala:
     "Cada encuentro alimenta a Atenea e Intelligence: el conocimiento se acumula y se reutiliza en cada país sin empezar de cero.",
   proveedor:
@@ -365,8 +385,10 @@ export const CONSENTS = {
   news: "Quiero recibir novedades de InnKind (FIEd, webinars, comunidad).",
 } as const;
 
+// Pie del formulario (sección 7). La línea de los datos fuera de Ecuador la aprobó
+// Adriana el 28-sep y es la misma del talón del tríptico.
 export const PRIVACY_FOOTER =
-  "Tus respuestas a las preguntas son anónimas y no se unen a estos datos. Tus datos los trata SenecaLab S.A. solo para lo que marcaste.";
+  "Tus respuestas a las preguntas son anónimas y no se unen a estos datos. Tus datos los trata SenecaLab S.A. solo para lo que marcaste. Tus datos se guardan en servicios en la nube cuyos servidores pueden estar fuera de Ecuador.";
 
 // Topes de longitud (iguales o menores que los del SQL).
 export const LIMITS = {
@@ -416,7 +438,87 @@ export type Card = {
   rows?: { label: string; text: string }[];
   source?: string;
 };
-export type Quote = { text: string; author?: string };
+// `tag`: rótulo corto sobre la cita (p. ej. la marca a la que habla el testimonio).
+export type Quote = { text: string; author?: string; tag?: string };
+
+// Un caso de SenecaLab (sección 5). `value` es la cifra grande (solo el caso principal).
+export type Case = {
+  id: "C1" | "C2" | "C3" | "C4" | "C5";
+  tag: string; // rótulo pequeño: «Caso · país»
+  name: string;
+  value?: string;
+  valueLabel?: string;
+  text: string;
+  points?: string[];
+  quote?: Quote;
+};
+
+// ---------------------------------------------------------------------------
+// Testimonios (sección 5): citas TEXTUALES del contenido maestro, que las tomó de
+// los videos del 28-sep (con su minuto) y de la cita escrita de Lupita Humbert.
+// No se editan aquí: si cambian, se cambian primero en el maestro.
+// ---------------------------------------------------------------------------
+export const TESTIMONIALS = {
+  // Video UNIVO, [00:39]. Va en s15, junto al caso.
+  T1: {
+    text: "Una nueva plataforma de aprendizaje permite la innovación, la modernización del sistema de enseñanza aprendizaje",
+    author: "María Luisa Sevillano, vicerrectora académica, Universidad de Oriente (UNIVO)",
+    tag: "SenecaLab",
+  },
+  // Cita escrita (versión corta). Va en s17.
+  T2: {
+    text: "Sin duda, nuestro proyecto no hubiera sido posible sin el apoyo de SenecaLab",
+    author: "Lupita Humbert, cofundadora, Universidad Central de Panamá",
+    tag: "SenecaLab",
+  },
+  // Video SPEAKER, [00:00]. Va en s17.
+  T3: {
+    text: "Este evento lo que tiene como diferenciador único es esta conversación que integra el sector empresarial, gobierno, universidad pública, privada y diferentes países",
+    author: "Fernando Valenzuela, Co-Steward en Integrans (speaker del FIEd)",
+    tag: "InnKind",
+  },
+} satisfies Record<string, Quote>;
+// T4 (Mauricio Bernal) y T5 (Juan Camilo Páez) van solo en las notas del guion.
+
+// ---------------------------------------------------------------------------
+// Casos de SenecaLab (sección 5; Excel de Marcela del 28-sep). Solo las cifras
+// del maestro: no se inventa ninguna.
+// ---------------------------------------------------------------------------
+export const CASES: Case[] = [
+  {
+    id: "C1",
+    tag: "Caso · El Salvador",
+    name: "Universidad de Oriente (UNIVO)",
+    value: "7.000",
+    valueLabel: "usuarios habilitados",
+    // Texto corto del caso (máx. 20 palabras), tal cual el maestro.
+    text: "Primera universidad de LATAM que usa Canvas con Intelligent Insights desde el inicio, y rúbricas con trazabilidad de competencias directivas",
+    quote: { text: TESTIMONIALS.T1.text, author: "María Luisa Sevillano, vicerrectora académica" },
+  },
+  {
+    id: "C2",
+    tag: "Caso · Panamá",
+    name: "Universidad Central de Panamá",
+    text: "Acompañamos su creación ante la regulación panameña.",
+    points: [
+      "**4** programas curriculares",
+      "**1** expediente institucional estructurado",
+      "Documentación organizada y digitalizada para **MEDUCA** y entidades regulatorias",
+    ],
+  },
+];
+
+// C3 (RedTec LATAM), C4 (QLU) y C5 (OTEIMA): el Excel no da permiso explícito para
+// nombrarlas. La pantalla es pública, así que van ANÓNIMAS, con la forma que fija
+// el maestro. Si Marcela o Adriana confirman el permiso, aquí se ponen los nombres.
+export const CASES_ANON = {
+  title: "También acompañamos a",
+  items: [
+    "**Una red regional de educación técnica en 7 países:** impulsamos su expansión, con 4 instituciones vinculadas y un alcance de ~115.000 estudiantes.",
+    "**Una universidad privada en Panamá:** diseñamos con expertos y el sector productivo un programa internacional de Derecho.",
+    "**Otra universidad privada en Panamá:** convertimos su estrategia institucional en un plan operativo con indicadores y metas cuantificables.",
+  ],
+};
 
 // En cualquier texto: **negrita**, [PEDIR: …] y [APROBAR: …] (chips amarillos).
 export type Step = {
@@ -432,10 +534,12 @@ export type Step = {
   stats?: Stat[];
   cards?: Card[];
   lines?: string[];
-  // Recuadro destacado; con `title`, es una tarjeta con nombre (p. ej. el caso UNIVO).
-  callout?: { label: string; title?: string; text: string };
+  callout?: { label: string; text: string }; // recuadro destacado
   quote?: Quote;
   quotes?: Quote[]; // varias citas lado a lado (en vez de `quote`)
+  cases?: Case[]; // el primero es el caso principal (con la cifra grande)
+  casesMore?: { title: string; items: string[] }; // casos sin nombre, en una lista corta
+  logos?: boolean; // logos de las dos marcas (solo en pantallas de fondo oscuro)
   footer?: string;
   sources?: string[];
   markers?: string[]; // p. ej. "[PEDIR: …]"
@@ -452,7 +556,7 @@ export const STEPS: Step[] = [
     label: "Portada",
     kicker: "GET Forum 2026 · Quito",
     title: "Si casi todas las empresas ya usan IA, ¿por qué tan pocas ven resultados?",
-    footer: BRAND_TEXT,
+    logos: true,
     qr: ["entrar"],
   },
   {
@@ -660,7 +764,7 @@ export const STEPS: Step[] = [
       { title: "Canvas (Instructure)", text: "Implementación." },
       {
         title: "BoodleBox",
-        text: "IA para docentes y estudiantes, con asistentes que guían sin dar la respuesta. Pilotos de **~200 usuarios**.",
+        text: `IA para docentes y estudiantes, con asistentes que guían sin dar la respuesta. Pilotos de **~200${NBSP}usuarios**.`,
       },
       { title: "Capacitación docente en IA", text: "A la medida de cada institución." },
       {
@@ -668,13 +772,10 @@ export const STEPS: Step[] = [
         text: "Modelos predictivos de retención y empleabilidad.",
       },
     ],
-    // El caso va sin cifra (no hay un caso con número y no se inventa ninguno):
-    // el nombre de la institución hace de título. Respaldo: T1 (la vicerrectora).
-    callout: {
-      label: "Un caso",
-      title: "UNIVO",
-      text: "Implementamos rúbricas a nivel institucional que permiten la trazabilidad de la adquisición de competencias en el equipo directivo.",
-    },
+    // Caso principal: UNIVO, con 7.000 como número grande y T1 (la vicerrectora).
+    // Segundo caso: la Universidad Central de Panamá. C3-C5, anónimos.
+    cases: CASES,
+    casesMore: CASES_ANON,
   },
   {
     id: "s16",
@@ -696,32 +797,13 @@ export const STEPS: Step[] = [
     title: "Nos confiaron · Hicimos · Seguimos",
     lines: [
       "**Institucionales:** Fundación Qatar, EdLatam Alliance, CAF, UNESCO, BID, ONU.",
-      "**EdTech** (patrocinadores de ediciones): Instructure/Canvas, Coursera, Turnitin, AWS, D2L, Wooclap, Symplicity, POK, McKinsey.",
+      `**EdTech** (patrocinadores de ediciones): Instructure/Canvas, Coursera, Turnitin, AWS, D2L, Wooclap, Symplicity, POK, McKinsey, Open${NBSP}LMS.`,
     ],
-    cards: [
-      { title: "Nos confiaron", text: "[PEDIR: historia 1 e historia 2]" },
-      { title: "Hicimos", text: "[PEDIR: historia 1 e historia 2]" },
-      { title: "Seguimos", text: "[PEDIR: historia 1 e historia 2]" },
-    ],
-    // Testimonios (los textos llegan el 28-sep): en pantalla, T1 (UNIVO) junto a
-    // Marmolejo. T2 (QLU) y T3 (OTEIMA) van al tríptico (uno de los dos) y a las
-    // notas del guion; T4 (InnKind), si llega, al guion.
-    quotes: [
-      {
-        text: "Inn.kind es un espacio único de reflexión, colaboración y exploración de ideas novedosas para el mejoramiento de la educación.",
-        author:
-          "Francisco Marmolejo, Consejo Asesor de InnKind (presidente de Educación Superior, Fundación Qatar)",
-      },
-      {
-        text: "[PEDIR: T1 · UNIVO (vicerrectora): texto, máx. 25 palabras]",
-        author: "[PEDIR: nombre], vicerrectora de UNIVO",
-      },
-    ],
-    markers: [
-      "[PEDIR: cuáles logos se pueden mostrar con permiso escrito]",
-      "[PEDIR: T2 · QLU: texto (máx. 25 palabras), nombre y cargo]",
-      "[PEDIR: T3 · OTEIMA: texto (máx. 25 palabras), nombre y cargo]",
-    ],
+    // Testimonios en pantalla (sección 5): T2 (cliente de SenecaLab) y T3 (speaker
+    // del FIEd, InnKind). T4 (Bernal) y T5 (Páez) van en las notas del guion.
+    quotes: [TESTIMONIALS.T2, TESTIMONIALS.T3],
+    // Lo único pendiente de esta pantalla.
+    markers: ["[PEDIR: cuáles logos de aliados se pueden mostrar con permiso escrito]"],
   },
   {
     id: "s18",
@@ -804,6 +886,7 @@ export const STEPS: Step[] = [
     label: "Gracias",
     kicker: BRAND_TEXT,
     title: "Gracias",
+    logos: true,
     qr: ["atenea", "resultados"],
   },
 ];
