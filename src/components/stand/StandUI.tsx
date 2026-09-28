@@ -46,7 +46,7 @@ export function plain(text: string): string {
 export function BrandLogos({ height, className = "" }: { height: number; className?: string }) {
   const s = LOGOS.senecalab;
   const k = LOGOS.innkind;
-  const hk = Math.round(height * 0.75);
+  const hk = Math.round(height * 0.6);
   const pad = Math.round(height * 0.174);
   return (
     <div className={`flex items-center ${className}`} style={{ gap: Math.round(height * 0.36) }}>
