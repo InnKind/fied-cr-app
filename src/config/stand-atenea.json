@@ -1,0 +1,50 @@
+{
+  "a": {
+    "reto": "Talento: faltan personas con las habilidades que pide el mercado",
+    "pregunta": "¿Qué habilidades necesita el talento latinoamericano para convertir la IA en resultados, y qué deben cambiar las universidades?",
+    "respuesta": "Para que el talento latinoamericano convierta la IA en resultados, la clave está en la adopción estratégica y en competencias humanas perdurables. Como advierte Gabriel Hernández (Symplicity), la vida útil de una habilidad técnica se redujo de diez años a seis meses. Por eso el talento necesita pensamiento crítico, creatividad, comunicación, metacognición y empatía.\n\nComo destaca Fernando Valenzuela (EdLatam Alliance), hoy la escasez ya no es el conocimiento, sino «conciencia, empatía y humanidad». Se trata de dirigir la IA con contexto y propósito, pasando de ejecutores a creadores.\n\nLas universidades deben co-diseñar currículos y microcredenciales verificables con el sector productivo, porque hoy aportan apenas cerca del 5% de la formación que las empresas requieren (Karlo Mondragón, Grupo Salinas). Y deben decidir con datos, no con dogmas.",
+    "fuentes": [
+      "Gabriel Hernández (Symplicity)",
+      "Fernando Valenzuela (EdLatam Alliance)",
+      "Karlo Mondragón (Grupo Salinas)"
+    ]
+  },
+  "b": {
+    "reto": "Las universidades cambian más lento que la tecnología",
+    "pregunta": "Si la tecnología avanza más rápido que las universidades, ¿cómo puede la educación superior de América Latina cambiar a tiempo en la era de la IA?",
+    "respuesta": "Para que la educación superior de América Latina cambie a tiempo frente a una tecnología que avanza a ritmo exponencial, donde las habilidades técnicas caducan en meses, la clave no es adquirir herramientas sin rumbo, sino transformar el modelo institucional.\n\nDesde los foros del FIEd se plantean rutas concretas: más datos y menos dogmas, con universidades guiadas por datos que entiendan el problema real antes de digitalizar por inercia; vincularse con el sector productivo y adoptar microcredenciales verificables para el aprendizaje a lo largo de la vida; y una regulación y una acreditación ágiles, con sandboxes, que midan impacto y empleabilidad en lugar de mero cumplimiento.\n\nLa meta es potenciar lo humano. Como sostiene Jordi Albo Canals, «la IA bien utilizada no reemplaza a los humanos, nos hace más humanos».",
+    "fuentes": [
+      "Jordi Albo Canals (ponente del FIEd)",
+      "FIEd LATAM 2025 (lema «Educación Hack: más datos, menos dogmas»)"
+    ]
+  },
+  "c": {
+    "reto": "Se adopta IA sin medir si da resultados",
+    "pregunta": "¿Cómo pueden las universidades y las organizaciones de América Latina adoptar la IA midiendo si de verdad da resultados, y no solo comprando tecnología?",
+    "respuesta": "Para que las universidades y organizaciones de América Latina adopten la IA con resultados reales, y no caigan en la simple compra de licencias, la transformación debe ser cultural y guiada por la evidencia. Como enfatiza Nairo Vargas (Instructure), «la primera pregunta no es qué IA quiero, sino qué problema real quiero resolver».\n\nSiguiendo la premisa de Juan Pablo Rincón (AWS), las instituciones deben convertirse en organizaciones basadas en datos y experimentar con «puertas de dos vías»: pilotos ágiles para evaluar resultados antes de escalar.\n\nBajo el lema del FIEd 2025, «más datos, menos dogmas», el éxito no se cuenta en herramientas instaladas, sino en la empleabilidad efectiva y el cierre de brechas de habilidades.",
+    "fuentes": [
+      "Nairo Vargas (Instructure)",
+      "Juan Pablo Rincón (AWS)",
+      "FIEd LATAM 2025 (lema «Educación Hack: más datos, menos dogmas»)"
+    ]
+  },
+  "d": {
+    "reto": "Universidad, empresa y emprendimiento no conversan",
+    "pregunta": "¿Cómo hacemos para que universidades, empresas y emprendedores de América Latina trabajen juntos para formar el talento que pide la era de la IA?",
+    "respuesta": "Para que universidades, empresas y emprendedores trabajen juntos, primero hay que cerrar una brecha crítica: como reveló Karlo Mondragón (Grupo Salinas), las instituciones de educación superior aportan apenas cerca del 5% de la formación que demandan las empresas. Se requiere co-diseño curricular, «socios formadores» y centros de carrera que midan la empleabilidad con «datos, no anécdotas».\n\nComo destaca Tatiana Yglesias, el capital privado, las universidades y los emprendedores forman «la triada», especialmente en sectores como la salud y la longevidad. Y la formación debe ser portable, validada con microcredenciales verificables que faciliten la contratación por habilidades.\n\nEn América Latina, el reto es vincular la academia con el sector productivo para impulsar el desarrollo y la movilidad social, sin dejar a nadie atrás.",
+    "fuentes": [
+      "Karlo Mondragón (Grupo Salinas)",
+      "Tatiana Yglesias (ponente del FIEd)"
+    ]
+  },
+  "e": {
+    "reto": "No hay financiamiento para transformar la educación",
+    "pregunta": "¿Cómo se puede financiar la transformación de la educación superior en América Latina ante la IA, y qué papel tienen la inversión privada y las alianzas?",
+    "respuesta": "Para transformar la educación superior en América Latina frente a la IA, las instituciones deben diversificar sus fuentes de ingreso más allá de la matrícula y construir modelos autosostenibles. Como advierte Catherine Juvinao: «Educación sin financiamiento es reforma sin impacto».\n\nEl financiamiento debe apoyarse en un «crédito con sentido», fondos de garantía y alianzas público-privadas. La inversión privada cumple un rol catalizador: Tatiana Yglesias plantea que el capital privado, las universidades y los emprendedores conforman «la triada», particularmente en campos como la salud y la longevidad.\n\nPero el capital debe orientarse con claridad de propósito. Como recuerda Fernando Vargas (BID): «el principal cuello de botella no es el financiamiento, sino las personas». Por eso, los recursos deben ir primero al talento docente y directivo, a la transformación cultural y a la adopción ética de la tecnología.",
+    "fuentes": [
+      "Catherine Juvinao (ponente del FIEd)",
+      "Tatiana Yglesias (ponente del FIEd)",
+      "Fernando Vargas (BID)"
+    ]
+  }
+}
