@@ -802,7 +802,6 @@ export const STEPS: Step[] = [
     // del FIEd, InnKind). T4 (Bernal) y T5 (Páez) van en las notas del guion.
     quotes: [TESTIMONIALS.T2, TESTIMONIALS.T3],
     // Lo único pendiente de esta pantalla.
-    markers: ["[PEDIR: cuáles logos de aliados se pueden mostrar con permiso escrito]"],
   },
   {
     id: "s18",
@@ -819,12 +818,12 @@ export const STEPS: Step[] = [
         tag: "1",
         rows: [
           {
-            label: "Nos dijeron",
-            text: "En el ensayo del FIEd Costa Rica 2026, los facilitadores nos dijeron que las mesas se quedaban esperando a las demás.",
+            label: "Detectamos",
+            text: "Durante las pruebas de la app en el FIEd Costa Rica, identificamos una oportunidad para mejorar el flujo de la actividad y la experiencia de los participantes.",
           },
           {
             label: "Lo cambiamos",
-            text: "En una semana cambiamos la app para que cada mesa avanzara a su propio ritmo, y así se usó en el evento.",
+            text: "**Ajustes en tiempo récord:** en solo una semana evolucionamos el prototipo para incorporar un ritmo de participación personalizado.",
           },
         ],
       },
@@ -832,7 +831,7 @@ export const STEPS: Step[] = [
         tag: "2",
         rows: [
           {
-            label: "Nos dijeron",
+            label: "Detectamos",
             text: "Los patrocinadores nos dijeron qué les servía y qué no de patrocinar un FIEd.",
           },
           {
