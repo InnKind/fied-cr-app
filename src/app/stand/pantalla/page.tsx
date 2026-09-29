@@ -945,7 +945,7 @@ function EndScreen() {
       <h1 className="text-[76px] font-bold leading-[1.05] tracking-tight">¿Quieren seguir con nosotros?</h1>
       <p className="mt-5 max-w-[1500px] text-[30px] leading-snug text-white/85">{TWO_BRANDS}</p>
       <div className="mt-14 flex justify-between gap-[48px]">
-        <QrCard which="entrar" size={290} title="Quiero hablar con ustedes" sub="Tres puertas" />
+        <QrCard which="entrar" size={290} title="Escoge tu puerta" sub="Sigamos en contacto" />
         <QrCard which="atenea" size={290} title="Atenea (GPT)" sub="Atenea está abierta: escanéenla" />
         <QrCard which="resultados" size={290} title="Lo que dijo la sala" sub={RESULTS_SHORT_URL} />
       </div>
