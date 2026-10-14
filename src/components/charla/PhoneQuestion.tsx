@@ -108,7 +108,8 @@ export function QuestionHeader({ q, intro = false }: { q: Question; intro?: bool
 }
 
 // Tarjeta de opción. shape: círculo = se elige una; cuadro = se eligen varias.
-function OptionCard({
+// También la usa el contacto del final (PhoneContact).
+export function OptionCard({
   label,
   selected,
   disabled,

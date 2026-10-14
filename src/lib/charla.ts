@@ -1,14 +1,16 @@
 // Datos de la charla (navegador). Usa la anon key; las tablas y funciones están
-// en supabase/14-charla.sql. El navegador NO lee ni escribe las tablas de
-// personas y respuestas: pasa por charla_register, charla_answer, charla_me y
-// charla_results, que nunca devuelven nombres, correos ni textos escritos.
+// en supabase/14-charla.sql y 15-charla-anonima.sql. El navegador NO lee ni
+// escribe las tablas: pasa por charla_answer, charla_me, charla_results y
+// charla_contact. Las respuestas son anónimas (código aleatorio del celular) y
+// el contacto opcional se guarda aparte, sin ese código.
 
 import { supabase } from "@/lib/supabase";
 import {
   OTHER_ID,
   QUESTIONS,
   SESSION,
-  type Profile,
+  type Contact,
+  type ContactOptionId,
   type Question,
   type QuestionId,
 } from "@/config/charla";
@@ -28,20 +30,21 @@ export type Mine = Partial<Record<QuestionId, CharlaAnswer>>;
 
 // Conteos de la sala (sin nombres ni textos).
 export type CharlaResults = {
-  people: number; // personas registradas
+  people: number; // celulares con al menos una respuesta
   answered: Record<string, number>; // personas que respondieron cada pregunta
   counts: Record<string, Record<string, number>>; // pregunta → opción → veces elegida
 };
 export const EMPTY_RESULTS: CharlaResults = { people: 0, answered: {}, counts: {} };
 
-const SQL_FILE = "supabase/14-charla.sql";
+const SQL_FILE = "supabase/14-charla.sql y 15-charla-anonima.sql";
 
-// Rechazos de las funciones de supabase/14-charla.sql («charla: …»), dichos
-// para la persona. El texto original queda en `detail`.
+// Rechazos de las funciones de la base («charla: …»), dichos para la persona.
+// El texto original queda en `detail`.
 const REJECTIONS: [RegExp, string][] = [
-  [/sin registrar/i, "Sus datos ya no están en la sesión. Vuelva a completarlos para continuar."],
   [/sesión llena/i, "La sesión ya no admite más personas."],
-  [/datos inválidos/i, "Revise sus datos: falta alguno o el correo no está bien escrito."],
+  [/datos inválidos/i, "Revise sus datos: falta el nombre o el correo no está bien escrito."],
+  [/falta el consentimiento/i, "Para enviar sus datos, marque la casilla de autorización."],
+  [/opciones inválidas/i, "Elija al menos una forma de seguir en contacto."],
   [/sesión inválida/i, "La sesión no está disponible."],
 ];
 
@@ -70,8 +73,8 @@ function classifyError(
 }
 
 // ---------------------------------------------------------------------------
-// Código de la persona (localStorage). Es propio de esta charla: no se comparte
-// con el id anónimo del stand.
+// Código anónimo del celular (localStorage). Es propio de esta charla: no se
+// comparte con el id anónimo del stand y nunca se envía junto con el contacto.
 // ---------------------------------------------------------------------------
 const PID_KEY = `charla_pid_${SESSION}`;
 let memoryPid: string | null = null;
@@ -138,19 +141,26 @@ export async function fetchStep(): Promise<{ row: StepRow | null; error: CharlaE
 }
 
 // ---------------------------------------------------------------------------
-// Registro y respuestas
+// Respuestas (anónimas) y contacto (opcional, aparte)
 // ---------------------------------------------------------------------------
-export async function registerProfile(pid: string, p: Profile): Promise<CharlaError | null> {
+// Guarda el contacto opcional del final. A propósito NO recibe el código del
+// celular: así el contacto no se puede unir con las respuestas.
+export async function sendContact(
+  opciones: ContactOptionId[],
+  c: Contact,
+  consentimiento: boolean
+): Promise<CharlaError | null> {
   const t = timeoutSignal();
   try {
     const { error } = await supabase
-      .rpc("charla_register", {
+      .rpc("charla_contact", {
         p_session: SESSION,
-        p_pid: pid,
-        p_nombre: p.nombre,
-        p_organizacion: p.organizacion,
-        p_cargo: p.cargo,
-        p_correo: p.correo,
+        p_opciones: opciones,
+        p_nombre: c.nombre,
+        p_organizacion: c.organizacion,
+        p_cargo: c.cargo,
+        p_correo: c.correo,
+        p_consentimiento: consentimiento,
       })
       .abortSignal(t.signal);
     return error ? classifyError(error) : null;
@@ -184,26 +194,24 @@ export async function saveAnswer(
   }
 }
 
-// Si la persona ya está registrada en la base y lo que respondió.
-export async function fetchMe(
-  pid: string
-): Promise<{ registered: boolean; answers: Mine; error: CharlaError | null }> {
+// Lo que este celular ya respondió (según la base).
+export async function fetchMe(pid: string): Promise<{ answers: Mine; error: CharlaError | null }> {
   const t = timeoutSignal();
   try {
     const { data, error } = await supabase
       .rpc("charla_me", { p_session: SESSION, p_pid: pid })
       .abortSignal(t.signal);
-    if (error) return { registered: false, answers: {}, error: classifyError(error) };
-    const raw = (data ?? {}) as { registered?: unknown; answers?: unknown };
+    if (error) return { answers: {}, error: classifyError(error) };
+    const raw = (data ?? {}) as { answers?: unknown };
     const answers: Mine = {};
     if (raw.answers && typeof raw.answers === "object" && !Array.isArray(raw.answers)) {
       for (const [q, a] of Object.entries(raw.answers as Record<string, unknown>)) {
         if (q in QUESTIONS && a && typeof a === "object") answers[q as QuestionId] = a as CharlaAnswer;
       }
     }
-    return { registered: raw.registered === true, answers, error: null };
+    return { answers, error: null };
   } catch (e) {
-    return { registered: false, answers: {}, error: classifyError(e as Error) };
+    return { answers: {}, error: classifyError(e as Error) };
   } finally {
     t.clear();
   }

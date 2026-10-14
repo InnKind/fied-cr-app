@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { FORM_CONSENT, TALK_TITLE } from "@/config/charla";
+import { CONTACT, TALK_TITLE } from "@/config/charla";
 import { BrandLogos, Kicker, SERIF } from "@/components/charla/CharlaUI";
 
 // Descarga los CSV de la charla (para Jerónimo y Adriana). La clave se escribe
 // aquí y viaja en el encabezado x-stand-key: nunca queda en la URL, en los
 // registros de Vercel ni en el historial. No se guarda en el navegador.
-// OJO: a diferencia del stand, estos archivos traen nombres y correos.
+// Las respuestas son anónimas (un número por participante). Solo el archivo de
+// contactos trae nombres y correos, y no se puede unir con el de respuestas.
 
-type Kind = "personas" | "respuestas";
+type Kind = "participantes" | "respuestas" | "contactos";
 
 function filenameFrom(res: Response, fallback: string): string {
   const cd = res.headers.get("Content-Disposition") ?? "";
@@ -74,15 +75,16 @@ export default function CharlaExportar() {
           Exportar la charla
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[#dce4ff]">
-          Los archivos traen nombres y correos: se manejan con cuidado y no se comparten fuera del
-          equipo. Los contactos se usan solo para lo que decía el formulario: «{FORM_CONSENT}»
+          Las respuestas son anónimas: cada celular sale como un participante con un número, sin
+          nombre ni correo. Solo el archivo de contactos trae datos personales, y no se puede unir
+          con el de respuestas.
         </p>
 
         <form
           className="mt-6 space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
-            void download("personas");
+            void download("participantes");
           }}
         >
           <label className="block">
@@ -107,12 +109,14 @@ export default function CharlaExportar() {
             />
             Separar con punto y coma (Excel en español)
           </label>
+
+          <h2 className="pt-2 text-lg font-bold">Respuestas (anónimas)</h2>
           <button
             type="submit"
             disabled={!key.trim() || !!busy}
             className={`${btn} bg-[#ff5800] text-white`}
           >
-            {busy === "personas" ? "Descargando…" : "Personas y respuestas (CSV)"}
+            {busy === "participantes" ? "Descargando…" : "Una fila por participante (CSV)"}
           </button>
           <button
             type="button"
@@ -122,12 +126,29 @@ export default function CharlaExportar() {
           >
             {busy === "respuestas" ? "Descargando…" : "Una fila por respuesta (CSV)"}
           </button>
+          <p className="text-xs leading-relaxed text-[#dce4ff]">
+            «Una fila por participante» trae una columna por pregunta (como la hoja de un
+            formulario de Google). «Una fila por respuesta» es el mismo contenido en formato largo,
+            para tablas dinámicas. El número de participante es el mismo en los dos y va en el orden
+            en que cada celular empezó a responder.
+          </p>
+
+          <h2 className="pt-2 text-lg font-bold">Contactos (con datos personales)</h2>
+          <button
+            type="button"
+            onClick={() => void download("contactos")}
+            disabled={!key.trim() || !!busy}
+            className={`${btn} border-2 border-white bg-transparent text-white`}
+          >
+            {busy === "contactos" ? "Descargando…" : "Contactos (CSV)"}
+          </button>
+          <p className="text-xs leading-relaxed text-[#dce4ff]">
+            Una fila por persona que dejó sus datos al final: nombre, organización, cargo, correo y
+            lo que marcó. Va en orden alfabético y sin hora, para que no se pueda emparejar con las
+            respuestas. Se maneja con cuidado, no se comparte fuera del equipo y se usa solo para lo
+            que cada persona marcó: «{CONTACT.consent}»
+          </p>
         </form>
-        <p className="mt-4 text-xs leading-relaxed text-[#dce4ff]">
-          «Personas y respuestas» trae una fila por persona, con una columna por pregunta (como la
-          hoja de un formulario de Google). «Una fila por respuesta» es el mismo contenido en
-          formato largo, para tablas dinámicas.
-        </p>
 
         {msg && (
           <p

@@ -180,11 +180,11 @@ function PreScreen({ res }: { res: CharlaResultsState }) {
         <p style={{ margin: "40px 0 0", fontSize: 38, lineHeight: 1.35, color: C.ice }}>
           Esta charla se responde desde el celular.
           <br />
-          Escanee el código y complete su perfil: toma un minuto.
+          Escanee el código: es anónimo y toma un minuto.
         </p>
         {res.people > 0 && (
           <p style={{ margin: "36px 0 0", fontSize: 30, fontWeight: 700, color: C.cream }}>
-            {people(res.people)} ya {res.people === 1 ? "entró" : "entraron"}
+            {people(res.people)} ya {res.people === 1 ? "respondió" : "respondieron"}
           </p>
         )}
       </div>
@@ -210,7 +210,7 @@ function EndScreen({ res }: { res: CharlaResultsState }) {
         Gracias por participar
       </h1>
       <p style={{ margin: "24px 0 0", fontSize: 34, lineHeight: 1.35, color: C.ice }}>
-        Sus respuestas alimentan InnKind Intelligence. Recibirán los resultados.
+        Sus respuestas alimentan InnKind Intelligence. Si pidió los resultados al final, se los enviaremos.
         {res.people > 0 ? ` Hoy ${res.people === 1 ? "participó" : "participaron"} ${people(res.people)}.` : ""}
       </p>
       <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "space-between" }}>

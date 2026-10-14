@@ -2,13 +2,19 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
+  ANON_NOTE,
   END_STEP,
+  FORM_INTRO,
+  FORM_TITLE,
+  MOMENT_OPENS_AT,
+  PRIVACY_URL,
   QUESTIONS,
   QUESTION_ORDER,
   SESSION,
   openQuestions,
   stepAt,
-  type Profile,
+  type Contact,
+  type ContactOptionId,
   type QuestionId,
 } from "@/config/charla";
 import { useCharlaStep } from "@/hooks/useCharla";
@@ -17,26 +23,34 @@ import {
   fetchMe,
   getPid,
   isAnswered,
-  registerProfile,
+  safeSession,
   safeStorage,
   saveAnswer,
+  sendContact,
   type CharlaAnswer,
   type CharlaError,
   type Mine,
 } from "@/lib/charla";
 import { BrandLogos, SERIF } from "@/components/charla/CharlaUI";
-import PhoneDone from "@/components/charla/PhoneDone";
-import PhoneForm, { EMPTY_PROFILE, parseProfile } from "@/components/charla/PhoneForm";
+import PhoneContact from "@/components/charla/PhoneContact";
+import PhoneDone, { type ContactState } from "@/components/charla/PhoneDone";
 import PhoneQuestion, { QuestionHeader } from "@/components/charla/PhoneQuestion";
 import { BTN_PRIMARY } from "@/components/charla/PhoneUI";
 
-// Lo que este celular recuerda (localStorage): si ya se registró, sus datos,
-// la copia de sus respuestas y las preguntas opcionales que saltó.
-const REG_KEY = `charla_reg_${SESSION}`;
-const PROFILE_KEY = `charla_profile_${SESSION}`;
+// Lo que este celular recuerda (localStorage): si ya pasó la bienvenida, la
+// copia de sus respuestas, las preguntas opcionales que saltó, hasta dónde
+// llegó la pantalla y qué hizo con el contacto del final. Nada de esto lleva
+// nombre ni correo: las respuestas son anónimas.
+const WELCOME_KEY = `charla_inicio_${SESSION}`;
 const MINE_KEY = `charla_mine_${SESSION}`;
 const SKIP_KEY = `charla_skip_${SESSION}`;
 const REACH_KEY = `charla_reach_${SESSION}`;
+const CONTACT_KEY = `charla_contacto_${SESSION}`;
+
+// La versión anterior pedía nombre, organización, cargo y correo y los
+// guardaba en el celular: se borran al entrar.
+const OLD_KEYS = [`charla_reg_${SESSION}`, `charla_profile_${SESSION}`];
+const OLD_DRAFT_KEY = `charla_profile_draft_${SESSION}`;
 
 // Cada cuánto se reintenta leer la base cuando no hubo conexión.
 const ME_RETRY_MS = 5000;
@@ -69,6 +83,11 @@ function readSkipped(): QuestionId[] {
   }
 }
 
+function readContact(): ContactState {
+  const v = safeStorage.get(CONTACT_KEY);
+  return v === "enviado" || v === "no" ? v : null;
+}
+
 function Shell({ children, banner }: { children: React.ReactNode; banner?: React.ReactNode }) {
   return (
     <main className="flex min-h-dvh flex-1 flex-col bg-[#223C5D] text-white">
@@ -85,8 +104,8 @@ function Shell({ children, banner }: { children: React.ReactNode; banner?: React
 
 const noopSubscribe = () => () => {};
 
-// El celular lee el código de la persona y la copia local de sus datos y
-// respuestas, que solo existen en el navegador: se monta después de hidratar.
+// El celular lee su código anónimo y la copia local de sus respuestas, que solo
+// existen en el navegador: se monta después de hidratar.
 export default function CharlaPhone() {
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   if (!mounted) {
@@ -99,18 +118,18 @@ export default function CharlaPhone() {
   return <PhoneApp />;
 }
 
-// ?paso=N → vista previa: muestra lo que ve una persona ya registrada en el
-// paso N, empezando sin respuestas, y NO guarda nada (ni en la base ni en el
-// navegador). Con ?paso=N&registro=1 empieza sin registrar, para ver también el
-// formulario. Sirve para ensayar y revisar pantallas sin tocar los datos.
+// ?paso=N → vista previa: muestra lo que ve una persona en el paso N, empezando
+// sin respuestas, y NO guarda nada (ni en la base ni en el navegador). Con
+// ?paso=N&inicio=1 empieza en la bienvenida. Sirve para ensayar y revisar
+// pantallas sin tocar los datos.
 function readPreview(): number | null {
   const p = new URLSearchParams(window.location.search).get("paso");
   if (p === null || !/^\d+$/.test(p)) return null;
   return Math.max(0, Math.min(END_STEP, parseInt(p, 10)));
 }
 
-function previewWithForm(): boolean {
-  return new URLSearchParams(window.location.search).get("registro") === "1";
+function previewWithWelcome(): boolean {
+  return new URLSearchParams(window.location.search).get("inicio") === "1";
 }
 
 const toTop = () => window.scrollTo({ top: 0 });
@@ -119,28 +138,29 @@ function PhoneApp() {
   const remote = useCharlaStep(5000);
   const [preview, setPreview] = useState<number | null>(readPreview);
   const isPreview = preview !== null;
-  // En vista previa no se crea el código de la persona (getPid lo guarda).
+  // En vista previa no se crea el código del celular (getPid lo guarda).
   const [pid] = useState(() => (isPreview ? "" : getPid()));
   // Primero lo que recuerda el celular… (en vista previa se empieza en blanco)
-  const [registered, setRegistered] = useState(() =>
-    isPreview ? !previewWithForm() : safeStorage.get(REG_KEY) === "1"
-  );
-  const [profile, setProfile] = useState<Profile>(() =>
-    isPreview ? EMPTY_PROFILE : (parseProfile(safeStorage.get(PROFILE_KEY)) ?? EMPTY_PROFILE)
-  );
   const [mine, setMine] = useState<Mine>(() => (isPreview ? {} : readMine()));
+  const [welcomed, setWelcomed] = useState(() =>
+    isPreview
+      ? !previewWithWelcome()
+      : safeStorage.get(WELCOME_KEY) === "1" || Object.keys(readMine()).length > 0
+  );
   const [skipped, setSkipped] = useState<QuestionId[]>(() => (isPreview ? [] : readSkipped()));
+  const [contact, setContact] = useState<ContactState>(() => (isPreview ? null : readContact()));
   // Hasta que la base responde la primera vez se confía en el celular, pero no
   // se deja guardar.
   const [meLoaded, setMeLoaded] = useState(isPreview);
   const [busy, setBusy] = useState(false);
   // El aviso de «no se pudo guardar» es de la pantalla donde falló el envío.
-  const [saveErr, setSaveErr] = useState<{ at: QuestionId | "perfil"; error: CharlaError } | null>(
+  const [saveErr, setSaveErr] = useState<{ at: QuestionId | "contacto"; error: CharlaError } | null>(
     null
   );
   // Desde «Sus respuestas»: la pregunta que se está cambiando o completando.
   const [editing, setEditing] = useState<QuestionId | null>(null);
-  const [editProfile, setEditProfile] = useState(false);
+  // Desde «Sus respuestas»: el contacto, si al final dijo que no.
+  const [contactOpen, setContactOpen] = useState(false);
   // El paso más alto que vio este celular: un momento que ya se abrió no se
   // cierra si la pantalla retrocede (un clic de más, o volver a una lámina en
   // las preguntas del final). Se olvida si la base se reinicia entre ensayos.
@@ -152,20 +172,26 @@ function PhoneApp() {
     : remote;
 
   // Reloj de esta visita: cada lectura de la base y cada guardado toman un
-  // número. Lo guardado aquí (savedHere: pregunta → número; registeredHere) gana
-  // sobre una lectura que salió antes; una que salió después ya lo trae, y ahí
-  // manda la base.
+  // número. Lo guardado aquí (savedHere: pregunta → número) gana sobre una
+  // lectura que salió antes; una que salió después ya lo trae, y ahí manda la
+  // base.
   const clock = useRef(0);
   const savedHere = useRef<Map<QuestionId, number>>(new Map());
-  const registeredHere = useRef(0);
   // Vuelve a leer la base (lo define el efecto de abajo).
   const resync = useRef<() => void>(() => {});
   const lastStep = useRef<number | null>(null);
 
+  // Datos personales que dejó en este celular la versión con registro.
+  useEffect(() => {
+    if (isPreview) return;
+    for (const k of OLD_KEYS) safeStorage.remove(k);
+    safeSession.remove(OLD_DRAFT_KEY);
+  }, [isPreview]);
+
   // …y luego la base, que manda: si se reinició (entre ensayos), aquí se borran
-  // las respuestas y el registro, y vuelve el formulario relleno con los datos
-  // guardados. Sin conexión se conserva lo local y se reintenta: al rato, al
-  // volver a primer plano y cuando la pantalla retrocede.
+  // las respuestas, las preguntas saltadas y lo hecho con el contacto. Sin
+  // conexión se conserva lo local y se reintenta: al rato, al volver a primer
+  // plano y cuando la pantalla retrocede.
   useEffect(() => {
     if (isPreview) return;
     let alive = true;
@@ -196,31 +222,28 @@ function PhoneApp() {
         const keep = Array.from(savedHere.current)
           .filter(([, at]) => at > started)
           .map(([q]) => q);
-        const isReg = res.registered || registeredHere.current > started;
         // El celular tenía respuestas y la base no trae ninguna: se reinició.
         const wiped =
           Object.keys(res.answers).length === 0 &&
           keep.length === 0 &&
           Object.keys(readMine()).length > 0;
-        setRegistered(isReg);
-        if (isReg) safeStorage.set(REG_KEY, "1");
-        else safeStorage.remove(REG_KEY);
         setMine((prev) => {
           const next: Mine = { ...res.answers };
           for (const q of keep) next[q] = prev[q];
           safeStorage.set(MINE_KEY, JSON.stringify(next));
           return next;
         });
-        // Empezar de cero incluye olvidar las preguntas que saltó.
-        if (!isReg || wiped) {
+        // Empezar de cero incluye olvidar las preguntas que saltó y el contacto
+        // (el reinicio también borra los contactos).
+        if (wiped) {
           setSkipped([]);
           safeStorage.remove(SKIP_KEY);
           setReach(0);
           safeStorage.remove(REACH_KEY);
-        }
-        if (!isReg) {
+          setContact(null);
+          safeStorage.remove(CONTACT_KEY);
           setEditing(null);
-          setEditProfile(false);
+          setContactOpen(false);
           setSaveErr(null);
         }
       }
@@ -255,25 +278,10 @@ function PhoneApp() {
     }
   }, [remote.step, isPreview]);
 
-  const register = async (p: Profile): Promise<boolean> => {
-    if (!isPreview) {
-      setBusy(true);
-      setSaveErr(null);
-      const error = await registerProfile(pid, p);
-      setBusy(false);
-      if (error) {
-        setSaveErr({ at: "perfil", error });
-        return false;
-      }
-      registeredHere.current = ++clock.current;
-      safeStorage.set(PROFILE_KEY, JSON.stringify(p));
-      safeStorage.set(REG_KEY, "1");
-    }
-    setProfile(p);
-    setRegistered(true);
-    setEditProfile(false);
+  const start = () => {
+    if (!isPreview) safeStorage.set(WELCOME_KEY, "1");
+    setWelcomed(true);
     toTop();
-    return true;
   };
 
   const save = async (qid: QuestionId, answer: CharlaAnswer): Promise<boolean> => {
@@ -284,9 +292,6 @@ function PhoneApp() {
       setBusy(false);
       if (error) {
         setSaveErr({ at: qid, error });
-        // La base ya no conoce a esta persona (se reinició): se vuelve a leer y
-        // aparece el formulario.
-        if (/sin registrar/i.test(error.detail ?? "")) resync.current();
         return false;
       }
       savedHere.current.set(qid, ++clock.current);
@@ -318,6 +323,30 @@ function PhoneApp() {
       return next;
     });
     toTop();
+  };
+
+  const decideContact = (v: Exclude<ContactState, null>) => {
+    if (!isPreview) safeStorage.set(CONTACT_KEY, v);
+    setContact(v);
+    setContactOpen(false);
+    setSaveErr(null);
+    toTop();
+  };
+
+  // El contacto va sin el código del celular: no se puede unir con las respuestas.
+  const submitContact = async (opciones: ContactOptionId[], c: Contact): Promise<boolean> => {
+    if (!isPreview) {
+      setBusy(true);
+      setSaveErr(null);
+      const error = await sendContact(opciones, c, true);
+      setBusy(false);
+      if (error) {
+        setSaveErr({ at: "contacto", error });
+        return false;
+      }
+    }
+    decideContact("enviado");
+    return true;
   };
 
   // --- Cargando / sin conexión ---
@@ -362,11 +391,13 @@ function PhoneApp() {
   // La primera pregunta abierta que no respondió ni saltó.
   const pendingId =
     open.find((id) => !isAnswered(QUESTIONS[id], mine[id]) && !skipped.includes(id)) ?? null;
+  // El contacto se ofrece solo una vez, al terminar las preguntas del último momento.
+  const offerContact = !pendingId && openStep >= MOMENT_OPENS_AT[3] && contact === null;
 
   const movePreview = (d: number) => {
     setPreview((p) => Math.max(0, Math.min(END_STEP, (p ?? 0) + d)));
     setEditing(null);
-    setEditProfile(false);
+    setContactOpen(false);
     toTop();
   };
 
@@ -388,40 +419,56 @@ function PhoneApp() {
     </p>
   ) : null;
 
-  // --- Registro (primero siempre, también si llega tarde) y «Corregir mis datos» ---
-  if (!registered || editProfile) {
-    const fixing = registered;
-    // Con datos guardados y sin registro: la base se reinició.
-    const note = fixing
-      ? null
-      : profile.nombre
-        ? "Confirme sus datos para continuar."
-        : ended
-          ? "La charla ya terminó, pero todavía puede dejar sus respuestas."
-          : step >= 1
-            ? "La charla ya empezó: unirse toma un minuto."
-            : null;
+  // --- Bienvenida (una vez): de qué se trata y que es anónimo ---
+  if (!welcomed) {
+    const note = ended
+      ? "La charla ya terminó, pero todavía puede dejar sus respuestas."
+      : step >= 1
+        ? "La charla ya empezó: unirse toma un minuto."
+        : null;
     return (
       <Shell banner={banner}>
-        <PhoneForm
-          key={fixing ? "corregir" : "registro"}
-          mode={fixing ? "corregir" : "registro"}
-          initial={profile}
-          note={note}
+        <h1 className="text-[30px] leading-[1.15] text-white" style={SERIF}>
+          {FORM_TITLE}
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-[#DCE4FF]">{FORM_INTRO}</p>
+        <p className="mt-5 rounded-xl bg-white/10 px-4 py-3 text-[16px] font-bold leading-snug text-white">
+          {ANON_NOTE}
+        </p>
+        {note && <p className="mt-4 text-sm font-bold text-white">{note}</p>}
+        <button type="button" onClick={start} className={`mt-7 ${BTN_PRIMARY}`}>
+          Empezar
+        </button>
+        <p className="mt-4 text-[13px] leading-relaxed text-[#DCE4FF]">
+          <a
+            href={PRIVACY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block py-1 font-bold text-white underline"
+          >
+            Aviso de privacidad
+          </a>
+        </p>
+      </Shell>
+    );
+  }
+
+  // --- Contacto opcional: al terminar, o desde «Sus respuestas» ---
+  if (contactOpen || offerContact) {
+    return (
+      <Shell banner={banner}>
+        <PhoneContact
           persist={!isPreview}
           busy={busy}
-          ready={meLoaded}
-          error={saveErr?.at === "perfil" ? saveErr.error : null}
-          onSubmit={register}
-          onCancel={
-            fixing
-              ? () => {
-                  setEditProfile(false);
-                  setSaveErr(null);
-                  toTop();
-                }
-              : undefined
-          }
+          error={saveErr?.at === "contacto" ? saveErr.error : null}
+          onSend={submitContact}
+          onDecline={() => {
+            if (!contactOpen) return decideContact("no");
+            setContactOpen(false);
+            setSaveErr(null);
+            toTop();
+          }}
+          declineLabel={contactOpen ? "Cancelar" : "No, gracias"}
         />
       </Shell>
     );
@@ -489,14 +536,15 @@ function PhoneApp() {
         step={step}
         openStep={openStep}
         mine={mine}
+        contact={contact}
         onEdit={(id) => {
           setSaveErr(null);
           setEditing(id);
           toTop();
         }}
-        onEditProfile={() => {
+        onContact={() => {
           setSaveErr(null);
-          setEditProfile(true);
+          setContactOpen(true);
           toTop();
         }}
       />

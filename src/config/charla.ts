@@ -5,13 +5,15 @@
 // allá, se cambian aquí Y en supabase/14-charla.sql (la base valida las opciones).
 //
 // Pantallas:
-//   /charla             → celular (pide nombre, organización, cargo y correo; luego las preguntas)
+//   /charla             → celular (ANÓNIMO: las preguntas sin pedir nombre; al final, contacto opcional aparte)
 //   /charla/pantalla    → proyector (se avanza con el clicker; ?k=CLAVE)
 //   /charla/resultados  → resultados públicos (solo conteos)
-//   /charla/exportar    → CSV con nombre y respuestas (pide la clave)
-// Base: supabase/14-charla.sql (tablas charla_state, charla_people y
-// charla_responses; funciones charla_register, charla_answer, charla_me y
-// charla_results). No toca nada del stand ni del FIEd.
+//   /charla/exportar    → CSV de respuestas anónimas y de contactos (pide la clave)
+// Base: supabase/14-charla.sql y 15-charla-anonima.sql (tablas charla_state,
+// charla_responses y charla_contacts; funciones charla_answer, charla_me,
+// charla_results y charla_contact). No toca nada del stand ni del FIEd.
+// Las respuestas son ANÓNIMAS (un código aleatorio del celular). El contacto
+// del final es opcional y se guarda aparte, sin ese código: no se pueden unir.
 //
 // Las láminas se dibujan desde src/config/charla-laminas.json, que se genera a
 // partir del .pptx (herramientas/pptx_a_laminas.py en la carpeta de entregables).
@@ -58,28 +60,48 @@ export const LOGOS = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Registro (sección «1 · Su perfil» del formulario)
+// Bienvenida (anónima)
 // ---------------------------------------------------------------------------
 export const FORM_TITLE = "Su mirada sobre la educación superior";
-// Descripción del formulario, tal cual.
+// Descripción del formulario, sin la parte que pedía datos personales.
 export const FORM_INTRO =
-  "Encuesta para líderes empresariales: 3 minutos. Sus respuestas alimentan InnKind Intelligence, el análisis de InnKind sobre lo que piensan y deciden los líderes de la educación superior y el empleo. Recibirá los resultados.";
-export const FORM_CONSENT =
-  "Al enviarla, acepta que SénecaLab e InnKind la contacten sobre este tema.";
+  "Encuesta para líderes empresariales: 3 minutos. Sus respuestas alimentan InnKind Intelligence, el análisis de InnKind sobre lo que piensan y deciden los líderes de la educación superior y el empleo.";
+export const ANON_NOTE = "Sus respuestas son anónimas: no le pedimos su nombre.";
 
-export type ProfileField = "nombre" | "organizacion" | "cargo" | "correo";
-export type Profile = Record<ProfileField, string>;
-export const PROFILE_FIELDS: {
-  id: ProfileField;
+// ---------------------------------------------------------------------------
+// Contacto opcional del final. Va APARTE de las respuestas (charla_contacts no
+// guarda el código del celular), así que no se puede saber qué respondió quien
+// deja su contacto. Las opciones son las de la pregunta del formulario
+// «¿Cómo le gustaría seguir con SénecaLab e InnKind?», textos exactos.
+// ---------------------------------------------------------------------------
+export const CONTACT = {
+  title: "¿Quiere seguir en contacto?",
+  intro: "Es opcional y va aparte: sus respuestas siguen siendo anónimas y no se unen a estos datos.",
+  prompt: "¿Cómo le gustaría seguir con SénecaLab e InnKind?",
+  options: [
+    { id: "resultados", label: "Recibir los resultados de esta sesión" },
+    { id: "proyecto", label: "Conversar sobre un proyecto con universidades" },
+    { id: "mesa", label: "Participar en una mesa de prototipado InnKind" },
+    { id: "fied2027", label: "Conocer el FIEd 2027" },
+  ],
+  consent: "Acepto que SénecaLab e InnKind me contacten para lo que marqué.",
+} as const;
+export type ContactOptionId = (typeof CONTACT.options)[number]["id"];
+
+export type ContactField = "nombre" | "correo" | "organizacion" | "cargo";
+export type Contact = Record<ContactField, string>;
+export const CONTACT_FIELDS: {
+  id: ContactField;
   label: string;
   max: number;
   type: "text" | "email";
   autoComplete: string;
+  required: boolean;
 }[] = [
-  { id: "nombre", label: "Nombre", max: 150, type: "text", autoComplete: "name" },
-  { id: "organizacion", label: "Organización", max: 200, type: "text", autoComplete: "organization" },
-  { id: "cargo", label: "Cargo", max: 150, type: "text", autoComplete: "organization-title" },
-  { id: "correo", label: "Correo", max: 200, type: "email", autoComplete: "email" },
+  { id: "nombre", label: "Nombre", max: 150, type: "text", autoComplete: "name", required: true },
+  { id: "correo", label: "Correo", max: 200, type: "email", autoComplete: "email", required: true },
+  { id: "organizacion", label: "Organización (opcional)", max: 200, type: "text", autoComplete: "organization", required: false },
+  { id: "cargo", label: "Cargo (opcional)", max: 150, type: "text", autoComplete: "organization-title", required: false },
 ];
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -96,8 +118,7 @@ export type QuestionId =
   | "POSICIONES"
   | "INFO"
   | "COEXP"
-  | "FRASE"
-  | "SEGUIR";
+  | "FRASE";
 
 // single = una opción · multi = varias (casillas) · scale = escala 1–5 · text = texto libre
 export type QuestionMode = "single" | "multi" | "scale" | "text";
@@ -286,20 +307,6 @@ export const QUESTIONS: Record<QuestionId, Question> = {
     long: true,
     options: [],
   },
-  SEGUIR: {
-    id: "SEGUIR",
-    moment: 3,
-    mode: "multi",
-    prompt: "¿Cómo le gustaría seguir con SénecaLab e InnKind?",
-    short: "Cómo le gustaría seguir",
-    required: false,
-    options: [
-      { id: "resultados", label: "Recibir los resultados de esta sesión" },
-      { id: "proyecto", label: "Conversar sobre un proyecto con universidades" },
-      { id: "mesa", label: "Participar en una mesa de prototipado InnKind" },
-      { id: "fied2027", label: "Conocer el FIEd 2027" },
-    ],
-  },
 };
 
 export const QUESTION_ORDER: QuestionId[] = [
@@ -313,7 +320,6 @@ export const QUESTION_ORDER: QuestionId[] = [
   "INFO",
   "COEXP",
   "FRASE",
-  "SEGUIR",
 ];
 
 export function optionLabel(q: Question, id: string): string {
@@ -351,7 +357,7 @@ export const MOMENTS: Record<MomentId, Moment> = {
     kicker: "Participación 3",
     title: "La voz que faltó",
     intro: "Las preguntas que el Costa Rica Talent Adaptation Lab dejó pendientes con empleadores.",
-    questions: ["CAPACIDADES", "POSICIONES", "INFO", "COEXP", "FRASE", "SEGUIR"],
+    questions: ["CAPACIDADES", "POSICIONES", "INFO", "COEXP", "FRASE"],
   },
 };
 export const MOMENT_IDS: MomentId[] = [1, 2, 3];

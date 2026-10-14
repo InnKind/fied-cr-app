@@ -9,7 +9,6 @@ import {
   QUESTIONS,
   TALK_TITLE,
   type Question,
-  type QuestionId,
 } from "@/config/charla";
 import { formatMean, pct, tallyOf, type CharlaResults, type Tally } from "@/lib/charla";
 import { useCharlaResults } from "@/hooks/useCharla";
@@ -19,9 +18,6 @@ import { BrandLogos, Kicker, SERIF } from "@/components/charla/CharlaUI";
 // nombres, correos ni textos escritos) y nada de una pregunta con menos de 3
 // respuestas, para que nadie pueda deducir lo que respondió otra persona.
 const MIN_PEOPLE = 3;
-
-// «Cómo le gustaría seguir» es una preferencia de contacto, no un resultado.
-const HIDDEN: QuestionId[] = ["SEGUIR"];
 
 const NOT_ENOUGH = "Aún no hay suficientes respuestas.";
 
@@ -214,8 +210,7 @@ export default function CharlaResultados() {
         ) : (
           MOMENT_IDS.map((id) => {
             const m = MOMENTS[id];
-            const ids = m.questions.filter((qid) => !HIDDEN.includes(qid));
-            if (ids.length === 0) return null;
+            const ids = m.questions;
             return (
               <section key={m.id} className="mt-10">
                 <Kicker className="text-xs text-[#dce4ff]">{m.kicker}</Kicker>

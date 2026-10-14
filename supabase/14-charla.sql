@@ -1,3 +1,8 @@
+-- OJO: desde 15-charla-anonima.sql la charla es ANÓNIMA. NO vuelvas a correr
+-- este archivo después del 15: recrearía charla_register y charla_answer
+-- volvería a exigir registro (los celulares fallarían). Si hiciera falta, corre
+-- el 15 otra vez justo después.
+--
 -- Charla «La universidad que el primer empleo necesita» — ADITIVO e IDEMPOTENTE.
 -- No toca ninguna tabla del FIEd ni del stand. Crea 3 tablas nuevas y 4 funciones:
 --   charla_state      → en qué paso va la presentación (lo escribe el servidor).

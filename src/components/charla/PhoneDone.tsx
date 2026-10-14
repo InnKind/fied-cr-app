@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CONTACT,
   END_STEP,
   MOMENTS,
   MOMENT_IDS,
@@ -11,23 +12,28 @@ import {
 } from "@/config/charla";
 import { answerLines, isAnswered, type Mine } from "@/lib/charla";
 import { Kicker, SERIF } from "@/components/charla/CharlaUI";
-import { BTN_PRIMARY, CheckIcon } from "@/components/charla/PhoneUI";
+import { BTN_PRIMARY, BTN_SECONDARY, CheckIcon } from "@/components/charla/PhoneUI";
+
+// Qué hizo la persona con el contacto opcional del final (null = todavía nada).
+export type ContactState = "enviado" | "no" | null;
 
 // Sin preguntas pendientes: «Listo, mire la pantalla» (o «Gracias» si la charla
-// terminó) y abajo lo que la persona respondió, para cambiarlo o completar lo
-// que saltó.
+// terminó), abajo lo que la persona respondió, para cambiarlo o completar lo
+// que saltó, y el contacto opcional.
 export default function PhoneDone({
   step,
   openStep,
   mine,
+  contact,
   onEdit,
-  onEditProfile,
+  onContact,
 }: {
   step: number;
   openStep: number; // hasta dónde llegó la pantalla (momentos abiertos)
   mine: Mine;
+  contact: ContactState;
   onEdit: (id: QuestionId) => void;
-  onEditProfile: () => void;
+  onContact: () => void;
 }) {
   const ended = step >= END_STEP;
   // ¿Falta que se abra algún momento?
@@ -45,7 +51,7 @@ export default function PhoneDone({
               Gracias por participar
             </h1>
             <p className="mt-2 text-[16px] leading-relaxed text-[#55657A]">
-              Sus respuestas quedaron guardadas. Recibirá los resultados.
+              Sus respuestas quedaron guardadas, de forma anónima.
             </p>
             <a href="/charla/resultados" className={`mt-5 ${BTN_PRIMARY}`}>
               Ver lo que dijo la sala
@@ -117,15 +123,24 @@ export default function PhoneDone({
         </div>
       </section>
 
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={onEditProfile}
-          className="min-h-12 px-4 text-sm font-bold text-[#DCE4FF] underline"
-        >
-          Corregir mis datos
-        </button>
-      </div>
+      <section className="rounded-2xl bg-white/10 px-4 py-4">
+        {contact === "enviado" ? (
+          <p className="text-[15px] leading-relaxed text-white">
+            <span className="font-bold">Sus datos de contacto quedaron guardados</span>, aparte de sus
+            respuestas.
+          </p>
+        ) : (
+          <>
+            <h2 className="text-[20px] leading-tight text-white" style={SERIF}>
+              {CONTACT.title}
+            </h2>
+            <p className="mt-1.5 text-[15px] leading-relaxed text-[#DCE4FF]">{CONTACT.intro}</p>
+            <button type="button" onClick={onContact} className={`mt-4 ${BTN_SECONDARY}`}>
+              Dejar mis datos de contacto
+            </button>
+          </>
+        )}
+      </section>
     </div>
   );
 }

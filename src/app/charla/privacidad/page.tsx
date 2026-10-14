@@ -1,8 +1,9 @@
-import { CONTACT_EMAIL, FORM_CONSENT, TALK_TITLE } from "@/config/charla";
+import { CONTACT, CONTACT_EMAIL, TALK_TITLE } from "@/config/charla";
 import { BrandLogos, Kicker, SERIF } from "@/components/charla/CharlaUI";
 
-// Aviso de privacidad de la charla. A diferencia del stand, aquí las respuestas
-// NO son anónimas: se guardan unidas al nombre y al correo de cada persona.
+// Aviso de privacidad de la charla. Las respuestas son ANÓNIMAS: no se pide el
+// nombre y el celular solo guarda un código aleatorio. El contacto del final es
+// opcional y se guarda aparte, sin ese código, así que no se une con las respuestas.
 // Mientras PRIVACY_APPROVED sea false, debajo del título sale un marcador
 // amarillo: el texto es un borrador y Adriana todavía no lo ha aprobado. Cuando
 // lo apruebe, se pone en true (y se anota aquí la fecha). Si el texto cambia y
@@ -60,24 +61,39 @@ export default function CharlaPrivacidad() {
           </p>
         </Section>
 
-        <Section title="Qué datos guardamos">
+        <Section title="Sus respuestas son anónimas">
           <p>
-            Su nombre, su organización, su cargo y su correo, y sus respuestas a las preguntas de la
-            sesión.
+            Para responder no le pedimos su nombre ni ningún otro dato personal. Sus respuestas se
+            guardan sin su nombre.
           </p>
-          <p>Esta sesión no es anónima: sus respuestas se guardan unidas a su nombre.</p>
+          <p>
+            Su celular guarda un código aleatorio solo para no repetirle las preguntas que ya
+            respondió. Ese código no dice quién es usted.
+          </p>
+          <p>En las respuestas de texto, le pedimos no escribir su nombre ni otros datos personales.</p>
+        </Section>
+
+        <Section title="Su contacto, si decide dejarlo">
+          <p>
+            Al final puede dejar, si quiere, su nombre y su correo y, si lo desea, su organización y
+            su cargo, junto con lo que marque en «{CONTACT.prompt}». Es opcional.
+          </p>
+          <p>
+            Ese contacto se guarda aparte: no lleva el código de su celular y no lo unimos con sus
+            respuestas.
+          </p>
         </Section>
 
         <Section title="Para qué los usamos">
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Para alimentar InnKind Intelligence, el análisis de InnKind sobre lo que piensan y
-              deciden los líderes de la educación superior y el empleo.
+              Sus respuestas: para alimentar InnKind Intelligence, el análisis de InnKind sobre lo
+              que piensan y deciden los líderes de la educación superior y el empleo.
             </li>
-            <li>Para enviarle los resultados de la sesión.</li>
-            <li>Para contactarla o contactarlo sobre este tema.</li>
+            <li>
+              Su contacto: solo para lo que marcó. Es lo que acepta al enviarlo: «{CONTACT.consent}»
+            </li>
           </ul>
-          <p>Es lo que dice el formulario antes de empezar: «{FORM_CONSENT}»</p>
           <p>
             Lo que se muestra en la pantalla de la sala y en la{" "}
             <a href="/charla/resultados" className="text-white underline">
@@ -87,7 +103,8 @@ export default function CharlaPrivacidad() {
           </p>
         </Section>
 
-        <Section title="Con quién se comparten">
+        <Section title="Quién los ve">
+          <p>El equipo de SénecaLab e InnKind.</p>
           <p>
             No vendemos ni cedemos sus datos. Los resultados agregados (sin nombres) pueden
             compartirse en informes de InnKind.
@@ -100,7 +117,10 @@ export default function CharlaPrivacidad() {
 
         <Section title="Sus derechos">
           <p>
-            Puede pedirnos ver, corregir o borrar sus datos escribiendo a <Mail />.
+            Puede pedirnos ver, corregir o borrar su contacto escribiendo a <Mail />.
+          </p>
+          <p>
+            Como sus respuestas no llevan su nombre, no podemos saber cuáles son suyas.
           </p>
         </Section>
 

@@ -18,7 +18,6 @@ const SAMPLE: Record<string, number[]> = {
   CAPACIDADES: [19, 24, 15, 8, 12, 10, 9, 2],
   INFO: [22, 15, 17, 9, 3],
   COEXP: [18, 14, 11, 9, 6, 7, 2],
-  SEGUIR: [25, 9, 7, 12],
 };
 const ANSWERED: Record<string, number> = {
   ROL: 40,
@@ -31,7 +30,6 @@ const ANSWERED: Record<string, number> = {
   INFO: 34,
   COEXP: 33,
   FRASE: 18,
-  SEGUIR: 30,
 };
 
 export function demoResults(): CharlaResults {
@@ -39,7 +37,7 @@ export function demoResults(): CharlaResults {
   for (const id of QUESTION_ORDER) {
     const q = QUESTIONS[id];
     const sample = SAMPLE[id];
-    if (!sample || id === "SEGUIR") continue;
+    if (!sample) continue;
     counts[id] = {};
     q.options.forEach((o, i) => {
       counts[id][o.id] = sample[i] ?? 0;
