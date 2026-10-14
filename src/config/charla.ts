@@ -1,8 +1,9 @@
 // Charla «La universidad que el primer empleo necesita» (Adriana Angarita).
 // FUENTES: la presentación «La universidad que el primer empleo necesita.pptx» y
-// el formulario de Google «Su mirada sobre la educación superior». Los textos de
-// las preguntas y de las opciones son EXACTOS a los del formulario: si cambian
-// allá, se cambian aquí Y en supabase/14-charla.sql (la base valida las opciones).
+// el formulario de Google «Su mirada sobre la educación superior». Las opciones
+// son las del formulario; los textos de ROL y SECTOR los cambió Jerónimo el
+// 13-oct. Si cambia una opción, se cambia aquí Y en supabase/15-charla-anonima.sql
+// (la base valida las opciones).
 //
 // Pantallas:
 //   /charla             → celular (ANÓNIMO: las preguntas sin pedir nombre; al final, contacto opcional aparte)
@@ -72,14 +73,15 @@ export const ANON_NOTE = "Sus respuestas son anónimas: no le pedimos su nombre.
 // Contacto opcional del final. Va APARTE de las respuestas (charla_contacts no
 // guarda el código del celular), así que no se puede saber qué respondió quien
 // deja su contacto. Las opciones son las de la pregunta del formulario
-// «¿Cómo le gustaría seguir con SénecaLab e InnKind?», textos exactos.
+// «¿Cómo le gustaría seguir con SénecaLab e InnKind?», textos exactos, sin
+// «Recibir los resultados de esta sesión» (Jerónimo la quitó el 13-oct: con
+// respuestas anónimas no tiene sentido).
 // ---------------------------------------------------------------------------
 export const CONTACT = {
   title: "¿Quiere seguir en contacto?",
   intro: "Es opcional y va aparte: sus respuestas siguen siendo anónimas y no se unen a estos datos.",
   prompt: "¿Cómo le gustaría seguir con SénecaLab e InnKind?",
   options: [
-    { id: "resultados", label: "Recibir los resultados de esta sesión" },
     { id: "proyecto", label: "Conversar sobre un proyecto con universidades" },
     { id: "mesa", label: "Participar en una mesa de prototipado InnKind" },
     { id: "fied2027", label: "Conocer el FIEd 2027" },
@@ -106,7 +108,7 @@ export const CONTACT_FIELDS: {
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 // ---------------------------------------------------------------------------
-// Preguntas (textos y opciones EXACTOS del formulario)
+// Preguntas (opciones EXACTAS del formulario)
 // ---------------------------------------------------------------------------
 export type QuestionId =
   | "ROL"
@@ -132,7 +134,7 @@ export type Question = {
   id: QuestionId;
   moment: MomentId;
   mode: QuestionMode;
-  prompt: string; // texto exacto del formulario
+  prompt: string; // texto de la pregunta
   short: string; // rótulo corto para paneles y columnas
   required: boolean;
   options: Option[];
@@ -154,7 +156,7 @@ export const QUESTIONS: Record<QuestionId, Question> = {
     id: "ROL",
     moment: 1,
     mode: "single",
-    prompt: "¿Cuál es su rol principal?",
+    prompt: "¿Cuál es el principal rol de la actividad que tiene influencia actual?",
     short: "Rol principal",
     required: true,
     options: [
@@ -170,7 +172,7 @@ export const QUESTIONS: Record<QuestionId, Question> = {
     id: "SECTOR",
     moment: 1,
     mode: "single",
-    prompt: "Sector de su organización",
+    prompt: "¿En qué sector se concentra principalmente su labor o influencia hoy?",
     short: "Sector",
     required: true,
     options: [
@@ -410,8 +412,8 @@ export function stepAt(step: number): Step | null {
   return step >= 1 && step <= STEPS.length ? STEPS[step - 1] : null;
 }
 
-// Paso en el que se abre cada momento en los celulares. El 1 (el perfil) está
-// abierto desde el registro; el 2 y el 3 se abren cuando la pantalla llega a su
+// Paso en el que se abre cada momento en los celulares. El 1 está abierto desde
+// antes de empezar; el 2 y el 3 se abren cuando la pantalla llega a su
 // lámina de participación, y ya no se cierran: quien llega tarde se pone al día.
 export const MOMENT_OPENS_AT: Record<MomentId, number> = {
   1: PRE_STEP,

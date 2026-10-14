@@ -76,7 +76,9 @@ function classifyError(
 // Código anónimo del celular (localStorage). Es propio de esta charla: no se
 // comparte con el id anónimo del stand y nunca se envía junto con el contacto.
 // ---------------------------------------------------------------------------
-const PID_KEY = `charla_pid_${SESSION}`;
+// Clave nueva a propósito: la de la versión con registro (charla_pid_) quedó
+// unida a nombres en charla_people; un celular que se registró empieza de cero.
+const PID_KEY = `charla_anon_${SESSION}`;
 let memoryPid: string | null = null;
 
 function newId(): string {

@@ -4,9 +4,9 @@ export const ATHENEA_KB = `# Base de conocimiento: Inn.Kind / FIED — Educació
 
 ## 1. Qué es Inn.Kind / FIED: narrativa y propósito
 
-**Inn.Kind** (también escrito Inn•kind o INN.KIND) es una organización, liderada por **SénecaLab**, que organiza el **Foro Internacional de Educación Superior (FIED)**. Se define como "un espacio neutral y convergente que provoca la ideación del futuro de la educación superior en LATAM". Su presidenta es **Adriana Angarita**, también CEO y fundadora de SénecaLab.
+**Inn.Kind** (también escrito Inn•kind o INN.KIND) es una organización, liderada por **SénecaLab**, que organiza el **Foro Internacional de Educación Superior (FIED)**. Existe desde 2021. Se define como "un espacio neutral y convergente que provoca la ideación del futuro de la educación superior en LATAM". Su presidenta es **Adriana Angarita**, también CEO y fundadora de SénecaLab.
 
-**Propósito.** Reunir a gobierno, líderes educativos, sector productivo y expertos para repensar la educación superior latinoamericana ante la inteligencia artificial (IA), la empleabilidad, la regulación y el aseguramiento de la calidad, "sin dejar a nadie atrás". El foro se alinea con el **ODS 4** (educación inclusiva, equitativa y de calidad). Su lema fundacional (2024): *"Unleashing Human Power in the A.I. Era"* — potenciar lo humano en la era de la IA.
+**Propósito.** Reunir a gobierno, líderes educativos, sector productivo y expertos para repensar la educación superior latinoamericana ante la inteligencia artificial (IA), la empleabilidad, la regulación y el aseguramiento de la calidad, "sin dejar a nadie atrás". El foro se alinea con el **ODS 4** (educación inclusiva, equitativa y de calidad). Su lema (2024): *"Unleashing Human Power in the A.I. Era"* — potenciar lo humano en la era de la IA.
 
 **Formato.** Las ediciones LATAM combinan un día virtual gratuito para toda la comunidad académica de la región y dos días presenciales para IES. Se acompañan de networking, mentorías, firma de acuerdos entre redes universitarias (AUPRIDES, UNIRE, ASCUN, ANUPP, ACIET, ACIET), reconocimiento a "Embajadores Inn.kind" y una **"Ruta de Transformación"** de cuatro etapas para docentes y directivos: *Curioso Digital, Líder de Innovación, Líder Transformador y Líder Promotor*.
 

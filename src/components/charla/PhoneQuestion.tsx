@@ -65,7 +65,7 @@ function readDraft(q: Question): Draft | null {
   }
 }
 
-// La respuesta con la forma que acepta charla_answer (supabase/14-charla.sql):
+// La respuesta con la forma que acepta charla_answer (supabase/15-charla-anonima.sql):
 // {choice} / {choices} / {text}, y «other» SOLO si eligió «Otros» y escribió
 // algo (nunca other: ""). null = todavía no hay nada que enviar.
 function toAnswer(q: Question, d: Draft): CharlaAnswer | null {

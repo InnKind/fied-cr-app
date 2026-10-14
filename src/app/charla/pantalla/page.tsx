@@ -210,14 +210,11 @@ function EndScreen({ res }: { res: CharlaResultsState }) {
         Gracias por participar
       </h1>
       <p style={{ margin: "24px 0 0", fontSize: 34, lineHeight: 1.35, color: C.ice }}>
-        Sus respuestas alimentan InnKind Intelligence. Si pidió los resultados al final, se los enviaremos.
+        Sus respuestas alimentan InnKind Intelligence.
         {res.people > 0 ? ` Hoy ${res.people === 1 ? "participó" : "participaron"} ${people(res.people)}.` : ""}
       </p>
       <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", gap: 120 }}>
-          <QrCard src={QR.entrar} size={300} title="Complete sus respuestas" sub={CHARLA_SHORT_URL} />
-          <QrCard src={QR.resultados} size={300} title="Lo que dijo la sala" sub={RESULTS_SHORT_URL} />
-        </div>
+        <QrCard src={QR.resultados} size={420} title="Lo que dijo la sala" sub={RESULTS_SHORT_URL} />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 44 }}>
           <BrandLogos height={84} />
           {/* eslint-disable-next-line @next/next/no-img-element */}

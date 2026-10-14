@@ -6,15 +6,16 @@
 -- Charla «La universidad que el primer empleo necesita» — ADITIVO e IDEMPOTENTE.
 -- No toca ninguna tabla del FIEd ni del stand. Crea 3 tablas nuevas y 4 funciones:
 --   charla_state      → en qué paso va la presentación (lo escribe el servidor).
---   charla_people     → quién respondió: nombre, organización, cargo y correo.
+--   charla_people     → quién respondió: nombre, organización, cargo y correo
+--                       (sin uso desde 15-charla-anonima.sql).
 --   charla_responses  → las respuestas de cada persona.
 -- El navegador NO lee ni escribe estas dos últimas tablas directo: usa las
 -- funciones charla_register, charla_answer, charla_me y charla_results. Así
 -- nadie puede leer los nombres, los correos ni los textos escritos: la pantalla
 -- y /charla/resultados solo reciben conteos.
 -- Pégalo en Supabase -> SQL Editor -> New query -> Run. Se puede correr varias veces.
--- Las opciones de cada pregunta son las de src/config/charla.ts: si cambian
--- allá, hay que cambiarlas aquí también.
+-- Las opciones de cada pregunta son las de src/config/charla.ts. Desde el 15,
+-- la validación que rige es la de 15-charla-anonima.sql: los cambios van allá.
 
 -- === 1. Estado de la sesión ===
 create table if not exists charla_state (
@@ -330,8 +331,8 @@ drop policy if exists "charla_state_select" on charla_state;
 create policy "charla_state_select" on charla_state for select to anon, authenticated using (true);
 
 -- charla_people y charla_responses: SIN políticas para el público (ni leer, ni
--- insertar, ni cambiar, ni borrar). Todo pasa por las funciones de arriba; el
--- archivo con nombres se descarga en /charla/exportar con la clave.
+-- insertar, ni cambiar, ni borrar). Todo pasa por las funciones de arriba; los
+-- archivos se descargan en /charla/exportar con la clave.
 revoke all on charla_state from anon, authenticated;
 revoke all on charla_people from anon, authenticated;
 revoke all on charla_responses from anon, authenticated;
@@ -374,10 +375,12 @@ order by 1, 2;
 -- la sala, las barras, /charla/resultados y el archivo de /charla/exportar
 -- incluirían a las personas de prueba. Está comentado para que volver a correr
 -- este archivo nunca borre datos reales. Para usarlo: selecciona SOLO estas
--- líneas, quítales el "-- " del inicio y dale Run (o usa reinicio-charla.sql,
--- que es lo mismo en una sola instrucción y dice cuánto borró).
+-- líneas, quítales el "-- " del inicio y dale Run. Mejor: usa
+-- charla-primer-empleo/reinicio-charla.sql, que hace lo mismo en una sola
+-- instrucción y dice cuánto borró.
 --
 -- delete from charla_responses where session = 'PE26';
+-- delete from charla_contacts where session = 'PE26';  -- existe desde el 15
 -- delete from charla_people where session = 'PE26';
 -- update charla_state set step = 0, updated_at = now() where session = 'PE26';
 --

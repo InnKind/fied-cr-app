@@ -32,7 +32,7 @@ export function CheckIcon({ className = "" }: { className?: string }) {
 }
 
 // Si no se guarda, la persona repite la acción de esa pantalla (vuelve a tocar
-// su respuesta, «Enviar» o «Continuar»). `text` dice cómo reintentar. Si fue la
+// su respuesta o «Enviar»). `text` dice cómo reintentar. Si fue la
 // base la que rechazó el envío, se dice el motivo en vez de culpar a la conexión.
 export function ErrorBox({ error, text }: { error: CharlaError; text: string }) {
   return (

@@ -25,17 +25,17 @@ import { BrandLogos, Kicker, SERIF } from "@/components/charla/CharlaUI";
 const KEY_STORAGE = "stand_key";
 const NOTAS = notasJson as Record<string, string>;
 
-// Las notas del .pptx de las láminas de participación hablan del formulario de
-// Google; aquí van las indicaciones equivalentes para la app.
+// En las láminas de participación (y antes y después de la charla) el control
+// muestra estas indicaciones para la app en vez de las notas del .pptx.
 const CUES: Record<string, string> = {
   pre: "En la pantalla está el código para entrar. Quien lo escanee ya puede empezar a responder: es anónimo, no se pide el nombre. Al tocar Siguiente aparece la portada.",
   p04: "Pedir que escaneen el código. En el celular (anónimo, sin pedir el nombre): rol, sector y, del 1 al 5, qué tan preparados llegan los recién graduados que contratan. Esperar a que suba el contador y pasar a los resultados.",
   p05: "Leer el promedio y cómo se reparte del 1 al 5. Quien todavía no termina puede seguir respondiendo: la pantalla se actualiza sola.",
   p14: "No hace falta escanear de nuevo: las preguntas aparecen solas en el celular de quien ya entró. Son dos: (1) por cada 10 contrataciones de primer empleo, cuántas pasantías ofrece su organización; (2) qué les impide ofrecer más.",
   p15: "Mostrar la distribución frente a la vara 1:10. Esto le dice a InnKind dónde diseñar el próximo experimento con empleadores.",
-  p17: "Esta es la participación central para SénecaLab e InnKind. En el celular: capacidades que más cuesta encontrar (hasta 3), posiciones que tardan más en cubrir, información que compartirían con las universidades, qué co-experimentarían, una frase para la educación superior. Al terminar, el celular ofrece dejar un contacto opcional (para recibir los resultados o seguir conversando), que se guarda aparte de las respuestas.",
+  p17: "Esta es la participación central para SénecaLab e InnKind. En el celular: capacidades que más cuesta encontrar (hasta 3), posiciones que tardan más en cubrir, información que compartirían con las universidades, qué co-experimentarían, una frase para la educación superior. Al terminar, el celular ofrece dejar un contacto opcional (conversar sobre un proyecto, una mesa de prototipado InnKind o el FIEd 2027), que se guarda aparte de las respuestas.",
   p18: "Capacidades, información y co-experimentos, en vivo. Las respuestas escritas (posiciones y frases) no se muestran en pantalla: quedan en el archivo que se descarga después.",
-  fin: "Fin. En la pantalla quedan los códigos para completar las respuestas y para ver los resultados. Recordar: sus respuestas alimentan InnKind Intelligence; quien dejó su contacto y pidió los resultados los recibirá.",
+  fin: "Fin. En la pantalla queda el código para ver lo que dijo la sala. Recordar: sus respuestas alimentan InnKind Intelligence.",
 };
 
 function notesFor(step: number, s: Step | null): string {

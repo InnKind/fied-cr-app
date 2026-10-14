@@ -14,8 +14,10 @@
 -- Pégalo en Supabase -> SQL Editor -> New query -> Run. Se puede correr varias veces.
 
 -- === 1. Contactos opcionales (aparte de las respuestas) ===
--- Id aleatorio y solo el día, sin hora: ni el orden de llegada ni la hora
--- permiten emparejar un contacto con las respuestas de un celular.
+-- Id aleatorio y solo el día, sin hora: los archivos de /charla/exportar no
+-- traen orden de llegada ni hora con que emparejar un contacto con las
+-- respuestas de un celular. (Quien administra la base todavía podría cruzarlos
+-- por el orden interno de las filas; el compromiso del aviso es no hacerlo.)
 create table if not exists charla_contacts (
   id uuid primary key default gen_random_uuid(),
   session text not null check (char_length(session) <= 20),
@@ -33,7 +35,8 @@ alter table charla_contacts enable row level security;
 revoke all on charla_contacts from anon, authenticated;
 
 -- Guarda un contacto. No recibe el código del celular: no se puede unir con las respuestas.
---   p_opciones: lista de 1 a 4 opciones de «¿Cómo le gustaría seguir…?»
+--   p_opciones: lista de 1 a 3 opciones de «¿Cómo le gustaría seguir…?» (sin
+--   «Recibir los resultados de esta sesión»: con respuestas anónimas no aplica)
 create or replace function charla_contact(
   p_session text,
   p_opciones jsonb,
@@ -70,12 +73,12 @@ begin
   end if;
   if p_opciones is null
      or jsonb_typeof(p_opciones) <> 'array'
-     or jsonb_array_length(p_opciones) not between 1 and 4
+     or jsonb_array_length(p_opciones) not between 1 and 3
      or exists (select 1 from jsonb_array_elements(p_opciones) as e(v) where jsonb_typeof(e.v) <> 'string') then
     raise exception 'charla: opciones inválidas' using errcode = '22023';
   end if;
   select array_agg(e.v) into v_ops from jsonb_array_elements_text(p_opciones) as e(v);
-  if not (v_ops <@ array['resultados', 'proyecto', 'mesa', 'fied2027'])
+  if not (v_ops <@ array['proyecto', 'mesa', 'fied2027'])
      or (select count(distinct x) from unnest(v_ops) as x) <> array_length(v_ops, 1) then
     raise exception 'charla: opciones inválidas' using errcode = '22023';
   end if;

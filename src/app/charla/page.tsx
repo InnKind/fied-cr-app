@@ -49,7 +49,7 @@ const CONTACT_KEY = `charla_contacto_${SESSION}`;
 
 // La versión anterior pedía nombre, organización, cargo y correo y los
 // guardaba en el celular: se borran al entrar.
-const OLD_KEYS = [`charla_reg_${SESSION}`, `charla_profile_${SESSION}`];
+const OLD_KEYS = [`charla_reg_${SESSION}`, `charla_profile_${SESSION}`, `charla_pid_${SESSION}`];
 const OLD_DRAFT_KEY = `charla_profile_draft_${SESSION}`;
 
 // Cada cuánto se reintenta leer la base cuando no hubo conexión.
@@ -180,6 +180,11 @@ function PhoneApp() {
   // Vuelve a leer la base (lo define el efecto de abajo).
   const resync = useRef<() => void>(() => {});
   const lastStep = useRef<number | null>(null);
+  // El último paso que dijo la pantalla, para la lectura de la base.
+  const stepNow = useRef<number | null>(null);
+  useEffect(() => {
+    stepNow.current = remote.step;
+  }, [remote.step]);
 
   // Datos personales que dejó en este celular la versión con registro.
   useEffect(() => {
@@ -235,6 +240,17 @@ function PhoneApp() {
         });
         // Empezar de cero incluye olvidar las preguntas que saltó y el contacto
         // (el reinicio también borra los contactos).
+        // Sin ninguna respuesta en la base, el paso más alto que vio este
+        // celular no sirve para abrir momentos: pudo quedar de un ensayo sin
+        // responder. Se baja al paso actual de la pantalla.
+        const now = stepNow.current;
+        if (Object.keys(res.answers).length === 0 && keep.length === 0 && now !== null) {
+          const stored = Number(safeStorage.get(REACH_KEY)) || 0;
+          if (stored > now) {
+            safeStorage.set(REACH_KEY, String(now));
+            setReach((r) => Math.min(r, now));
+          }
+        }
         if (wiped) {
           setSkipped([]);
           safeStorage.remove(SKIP_KEY);
@@ -267,11 +283,16 @@ function PhoneApp() {
     };
   }, [pid, isPreview]);
 
-  // La pantalla retrocedió: puede ser un ensayo que vuelve a empezar.
+  // La pantalla retrocedió: puede ser un ensayo que vuelve a empezar. Lo mismo
+  // si el primer paso que llega es menor que el que recuerda el celular.
   useEffect(() => {
     const s = remote.step;
     if (s === null) return;
-    if (lastStep.current !== null && s < lastStep.current) resync.current();
+    const back =
+      lastStep.current === null
+        ? s < (Number(safeStorage.get(REACH_KEY)) || 0)
+        : s < lastStep.current;
+    if (back) resync.current();
     lastStep.current = s;
     if (!isPreview && s > (Number(safeStorage.get(REACH_KEY)) || 0)) {
       safeStorage.set(REACH_KEY, String(s));

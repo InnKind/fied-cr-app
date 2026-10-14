@@ -347,7 +347,7 @@ function Momento3({ res }: { res: CharlaResults }) {
             <span style={{ textAlign: "right", fontSize: 20, lineHeight: 1.3, color: tone.soft }}>
               <strong style={{ fontSize: 22, color: tone.text }}>Responda desde su celular</strong>
               <br />
-              {CHARLA_SHORT_URL} · {people(res.people)} en la sala
+              {CHARLA_SHORT_URL} · <span style={{ whiteSpace: "nowrap" }}>{people(res.people)} en la sala</span>
             </span>
             <div style={{ borderRadius: 14, background: C.white, padding: 8 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
